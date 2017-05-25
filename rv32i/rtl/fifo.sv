@@ -41,7 +41,7 @@ module fifo
     begin
         empty_o = 1'b0;
         full_o  = 1'b0;
-        if (rd_ptr_q == wr_ptr_q) begin
+        if (rd_ptr_q[C_FIFO_DEPTH_X-1:0] == wr_ptr_q[C_FIFO_DEPTH_X-1:0]) begin
             if (rd_ptr_q[C_FIFO_DEPTH_X] == wr_ptr_q[C_FIFO_DEPTH_X]) begin
                 empty_o = 1'b1;
             end else begin
