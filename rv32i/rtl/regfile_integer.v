@@ -1,35 +1,35 @@
 module regfile_integer
     #(
-        parameter C_XLEN = 32
+        parameter P_XLEN = 32
     )
     (
         // global
-        input  logic              clk_i,
-        input  logic              clk_en_i,
-        input  logic              resetb_i,
+        input  wire              clk_i,
+        input  wire              clk_en_i,
+        input  wire              resetb_i,
         // write port
-        input  logic              wreg_a_wr_i,
-        input  logic        [4:0] wreg_a_addr_i,
-        input  logic [C_XLEN-1:0] wreg_a_data_i,
-        input  logic              wreg_b_wr_i,
-        input  logic        [4:0] wreg_b_addr_i,
-        input  logic [C_XLEN-1:0] wreg_b_data_i,
+        input  wire              wreg_a_wr_i,
+        input  wire        [4:0] wreg_a_addr_i,
+        input  wire [P_XLEN-1:0] wreg_a_data_i,
+        input  wire              wreg_b_wr_i,
+        input  wire        [4:0] wreg_b_addr_i,
+        input  wire [P_XLEN-1:0] wreg_b_data_i,
         // read port
-        input  logic              rreg_a_rd_i,
-        input  logic        [4:0] rreg_a_addr_i,
-        output logic [C_XLEN-1:0] rreg_a_data_o,
-        input  logic              rreg_b_rd_i,
-        input  logic        [4:0] rreg_b_addr_i,
-        output logic [C_XLEN-1:0] rreg_b_data_o
+        input  wire              rreg_a_rd_i,
+        input  wire        [4:0] rreg_a_addr_i,
+        output reg  [P_XLEN-1:0] rreg_a_data_o,
+        input  wire              rreg_b_rd_i,
+        input  wire        [4:0] rreg_b_addr_i,
+        output reg  [P_XLEN-1:0] rreg_b_data_o
     );
 
     //--------------------------------------------------------------
 
-    logic [C_XLEN-1:0] mem[0:31];
+    reg [P_XLEN-1:0] mem[0:31];
 
     //--------------------------------------------------------------
 
-    // read/write logic
+    // read/write wire
     //
     always @ (posedge clk_i)
     begin
@@ -37,7 +37,7 @@ module regfile_integer
             // read port a
             if (rreg_a_rd_i) begin
                 if (rreg_a_addr_i == 0) begin
-                    rreg_a_data_o <= { C_XLEN {1'b0} };
+                    rreg_a_data_o <= { P_XLEN {1'b0} };
                 end else begin
                     rreg_a_data_o <= mem[rreg_a_addr_i];
                 end
@@ -45,7 +45,7 @@ module regfile_integer
             // read port b
             if (rreg_b_rd_i) begin
                 if (rreg_b_addr_i == 0) begin
-                    rreg_b_data_o <= { C_XLEN {1'b0} };
+                    rreg_b_data_o <= { P_XLEN {1'b0} };
                 end else begin
                     rreg_b_data_o <= mem[rreg_b_addr_i];
                 end

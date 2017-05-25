@@ -269,7 +269,7 @@ module decoder
             C_INS_TYPE_SB : imm_o = { sign_imm[P_XLEN-1:12], ins_i[7], ins_i[30:25], ins_i[11:6] };
             C_INS_TYPE_U  : imm_o = { sign_imm[P_XLEN-1:31], ins_i[30:12], 12'b0 };
             C_INS_TYPE_UJ : imm_o = { sign_imm[P_XLEN-1:20], ins_i[19:12], ins_i[20], ins_i[30:21], 1'b0 };
-            default     : imm_o = { P_XLEN {1'b0} }; // NOTE don't care
+            default       : imm_o = { P_XLEN {1'b0} }; // NOTE don't care
         endcase
     end
 endmodule
