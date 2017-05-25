@@ -21,6 +21,7 @@ module ex_stage
         input  logic          [2:0] ids_funct3_i,
         input  logic                ids_csr_access_i,
         input  logic         [11:0] ids_csr_addr_i,
+        input  logic   [P_XLEN-1:0] ids_csr_wr_data_i,
             // write-back interface
         output logic                ids_regd_wr_o,
         output logic          [4:0] ids_regd_addr_o,
@@ -147,7 +148,7 @@ module ex_stage
             // read/write interface
             .access_i     (isd_csr_access_i),
             .addr         (ids_csr_addr_i),
-            .din          (ids_regs1_data_i),
+            .din          (ids_csr_wr_data_i),
             .dout         (csr_data_out)
             // static i/o
         );
