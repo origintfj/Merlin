@@ -9,7 +9,6 @@ module ex_stage
         output logic                ids_ack_o, // TODO
         input  logic                ids_cond_i, // TODO
         input  t_zone               ids_zone_i,
-        input  logic                ids_csr_access_i,
         input  logic                ids_link_i,
         input  logic   [C_XLEN-1:0] ids_pc_i,
         input  logic   [C_XLEN-1:0] ids_operand_left_i,

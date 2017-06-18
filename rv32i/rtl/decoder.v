@@ -15,9 +15,7 @@
 
 module decoder
     #(
-        parameter C_XLEN     = 32,
-        parameter C_ZONE_SZ  = 2,
-        parameter C_ALUOP_SZ = 4
+        parameter C_XLEN = 32
     )
     (
         // instruction decoder interface
@@ -25,15 +23,16 @@ module decoder
         input  wire           [31:0] ins_i,
             // egress side
         output reg                   ins_err_o,
-        output reg   [C_ZONE_SZ-1:0] zone_o,
+        output reg     [`ZONE_RANGE] zone_o,
         output wire            [4:0] regd_addr_o,
         output wire            [4:0] regs1_addr_o,
         output wire            [4:0] regs2_addr_o,
         output reg      [C_XLEN-1:0] imm_o,
+        output reg                   link_o,
         output reg                   sels1_pc_o,
-        output reg                   sels1_imm_o,
+        output reg                   sel_csr_wr_data_imm_o,
         output reg                   sels2_imm_o,
-        output reg  [C_ALUOP_SZ-1:0] aluop_o,
+        output reg    [`ALUOP_RANGE] aluop_o,
         output wire            [2:0] funct3_o,
         output reg                   csr_access_o,
         output wire           [11:0] csr_addr_o,
@@ -79,15 +78,16 @@ module decoder
     //
     always @ (*)
     begin
-        ins_err_o     = 1'b0;
-        zone_o        = `ZONE_REGFILE;
-        aluop_o       = `ALUOP_ADD; // NOTE don't actually care
-        sels1_pc_o    = 1'b0;
-        sels2_imm_o   = 1'b0;
-        sels1_imm_o   = 1'b0;
-        csr_access_o  = 1'b0;
-        conditional_o = 1'b0;
-        ins_type      = `IMM_TYPE_UDEF;
+        ins_err_o             = 1'b0;
+        zone_o                = `ZONE_REGFILE;
+        aluop_o               = `ALUOP_ADD; // NOTE don't actually care
+        link_o                = 1'b0;
+        sels1_pc_o            = 1'b0;
+        sels2_imm_o           = 1'b0;
+        sel_csr_wr_data_imm_o = 1'b0;
+        csr_access_o          = 1'b0;
+        conditional_o         = 1'b0;
+        ins_type              = `IMM_TYPE_UDEF;
         //
         case (opcode)
             7'b0110111 : begin // lui
@@ -104,12 +104,14 @@ module decoder
             7'b1101111 : begin // jal
                 ins_type    = `IMM_TYPE_UJ;
                 aluop_o     = `ALUOP_ADD;
+                link_o      = 1'b1;
                 sels1_pc_o  = 1'b1;
                 sels2_imm_o = 1'b1;
             end
             7'b1100111 : begin // jalr
                 ins_type    = `IMM_TYPE_I;
                 aluop_o     = `ALUOP_ADD;
+                link_o      = 1'b1;
                 sels2_imm_o = 1'b1;
                 if (funct3 != 3'b0) begin
                     ins_err_o = 1'b1;
@@ -268,9 +270,9 @@ module decoder
                 end else if (funct3 == 3'b101 ||
                              funct3 == 3'b110 ||
                              funct3 == 3'b111) begin // CSR access with zimm
-                    sels1_imm_o  = 1'b1;
-                    ins_type     = `IMM_TYPE_I_ZIMM;
-                    csr_access_o = 1'b1;
+                    sel_csr_wr_data_imm_o = 1'b1;
+                    ins_type              = `IMM_TYPE_I_ZIMM;
+                    csr_access_o          = 1'b1;
                 end else begin
                     ins_err_o = 1'b1;
                 end

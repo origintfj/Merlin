@@ -57,7 +57,7 @@ module boot_rom
         end else begin
             trspvalid <= gate & treqvalid;
             trspdata  <= mem[{1'b0, reqaddr}];
-            trspdata  <= treqaddr;
+            //trspdata  <= treqaddr;
         end
     end
 endmodule

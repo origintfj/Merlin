@@ -1,3 +1,5 @@
+// TODO - sofr required on reset
+
 /******************************************************
  * Module   : Prefetch Unit (PFU)
  * Language :

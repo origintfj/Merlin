@@ -1,8 +1,12 @@
+`ifndef RISCV_DEFS_
+`define RISCV_DEFS_
+
 //--------------------------------------------------------------
 // pipeline bundles
 //--------------------------------------------------------------
 // zones
 `define ZONE_SZ         2
+`define ZONE_RANGE      `ZONE_SZ-1:0
 //
 `define ZONE_LOADQ      2'b11
 `define ZONE_STOREQ     2'b10
@@ -12,6 +16,7 @@
 // ALU definitions
 //--------------------------------------------------------------
 `define ALUOP_SZ        4
+`define ALUOP_RANGE     `ALUOP_SZ-1:0
 // alu opcodes - top bit is for uniquification
 `define ALUOP_ADD       { 1'b0, `ALUOP_FUNCT3_ADDSUB }
 `define ALUOP_SUB       { 1'b1, `ALUOP_FUNCT3_ADDSUB }
@@ -25,4 +30,6 @@
 `define ALUOP_AND       { 1'b0, `ALUOP_FUNCT3_AND    }
 `define ALUOP_MOV       { 1'b1, `ALUOP_FUNCT3_AND    } // pass right operand to output (e.g. LUI)
 //--------------------------------------------------------------
+
+`endif
 
