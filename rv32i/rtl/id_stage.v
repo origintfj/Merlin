@@ -29,11 +29,11 @@ module id_stage
         output reg    [`ZONE_RANGE] ids_zone_o,
         output reg                  ids_link_o,
         output wire    [C_XLEN-1:0] ids_pc_o,
+        output reg   [`ALUOP_RANGE] ids_alu_op_o,
         output reg     [C_XLEN-1:0] ids_operand_left_o,
         output reg     [C_XLEN-1:0] ids_operand_right_o,
         output wire    [C_XLEN-1:0] ids_regs1_data_o,
         output wire    [C_XLEN-1:0] ids_regs2_data_o,
-        output wire    [C_XLEN-1:0] ids_imm_o,
         output reg            [4:0] ids_regd_addr_o,
         output reg            [2:0] ids_funct3_o,
         output reg                  ids_csr_access_o,
@@ -83,7 +83,6 @@ module id_stage
     reg                 sels1_pc_q;
     reg                 sel_csr_wr_data_imm_q;
     reg                 sels2_imm_q;
-    reg  [`ALUOP_RANGE] alu_op_q;
     // operand forwarding mux
     // left operand select mux
     // right operand select mux
@@ -97,7 +96,6 @@ module id_stage
     assign ids_pc_o         = pc_q;
     assign ids_regs1_data_o = fwd_mux_regs1_data;
     assign ids_regs2_data_o = fwd_mux_regs2_data;
-    assign ids_imm_o        = imm_q;
 
     // id stage dav logic
     //
@@ -195,7 +193,7 @@ module id_stage
             sels1_pc_q            <= sels1_pc_d;
             sel_csr_wr_data_imm_q <= sel_csr_wr_data_imm_d;
             sels2_imm_q           <= sels2_imm_d;
-            alu_op_q              <= alu_op_d;
+            ids_alu_op_o          <= alu_op_d;
             ids_funct3_o          <= funct3_d;
             ids_csr_access_o      <= csr_access_d;
             ids_csr_addr_o        <= csr_addr_d;
