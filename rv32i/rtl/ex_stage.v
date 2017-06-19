@@ -10,6 +10,9 @@ module ex_stage
         // instruction decoder stage interface
         input  logic                ids_dav_i, // TODO
         output logic                ids_ack_o, // TODO
+        input  wire                 ids_sofr_i, // TODO
+        input  wire                 ids_ins_uerr_i, // TODO
+        input  wire                 ids_ins_ferr_i, // TODO
         input  logic                ids_cond_i, // TODO
         input  t_zone               ids_zone_i,
         input  wire                 ids_link_i,
