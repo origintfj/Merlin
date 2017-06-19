@@ -11,7 +11,7 @@ module alu
         input  wire   [C_XLEN-1:0] op_left_i,
         input  wire   [C_XLEN-1:0] op_right_i,
         output reg    [C_XLEN-1:0] op_result_o,
-        input  wire [ALUOP_SZ-1:0] op_opcode_i,
+        input  wire [`ALUOP_RANGE] op_opcode_i,
         //
         input  wire   [C_XLEN-1:0] cmp_left_i,
         input  wire   [C_XLEN-1:0] cmp_right_i,
@@ -44,17 +44,17 @@ module alu
     begin
         op_result_mux_out = '0; // NOTE: don't actually care
         case (op_opcode_i)
-            ALUOP_ADD  : op_result_mux_out = op_left_i + op_right_i;
-            ALUOP_SUB  : op_result_mux_out = op_left_i - op_right_i;
-            ALUOP_SLL  : op_result_mux_out = '0; // TODO
-            ALUOP_SLT  : op_result_mux_out = '0; // TODO
-            ALUOP_SLTU : op_result_mux_out = '0; // TODO
-            ALUOP_XOR  : op_result_mux_out = op_left_i ^ op_right_i;
-            ALUOP_SRL  : op_result_mux_out = '0; // TODO
-            ALUOP_SRA  : op_result_mux_out = '0; // TODO
-            ALUOP_OR   : op_result_mux_out = op_left_i | op_right_i;
-            ALUOP_AND  : op_result_mux_out = op_left_i & op_right_i;
-            ALUOP_MOV  : op_result_mux_out = op_right_i;
+            `ALUOP_ADD  : op_result_mux_out = op_left_i + op_right_i;
+            `ALUOP_SUB  : op_result_mux_out = op_left_i - op_right_i;
+            `ALUOP_SLL  : op_result_mux_out = '0; // TODO
+            `ALUOP_SLT  : op_result_mux_out = '0; // TODO
+            `ALUOP_SLTU : op_result_mux_out = '0; // TODO
+            `ALUOP_XOR  : op_result_mux_out = op_left_i ^ op_right_i;
+            `ALUOP_SRL  : op_result_mux_out = '0; // TODO
+            `ALUOP_SRA  : op_result_mux_out = '0; // TODO
+            `ALUOP_OR   : op_result_mux_out = op_left_i | op_right_i;
+            `ALUOP_AND  : op_result_mux_out = op_left_i & op_right_i;
+            `ALUOP_MOV  : op_result_mux_out = op_right_i;
         endcase
     end
 
@@ -66,23 +66,23 @@ module alu
         if (clk_en_i) begin
             cmp_result_o <= 1'b0;
             case (op_opcode_i)
-                ALUCOND_EQ  : begin
+                `ALUCOND_EQ  : begin
                     if (op_left_i == op_right_i) begin
                         cmp_result_o = 1'b1;
                     end
                 end
-                ALUCOND_NE  : begin
+                `ALUCOND_NE  : begin
                     if (op_left_i != op_right_i) begin
                         cmp_result_o = 1'b1;
                     end
                 end
-                ALUCOND_LT  : begin // TODO
+                `ALUCOND_LT  : begin // TODO
                 end
-                ALUCOND_GE  : begin // TODO
+                `ALUCOND_GE  : begin // TODO
                 end
-                ALUCOND_LTU : begin // TODO
+                `ALUCOND_LTU : begin // TODO
                 end
-                ALUCOND_GEU : begin // TODO
+                `ALUCOND_GEU : begin // TODO
                 end
             endcase
         end

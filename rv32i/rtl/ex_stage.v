@@ -8,13 +8,13 @@ module ex_stage
         input  wire                 clk_en_i,
         input  wire                 resetb_i,
         // instruction decoder stage interface
-        input  logic                ids_dav_i, // TODO
-        output logic                ids_ack_o, // TODO
+        input  wire                 ids_dav_i, // TODO
+        output wire                 ids_ack_o, // TODO
         input  wire                 ids_sofr_i, // TODO
         input  wire                 ids_ins_uerr_i, // TODO
         input  wire                 ids_ins_ferr_i, // TODO
         input  logic                ids_cond_i, // TODO
-        input  t_zone               ids_zone_i,
+        input  wire   [`ZONE_RANGE] ids_zone_i,
         input  wire                 ids_link_i,
         input  wire    [C_XLEN-1:0] ids_pc_i,
         input  wire  [`ALUOP_RANGE] ids_alu_op_i,
@@ -65,6 +65,8 @@ module ex_stage
 
     //--------------------------------------------------------------
 
+    assign ids_ack_o = ids_dav_i; // TODO - this is just temp. so the sim does something
+    //
     assign ids_regd_addr_o  = regd_addr_q;
     //
     assign lsq_funct3_o     = funct3_q;
@@ -86,12 +88,12 @@ module ex_stage
             lsq_sq_wr_o   <= 1'b0;
             ids_regd_wr_o <= 1'b0;
             case (ids_zone_i)
-                ZONE_LOADQ   : lsq_lq_wr_o   <= 1'b1;
-                ZONE_STOREQ  : lsq_sq_wr_o   <= 1'b1;
-                ZONE_REGFILE : ids_regd_wr_o <= 1'b1;
+                `ZONE_LOADQ   : lsq_lq_wr_o   <= 1'b1;
+                `ZONE_STOREQ  : lsq_sq_wr_o   <= 1'b1;
+                `ZONE_REGFILE : ids_regd_wr_o <= 1'b1;
             endcase
             //
-            csr_access_q <= isd_csr_access_i;
+            csr_access_q <= ids_csr_access_i;
             link_q       <= ids_link_i;
             pc_inc_q     <= ids_pc_i + 4; // TODO for compressed instructions this will change
             regs2_data_q <= ids_regs2_data_i;
@@ -127,11 +129,10 @@ module ex_stage
 
     // alu
     //
-    alu alu_i
+    alu
         #(
             .C_XLEN       (C_XLEN)
-        )
-        (
+        ) i_alu (
             //
             .clk_i        (clk_i),
             .clk_en_i     (clk_en_i),
@@ -151,17 +152,19 @@ module ex_stage
 
     // cs registers
     //
-    cs_registers cs_registers_i
-        (
+    cs_registers
+        #(
+            .C_XLEN       (C_XLEN)
+        ) i_cs_registers (
             //
             .clk_i        (clk_i),
             .clk_en_i     (clk_en_i),
             .resetb_i     (resetb_i),
             // read/write interface
             .access_i     (ids_csr_access_i),
-            .addr         (ids_csr_addr_i),
-            .din          (ids_csr_wr_data_i),
-            .dout         (csr_data_out)
+            .addr_i       (ids_csr_addr_i),
+            .data_i       (ids_csr_wr_data_i),
+            .data_o       (csr_data_out)
             // static i/o
         );
 endmodule
