@@ -1,0 +1,72 @@
+[*]
+[*] GTKWave Analyzer v3.3.75 (w)1999-2016 BSI
+[*] Wed Jun 21 03:17:33 2017
+[*]
+[dumpfile] "C:\Users\Tom\riscv\rv32i\verif\wave.lxt"
+[dumpfile_mtime] "Wed Jun 21 03:16:52 2017"
+[dumpfile_size] 11104
+[savefile] "C:\Users\Tom\riscv\rv32i\verif\wave.gtkw"
+[timestart] 0
+[size] 2048 1089
+[pos] -1 -1
+*-9.000000 3563 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb_core.
+[treeopen] tb_core.i_merlin32i.
+[treeopen] tb_core.i_merlin32i.i_ex_stage.
+[treeopen] tb_core.i_merlin32i.i_id_stage.
+[treeopen] tb_core.i_merlin32i.i_pfu.
+[sst_width] 290
+[signals_width] 329
+[sst_expanded] 1
+[sst_vpaned_height] 326
+@28
+tb_core.i_merlin32i.i_id_stage.clk_i[0]
+tb_core.i_merlin32i.i_id_stage.resetb_i[0]
+tb_core.i_merlin32i.i_id_stage.pfu_dav_i[0]
+tb_core.i_merlin32i.i_id_stage.pfu_ack_o[0]
+@800200
+-id_stage rhs
+@28
+tb_core.i_merlin32i.i_id_stage.exs_dav_o[0]
+tb_core.i_merlin32i.i_id_stage.exs_ack_i[0]
+tb_core.i_merlin32i.i_id_stage.exs_sofr_o[0]
+tb_core.i_merlin32i.i_id_stage.exs_ins_uerr_o[0]
+tb_core.i_merlin32i.i_id_stage.exs_ins_ferr_o[0]
+tb_core.i_merlin32i.i_id_stage.exs_cond_o[0]
+tb_core.i_merlin32i.i_id_stage.exs_zone_o[1:0]
+tb_core.i_merlin32i.i_id_stage.exs_link_o[0]
+@22
+tb_core.i_merlin32i.i_id_stage.exs_pc_o[31:0]
+tb_core.i_merlin32i.i_id_stage.exs_alu_op_o[3:0]
+tb_core.i_merlin32i.i_id_stage.exs_operand_left_o[31:0]
+tb_core.i_merlin32i.i_id_stage.exs_operand_right_o[31:0]
+@23
+tb_core.i_merlin32i.i_id_stage.exs_regs1_data_o[31:0]
+@22
+tb_core.i_merlin32i.i_id_stage.exs_regs2_data_o[31:0]
+tb_core.i_merlin32i.i_id_stage.exs_regd_addr_o[4:0]
+@28
+tb_core.i_merlin32i.i_id_stage.exs_funct3_o[2:0]
+tb_core.i_merlin32i.i_id_stage.exs_csr_access_o[0]
+@22
+tb_core.i_merlin32i.i_id_stage.exs_csr_addr_o[11:0]
+tb_core.i_merlin32i.i_id_stage.exs_csr_wr_data_o[31:0]
+@28
+tb_core.i_merlin32i.i_id_stage.exs_regd_wr_i[0]
+@22
+tb_core.i_merlin32i.i_id_stage.exs_regd_addr_i[4:0]
+tb_core.i_merlin32i.i_id_stage.exs_regd_data_i[31:0]
+@1000200
+-id_stage rhs
+@28
+tb_core.i_merlin32i.i_id_stage.i_regfile_integer.wreg_a_wr_i[0]
+@22
+tb_core.i_merlin32i.i_id_stage.i_regfile_integer.wreg_a_addr_i[4:0]
+tb_core.i_merlin32i.i_id_stage.i_regfile_integer.wreg_a_data_i[31:0]
+tb_core.i_merlin32i.i_id_stage.i_decoder.ins_i[31:0]
+@28
+tb_core.i_merlin32i.i_id_stage.i_decoder.ins_err_o[0]
+@24
+tb_core.i_merlin32i.i_id_stage.i_decoder.ins_type[2:0]
+[pattern_trace] 1
+[pattern_trace] 0

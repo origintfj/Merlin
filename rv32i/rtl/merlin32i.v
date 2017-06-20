@@ -49,10 +49,11 @@ module merlin32i
     wire   [C_XLEN-1:0] pfu_ids_pc;
     // instruction decoder stage
     wire                ids_pfu_ack;
-    wire                ids_exs_dav;
+    wire                ids_exs_valid;
     wire                ids_exs_sofr;
     wire                ids_exs_ins_uerr;
     wire                ids_exs_ins_ferr;
+    wire                ids_exs_jump;
     wire                ids_exs_cond;
     wire  [`ZONE_RANGE] ids_exs_zone;
     wire                ids_exs_link;
@@ -72,7 +73,7 @@ module merlin32i
     wire          [4:0] exs_ids_regd_addr;
     wire   [C_XLEN-1:0] exs_ids_regd_data;
     // execution stage
-    wire                exs_ids_ack;
+    wire                exs_ids_stall;
 
     //--------------------------------------------------------------
 
@@ -137,29 +138,30 @@ module merlin32i
             .pfu_ferr_i          (pfu_ids_ferr),  // this instruction fetch resulted in error
             .pfu_pc_i            (pfu_ids_pc),    // address of this instruction
             // ex stage interface
-            .ids_dav_o           (ids_exs_dav),
-            .ids_ack_i           (exs_ids_ack),
-            .ids_sofr_o          (ids_exs_sofr),
-            .ids_ins_uerr_o      (ids_exs_ins_uerr),
-            .ids_ins_ferr_o      (ids_exs_ins_ferr),
-            .ids_cond_o          (ids_exs_cond),
-            .ids_zone_o          (ids_exs_zone),
-            .ids_link_o          (ids_exs_link),
-            .ids_pc_o            (ids_exs_pc),
-            .ids_alu_op_o        (ids_exs_alu_op),
-            .ids_operand_left_o  (ids_exs_operand_left),
-            .ids_operand_right_o (ids_exs_operand_right),
-            .ids_regs1_data_o    (ids_exs_regs1_data),
-            .ids_regs2_data_o    (ids_exs_regs2_data),
-            .ids_regd_addr_o     (ids_exs_regd_addr),
-            .ids_funct3_o        (ids_exs_funct3),
-            .ids_csr_access_o    (ids_exs_csr_access),
-            .ids_csr_addr_o      (ids_exs_csr_addr),
-            .ids_csr_wr_data_o   (ids_exs_csr_wr_data),
+            .exs_valid_o         (ids_exs_valid),
+            .exs_stall_i         (exs_ids_stall),
+            .exs_sofr_o          (ids_exs_sofr),
+            .exs_ins_uerr_o      (ids_exs_ins_uerr),
+            .exs_ins_ferr_o      (ids_exs_ins_ferr),
+            .exs_jump_o          (ids_exs_jump),
+            .exs_cond_o          (ids_exs_cond),
+            .exs_zone_o          (ids_exs_zone),
+            .exs_link_o          (ids_exs_link),
+            .exs_pc_o            (ids_exs_pc),
+            .exs_alu_op_o        (ids_exs_alu_op),
+            .exs_operand_left_o  (ids_exs_operand_left),
+            .exs_operand_right_o (ids_exs_operand_right),
+            .exs_regs1_data_o    (ids_exs_regs1_data),
+            .exs_regs2_data_o    (ids_exs_regs2_data),
+            .exs_regd_addr_o     (ids_exs_regd_addr),
+            .exs_funct3_o        (ids_exs_funct3),
+            .exs_csr_access_o    (ids_exs_csr_access),
+            .exs_csr_addr_o      (ids_exs_csr_addr),
+            .exs_csr_wr_data_o   (ids_exs_csr_wr_data),
                 // write-back interface
-            .ids_regd_wr_i       (exs_ids_regd_wr),
-            .ids_regd_addr_i     (exs_ids_regd_addr),
-            .ids_regd_data_i     (exs_ids_regd_data),
+            .exs_regd_wr_i       (exs_ids_regd_wr),
+            .exs_regd_addr_i     (exs_ids_regd_addr),
+            .exs_regd_data_i     (exs_ids_regd_data),
             // load/store queue interface
             .lsq_reg_wr_i        (1'b0), // TODO
             .lsq_reg_addr_i      (5'b0), // TODO
@@ -178,11 +180,12 @@ module merlin32i
             .clk_en_i            (clk_en_i),
             .resetb_i            (resetb_i),
             // instruction decoder stage interface
-            .ids_dav_i           (ids_exs_dav),
-            .ids_ack_o           (exs_ids_ack),
+            .ids_valid_i         (ids_exs_valid),
+            .ids_stall_o         (exs_ids_stall),
             .ids_sofr_i          (ids_exs_sofr),
             .ids_ins_uerr_i      (ids_exs_ins_uerr),
             .ids_ins_ferr_i      (ids_exs_ins_ferr),
+            .ids_jump_i          (ids_exs_jump),
             .ids_cond_i          (ids_exs_cond),
             .ids_zone_i          (ids_exs_zone),
             .ids_link_i          (ids_exs_link),
@@ -202,9 +205,13 @@ module merlin32i
             .ids_regd_addr_o     (exs_ids_regd_addr),
             .ids_regd_data_o     (exs_ids_regd_data),
             // hart vectoring and exception controller interface TODO
+            .hvec_jump_o         (),
+            .hvec_jump_addr_o    (),
+/*
             .hvec_vec_strobe_o   (), // TODO
             .hvec_vec_o          (), // TODO
             .hvec_pc_o           (), // TODO
+*/
             // load/store queue interface
             .lsq_lq_full_i       (1'b0), // TODO
             .lsq_lq_wr_o         (), // TODO

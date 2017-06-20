@@ -10,9 +10,12 @@ module decoder
         input  wire           [31:0] ins_i,
             // egress side
         output reg                   ins_err_o,
+        output reg                   jump_o,
         output reg     [`ZONE_RANGE] zone_o,
         output wire            [4:0] regd_addr_o,
+        output reg                   regs1_rd_o,
         output wire            [4:0] regs1_addr_o,
+        output reg                   regs2_rd_o,
         output wire            [4:0] regs2_addr_o,
         output reg      [C_XLEN-1:0] imm_o,
         output reg                   link_o,
@@ -66,7 +69,10 @@ module decoder
     always @ (*)
     begin
         ins_err_o             = 1'b0;
+        jump_o                = 1'b0;
         zone_o                = `ZONE_REGFILE;
+        regs1_rd_o            = 1'b0;
+        regs2_rd_o            = 1'b0;
         aluop_o               = `ALUOP_ADD; // NOTE don't actually care
         link_o                = 1'b0;
         sels1_pc_o            = 1'b0;
@@ -90,6 +96,7 @@ module decoder
             end
             7'b1101111 : begin // jal
                 ins_type    = `IMM_TYPE_UJ;
+                jump_o      = 1'b1;
                 aluop_o     = `ALUOP_ADD;
                 link_o      = 1'b1;
                 sels1_pc_o  = 1'b1;
@@ -97,6 +104,8 @@ module decoder
             end
             7'b1100111 : begin // jalr
                 ins_type    = `IMM_TYPE_I;
+                jump_o      = 1'b1;
+                regs1_rd_o  = 1'b1;
                 aluop_o     = `ALUOP_ADD;
                 link_o      = 1'b1;
                 sels2_imm_o = 1'b1;
@@ -106,6 +115,9 @@ module decoder
             end
             7'b1100011 : begin // branch
                 ins_type      = `IMM_TYPE_SB;
+                jump_o        = 1'b1;
+                regs1_rd_o    = 1'b1;
+                regs2_rd_o    = 1'b1;
                 aluop_o       = `ALUOP_ADD;
                 sels1_pc_o    = 1'b1;
                 sels2_imm_o   = 1'b1;
@@ -121,6 +133,7 @@ module decoder
             end
             7'b0000011 : begin // load
                 ins_type    = `IMM_TYPE_I;
+                regs1_rd_o  = 1'b1;
                 zone_o      = `ZONE_LOADQ;
                 aluop_o     = `ALUOP_ADD;
                 sels2_imm_o = 1'b1;
@@ -134,6 +147,8 @@ module decoder
             end
             7'b0100011 : begin // store
                 ins_type    = `IMM_TYPE_S;
+                regs1_rd_o  = 1'b1;
+                regs2_rd_o  = 1'b1;
                 zone_o      = `ZONE_STOREQ;
                 aluop_o     = `ALUOP_ADD;
                 sels2_imm_o = 1'b1;
@@ -145,6 +160,7 @@ module decoder
             end
             7'b0010011 : begin // op-imm
                 ins_type    = `IMM_TYPE_I;
+                regs1_rd_o  = 1'b1;
                 sels2_imm_o = 1'b1;
                 case (funct3)
                     `ALUOP_FUNCT3_ADDSUB : begin
@@ -166,9 +182,11 @@ module decoder
                         aluop_o = `ALUOP_XOR;
                     end
                     `ALUOP_FUNCT3_SRLSRA : begin
-                        aluop_o = `ALUOP_SRL; // NOTE ALU will chose SRA if funct7 != 0
-                        if (funct7 != 7'b0000000 &&
-                            funct7 != 7'b0100000) begin
+                        if (funct7 == 7'b0000000) begin
+                            aluop_o = `ALUOP_SRL;
+                        end else if (funct7 == 7'b0100000) begin
+                            aluop_o = `ALUOP_SRA;
+                        end else begin
                             ins_err_o = 1'b1;
                         end
                     end
@@ -184,7 +202,9 @@ module decoder
                 endcase
             end
             7'b0110011 : begin // op
-                ins_type = `IMM_TYPE_R;
+                ins_type   = `IMM_TYPE_R;
+                regs1_rd_o = 1'b1;
+                regs2_rd_o = 1'b1;
                 case (funct3)
                     `ALUOP_FUNCT3_ADDSUB : begin
                         if (funct7 == 7'b0000000) begin
@@ -253,12 +273,13 @@ module decoder
                 end else if (funct3 == 3'b001 ||
                              funct3 == 3'b010 ||
                              funct3 == 3'b011) begin // CSR access with rs1
+                    regs1_rd_o   = 1'b1;
                     csr_access_o = 1'b1;
                 end else if (funct3 == 3'b101 ||
                              funct3 == 3'b110 ||
                              funct3 == 3'b111) begin // CSR access with zimm
-                    sel_csr_wr_data_imm_o = 1'b1;
                     ins_type              = `IMM_TYPE_I_ZIMM;
+                    sel_csr_wr_data_imm_o = 1'b1;
                     csr_access_o          = 1'b1;
                 end else begin
                     ins_err_o = 1'b1;
