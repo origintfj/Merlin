@@ -13,7 +13,7 @@ module ex_stage
         input  wire                 ids_sofr_i, // TODO
         input  wire                 ids_ins_uerr_i, // TODO
         input  wire                 ids_ins_ferr_i, // TODO
-        input  logic                ids_cond_i, // TODO
+        input  wire                 ids_cond_i, // TODO
         input  wire   [`ZONE_RANGE] ids_zone_i,
         input  wire                 ids_link_i,
         input  wire    [C_XLEN-1:0] ids_pc_i,
@@ -36,7 +36,7 @@ module ex_stage
         output logic   [C_XLEN-1:0] hvec_vec_o,
         output logic   [C_XLEN-1:0] hvec_pc_o,
         // load/store queue interface
-        input  logic                lsq_lq_full_i, // TODO
+        input  wire                 lsq_lq_full_i, // TODO
         output reg                  lsq_lq_wr_o,
         output reg                  lsq_sq_wr_o,
         output wire           [2:0] lsq_funct3_o,
@@ -95,7 +95,7 @@ module ex_stage
             //
             csr_access_q <= ids_csr_access_i;
             link_q       <= ids_link_i;
-            pc_inc_q     <= ids_pc_i + 4; // TODO for compressed instructions this will change
+            pc_inc_q     <= ids_pc_i + 4; // TODO for compressed instructions this may change
             regs2_data_q <= ids_regs2_data_i;
             regd_addr_q  <= ids_regd_addr_i;
             funct3_q     <= ids_funct3_i;

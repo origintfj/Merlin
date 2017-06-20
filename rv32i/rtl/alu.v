@@ -42,16 +42,16 @@ module alu
     //
     always @ (*)
     begin
-        op_result_mux_out = '0; // NOTE: don't actually care
+        op_result_mux_out = { C_XLEN {1'b0} }; // NOTE: don't actually care
         case (op_opcode_i)
             `ALUOP_ADD  : op_result_mux_out = op_left_i + op_right_i;
             `ALUOP_SUB  : op_result_mux_out = op_left_i - op_right_i;
-            `ALUOP_SLL  : op_result_mux_out = '0; // TODO
-            `ALUOP_SLT  : op_result_mux_out = '0; // TODO
-            `ALUOP_SLTU : op_result_mux_out = '0; // TODO
+            `ALUOP_SLL  : op_result_mux_out = { C_XLEN {1'b0} }; // TODO
+            `ALUOP_SLT  : op_result_mux_out = { C_XLEN {1'b0} }; // TODO
+            `ALUOP_SLTU : op_result_mux_out = { C_XLEN {1'b0} }; // TODO
             `ALUOP_XOR  : op_result_mux_out = op_left_i ^ op_right_i;
-            `ALUOP_SRL  : op_result_mux_out = '0; // TODO
-            `ALUOP_SRA  : op_result_mux_out = '0; // TODO
+            `ALUOP_SRL  : op_result_mux_out = { C_XLEN {1'b0} }; // TODO
+            `ALUOP_SRA  : op_result_mux_out = { C_XLEN {1'b0} }; // TODO
             `ALUOP_OR   : op_result_mux_out = op_left_i | op_right_i;
             `ALUOP_AND  : op_result_mux_out = op_left_i & op_right_i;
             `ALUOP_MOV  : op_result_mux_out = op_right_i;

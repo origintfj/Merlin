@@ -49,9 +49,7 @@ module merlin32i
     wire   [C_XLEN-1:0] pfu_ids_pc;
     // instruction decoder stage
     wire                ids_pfu_ack;
-    // execution stage
     wire                ids_exs_dav;
-    wire                exs_ids_ack;
     wire                ids_exs_sofr;
     wire                ids_exs_ins_uerr;
     wire                ids_exs_ins_ferr;
@@ -73,6 +71,8 @@ module merlin32i
     wire                exs_ids_regd_wr;
     wire          [4:0] exs_ids_regd_addr;
     wire   [C_XLEN-1:0] exs_ids_regd_data;
+    // execution stage
+    wire                exs_ids_ack;
 
     //--------------------------------------------------------------
 
