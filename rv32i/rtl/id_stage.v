@@ -15,14 +15,14 @@ module id_stage
         // pfu interface
         input  wire                 pfu_dav_i,   // new fetch available
         output wire                 pfu_ack_o,   // ack this fetch
-        input  wire                 pfu_sofr_i,  // first fetch since vectoring
+        input  wire  [`SOFID_RANGE] pfu_sofid_i, // first fetch since vectoring
         input  wire          [31:0] pfu_ins_i,   // instruction fetched
         input  wire                 pfu_ferr_i,  // this instruction fetch resulted in error
         input  wire          [31:0] pfu_pc_i,    // address of this instruction
         // ex stage interface
         output reg                  exs_valid_o,
         input  wire                 exs_stall_i,
-        output reg                  exs_sofr_o,
+        output reg   [`SOFID_RANGE] exs_sofid_o,
         output reg                  exs_ins_uerr_o,
         output reg                  exs_ins_ferr_o,
         output reg                  exs_jump_o,
@@ -232,7 +232,7 @@ module id_stage
         end else if (clk_en_i) begin
             if (id_stage_en) begin
                 valid_q               <= pfu_ack_o;
-                exs_sofr_o            <= pfu_sofr_i;
+                exs_sofid_o           <= pfu_sofid_i;
                 exs_jump_o            <= jump_d;
                 pc_q                  <= pfu_pc_i;
                 exs_ins_uerr_o        <= ins_uerr_d;

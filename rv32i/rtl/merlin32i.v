@@ -1,3 +1,5 @@
+`include "riscv_defs.v"
+
 module merlin32i
     #(
         parameter C_IRQV_SZ           = 32,
@@ -43,14 +45,14 @@ module merlin32i
 
     // prefetch unit
     wire                pfu_ids_dav;
-    wire                pfu_ids_sofr;
+    wire [`SOFID_RANGE] pfu_ids_sofid;
     wire   [C_XLEN-1:0] pfu_ids_ins;
     wire                pfu_ids_ferr;
     wire   [C_XLEN-1:0] pfu_ids_pc;
     // instruction decoder stage
     wire                ids_pfu_ack;
     wire                ids_exs_valid;
-    wire                ids_exs_sofr;
+    wire [`SOFID_RANGE] ids_exs_sofid;
     wire                ids_exs_ins_uerr;
     wire                ids_exs_ins_ferr;
     wire                ids_exs_jump;
@@ -111,12 +113,12 @@ module merlin32i
             .vic_pc_din_i    (32'b0), // TODO
             .vic_link_addr_o (), // TODO
             // decoder interface
-            .decoder_dav_o   (pfu_ids_dav),  // new fetch available
-            .decoder_ack_i   (ids_pfu_ack),  // ack this fetch
-            .decoder_sofr_o  (pfu_ids_sofr), // first fetch since vectoring
-            .decoder_ins_o   (pfu_ids_ins),  // instruction fetched
-            .decoder_ferr_o  (pfu_ids_ferr), // this instruction fetch resulted in error
-            .decoder_pc_o    (pfu_ids_pc)    // address of this instruction
+            .decoder_dav_o   (pfu_ids_dav),   // new fetch available
+            .decoder_ack_i   (ids_pfu_ack),   // ack this fetch
+            .decoder_sofid_o (pfu_ids_sofid), // first fetch since vectoring
+            .decoder_ins_o   (pfu_ids_ins),   // instruction fetched
+            .decoder_ferr_o  (pfu_ids_ferr),  // this instruction fetch resulted in error
+            .decoder_pc_o    (pfu_ids_pc)     // address of this instruction
         );
 
 
@@ -133,14 +135,14 @@ module merlin32i
             // pfu interface
             .pfu_dav_i           (pfu_ids_dav),   // new fetch available
             .pfu_ack_o           (ids_pfu_ack),   // ack this fetch
-            .pfu_sofr_i          (pfu_ids_sofr),  // first fetch since vectoring
+            .pfu_sofid_i         (pfu_ids_sofid), // first fetch since vectoring
             .pfu_ins_i           (pfu_ids_ins),   // instruction fetched
             .pfu_ferr_i          (pfu_ids_ferr),  // this instruction fetch resulted in error
             .pfu_pc_i            (pfu_ids_pc),    // address of this instruction
             // ex stage interface
             .exs_valid_o         (ids_exs_valid),
             .exs_stall_i         (exs_ids_stall),
-            .exs_sofr_o          (ids_exs_sofr),
+            .exs_sofid_o         (ids_exs_sofid),
             .exs_ins_uerr_o      (ids_exs_ins_uerr),
             .exs_ins_ferr_o      (ids_exs_ins_ferr),
             .exs_jump_o          (ids_exs_jump),
@@ -182,7 +184,7 @@ module merlin32i
             // instruction decoder stage interface
             .ids_valid_i         (ids_exs_valid),
             .ids_stall_o         (exs_ids_stall),
-            .ids_sofr_i          (ids_exs_sofr),
+            .ids_sofid_i         (ids_exs_sofid),
             .ids_ins_uerr_i      (ids_exs_ins_uerr),
             .ids_ins_ferr_i      (ids_exs_ins_ferr),
             .ids_jump_i          (ids_exs_jump),

@@ -1,3 +1,5 @@
+`include "riscv_defs.v"
+
 module ex_stage
     #(
         parameter C_XLEN = 32
@@ -10,7 +12,7 @@ module ex_stage
         // instruction decoder stage interface
         input  wire                 ids_valid_i,
         output wire                 ids_stall_o,
-        input  wire                 ids_sofr_i, // TODO
+        input  wire  [`SOFID_RANGE] ids_sofid_i, // TODO
         input  wire                 ids_ins_uerr_i, // TODO
         input  wire                 ids_ins_ferr_i, // TODO
         input  wire                 ids_jump_i,
@@ -53,32 +55,34 @@ module ex_stage
     //--------------------------------------------------------------
 
     // ex stage qualifier logic
-    wire              ex_commit;
+    wire                ex_commit;
+    reg  [`SOFID_RANGE] sofid_q;
+    reg                 sofid_run;
     // delay stage
-    reg               ids_valid_q;
-    reg               ids_jump_q; // TODO use this signal
-    reg               ids_cond_q;
-    reg               lq_wr_q;
-    reg               sq_wr_q;
-    reg               regd_wr_q;
-    reg               csr_access_q;
-    reg               link_q;
-    reg  [C_XLEN-1:0] pc_inc_q;
-    reg  [C_XLEN-1:0] regs2_data_q;
-    reg         [4:0] regd_addr_q;
-    reg         [2:0] funct3_q;
+    reg                 ids_valid_q;
+    reg                 ids_jump_q;
+    reg                 ids_cond_q;
+    reg                 lq_wr_q;
+    reg                 sq_wr_q;
+    reg                 regd_wr_q;
+    reg                 csr_access_q;
+    reg                 link_q;
+    reg    [C_XLEN-1:0] pc_inc_q;
+    reg    [C_XLEN-1:0] regs2_data_q;
+    reg           [4:0] regd_addr_q;
+    reg           [2:0] funct3_q;
     // ex stage stall controller
-    wire              ex_stage_en;
-    reg               exs_stall;
+    wire                ex_stage_en;
+    reg                 exs_stall;
     // regd data out mux
     // alu pcinc mux
-    reg  [C_XLEN-1:0] alu_pcinc_mux_out;
+    reg    [C_XLEN-1:0] alu_pcinc_mux_out;
     // alu
-    wire [C_XLEN-1:0] alu_data_out;
-    wire              alu_cond_out;
+    wire   [C_XLEN-1:0] alu_data_out;
+    wire                alu_cmp_out;
     // cs registers
-    wire              csr_access;
-    wire [C_XLEN-1:0] csr_data_out;
+    wire                csr_access;
+    wire   [C_XLEN-1:0] csr_data_out;
 
 
     //--------------------------------------------------------------
@@ -98,7 +102,30 @@ module ex_stage
 
     // ex stage qualifier logic
     //
-    assign ex_commit = ex_stage_en & ids_valid_q & (alu_cond_out | ~ids_cond_q);
+    assign ex_commit = ex_stage_en & ids_valid_q & sofid_run & (alu_cmp_out | ~ids_cond_q);
+    //
+    always @ (posedge clk_i or negedge resetb_i)
+    begin
+        if (~resetb_i) begin
+            sofid_q <= `SOFID_RUN;
+        end else if (clk_en_i) begin
+            if (ex_stage_en) begin
+                if (hvec_jump_o) begin
+                    sofid_q <= `SOFID_JUMP;
+                end else if (ids_valid_i && ids_sofid_i == sofid_q) begin
+                    sofid_q <= `SOFID_RUN;
+                end
+            end
+        end
+    end
+    always @ (*)
+    begin
+        if (sofid_q == `SOFID_RUN) begin
+            sofid_run = 1'b1;
+        end else begin
+            sofid_run = 1'b0;
+        end
+    end
 
 
     // delay stage
@@ -194,7 +221,7 @@ module ex_stage
             //
             .cmp_left_i   (ids_regs1_data_i),
             .cmp_right_i  (ids_regs2_data_i),
-            .cmp_result_o (alu_cond_out),
+            .cmp_result_o (alu_cmp_out),
             .cmp_opcode_i (ids_funct3_i)
         );
 

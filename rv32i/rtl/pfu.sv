@@ -8,6 +8,8 @@
 // TODO can a request be dropped if it has not been accepted? At the moment
     // the PFU will drop requests which have not been accepted if vectoring
 
+`include "riscv_defs.v"
+
 module pfu
     #(
         parameter C_BUS_SZX      = 1, // bus width base 2 exponent
@@ -38,7 +40,7 @@ module pfu
         // decoder interface
         output logic                decoder_dav_o,   // new fetch available
         input  logic                decoder_ack_i,   // ack this fetch
-        output logic                decoder_sofr_o,  // first fetch since vectoring
+        output logic [`SOFID_RANGE] decoder_sofid_o, // first fetch since vectoring
         output logic [C_BUS_SZ-1:0] decoder_ins_o,   // instruction fetched
         output logic                decoder_ferr_o,  // this instruction fetch resulted in error
         output logic                decoder_maif_o,  // misaligned instruction fetch error TODO could vector immediatly
@@ -54,9 +56,10 @@ module pfu
     logic                    response_pending_q;
     logic [C_FIFO_DEPTH_X:0] fetch_level_q;
     // pfu fifo
-    parameter C_FIFO_WIDTH   = 3 + 2 * C_BUS_SZ;
+    parameter C_SOFID_SZ     = `SOFID_SZ;
+    parameter C_FIFO_WIDTH   = C_SOFID_SZ + 2 + 2 * C_BUS_SZ;
     //
-    parameter C_SOFR_LSB     = 2 + 2 * C_BUS_SZ;
+    parameter C_SOFID_LSB    = 2 + 2 * C_BUS_SZ;
     parameter C_FERR_LSB     = 1 + 2 * C_BUS_SZ;
     parameter C_MAIF_LSB     =     2 * C_BUS_SZ;
     parameter C_FIFO_PC_LSB  =         C_BUS_SZ;
@@ -72,7 +75,7 @@ module pfu
     // request address capture register
     logic     [C_BUS_SZ-1:0] ireqaddr_q;
     // instruction fetch token generation
-    logic                    sofr_q;
+    logic                    sofid_q;
     logic                    maif_q;
 
     //--------------------------------------------------------------
@@ -124,17 +127,17 @@ module pfu
     //
     assign decoder_dav_o = ~fifo_empty;
     // combine befor fifo ingress
-    assign fifo_din[C_SOFR_LSB]                 = sofr_q;
+    assign fifo_din[C_SOFID_LSB +: C_SOFID_SZ]  = sofid_q;
     assign fifo_din[C_FERR_LSB]                 = irsprerr_i;
     assign fifo_din[C_MAIF_LSB]                 = maif_q;
     assign fifo_din[ C_FIFO_PC_LSB +: C_BUS_SZ] = ireqaddr_q;
     assign fifo_din[C_FIFO_INS_LSB +: C_BUS_SZ] = irspdata_i;
     // seperate after fifo egress
-    assign decoder_sofr_o = fifo_dout[C_SOFR_LSB];
-    assign decoder_ferr_o = fifo_dout[C_FERR_LSB];
-    assign decoder_maif_o = fifo_dout[C_MAIF_LSB];
-    assign decoder_pc_o   = fifo_dout[ C_FIFO_PC_LSB +: C_BUS_SZ];
-    assign decoder_ins_o  = fifo_dout[C_FIFO_INS_LSB +: C_BUS_SZ];
+    assign decoder_sofid_o = fifo_dout[C_SOFID_LSB +: C_SOFID_SZ];
+    assign decoder_ferr_o  = fifo_dout[C_FERR_LSB];
+    assign decoder_maif_o  = fifo_dout[C_MAIF_LSB];
+    assign decoder_pc_o    = fifo_dout[ C_FIFO_PC_LSB +: C_BUS_SZ];
+    assign decoder_ins_o   = fifo_dout[C_FIFO_INS_LSB +: C_BUS_SZ];
     //
     fifo
         #(
@@ -203,15 +206,15 @@ module pfu
     always @ (posedge clk_i or negedge resetb_i)
     begin
         if (~resetb_i) begin
-            sofr_q <= 1'b0;
+            sofid_q <= `SOFID_RUN;
             maif_q <= 1'b0;
         end else if (clk_en_i) begin
             if (vic_pc_wr_i) begin
-                sofr_q <= 1'b1;
-                maif_q <= |(vic_pc_din_i[1:0]);
+                sofid_q <= `SOFID_JUMP;
+                maif_q  <= |(vic_pc_din_i[1:0]);
             end else if (response) begin
-                sofr_q <= 1'b0;
-                maif_q <= 1'b0;
+                sofid_q <= `SOFID_RUN;
+                maif_q  <= 1'b0;
             end
         end
     end

@@ -4,6 +4,12 @@
 //--------------------------------------------------------------
 // pipeline bundles
 //--------------------------------------------------------------
+// frame id
+`define SOFID_SZ        2
+`define SOFID_RANGE     `SOFID_SZ-1:0
+//
+`define SOFID_RUN       2'b00
+`define SOFID_JUMP      2'b01
 // zones
 `define ZONE_SZ         2
 `define ZONE_RANGE      `ZONE_SZ-1:0
