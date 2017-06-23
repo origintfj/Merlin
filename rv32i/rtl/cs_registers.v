@@ -17,7 +17,7 @@ module cs_registers // TODO
         output wire         [1:0] hpl_o
     );
 
-    assign data_o = '0;
+    assign data_o = { C_XLEN {1'b0} };
     assign illegal_access_o = 1'b0;
-    assign hpl_o = '0;
+    assign hpl_o = 2'b0;
 endmodule

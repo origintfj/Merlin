@@ -77,7 +77,7 @@ module merlin32i
     // execution stage
     wire          [1:0] exs_pfu_hpl;
     wire                exs_ids_stall;
-    wire                exs_ids_regd_cncl_load_o;
+    wire                exs_ids_regd_cncl_load;
     wire                exs_ids_regd_wr;
     wire          [4:0] exs_ids_regd_addr;
     wire   [C_XLEN-1:0] exs_ids_regd_data;

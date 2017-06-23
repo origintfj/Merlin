@@ -1,3 +1,5 @@
+`include "riscv_defs.v"
+
 module alu
     #(
         parameter C_XLEN = 32

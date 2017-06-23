@@ -4,7 +4,7 @@ module pfu
     #(
         parameter C_BUS_SZX      = 1, // bus width base 2 exponent
         parameter C_FIFO_DEPTH_X = 2, // depth >= read latency + 2
-        parameter C_RESET_VECTOR = '0,
+        parameter C_RESET_VECTOR = { 2**C_BUS_SZX {1'b0} },
         //
         parameter C_BUS_SZ = 2**C_BUS_SZX
     )

@@ -57,12 +57,12 @@ module fifo
     always @ (posedge clk_i or negedge resetb_i)
     begin
         if (~resetb_i) begin
-            rd_ptr_q <= '0;
-            wr_ptr_q <= '0;
+            rd_ptr_q <= { C_FIFO_DEPTH_X+1 {1'b0} };
+            wr_ptr_q <= { C_FIFO_DEPTH_X+1 {1'b0} };
         end else if (clk_en_i) begin
             if (flush_i) begin
-                rd_ptr_q <= '0;
-                wr_ptr_q <= '0;
+                rd_ptr_q <= { C_FIFO_DEPTH_X+1 {1'b0} };
+                wr_ptr_q <= { C_FIFO_DEPTH_X+1 {1'b0} };
             end else begin
                 if (rd_i) begin
                     rd_ptr_q <= rd_ptr_q + 1;

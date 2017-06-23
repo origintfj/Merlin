@@ -23,8 +23,9 @@ module hvec
     // jump address register
     reg [C_XLEN-1:0] jump_addr_q;
     // jump fsm
-    `define JUMP_STATE_IDLE     1'b0
-    `define JUMP_STATE_WAITING  1'b1
+    parameter JUMP_STATE_IDLE    = 1'b0;
+    parameter JUMP_STATE_WAITING = 1'b1;
+    //
     reg              jump_fsm_c_state;
     reg              jump_fsm_n_state;
     //
@@ -67,7 +68,7 @@ module hvec
         //
         jump_fsm_n_state = jump_fsm_c_state;
         case (jump_fsm_c_state)
-            `JUMP_STATE_IDLE : begin
+            JUMP_STATE_IDLE : begin
                 jump_addr_reg_bypass = 1'b1;
                 if (pfu_pc_ready_i) begin
                     if (exs_jump_i) begin
@@ -76,23 +77,23 @@ module hvec
                 end else begin
                     if (exs_jump_i) begin
                         jump_addr_reg_en = 1'b1;
-                        jump_fsm_n_state = `JUMP_STATE_WAITING;
+                        jump_fsm_n_state = JUMP_STATE_WAITING;
                     end
                 end
             end
-            `JUMP_STATE_WAITING : begin
+            JUMP_STATE_WAITING : begin
                 jump_addr_reg_bypass = 1'b0;
                 if (pfu_pc_ready_i) begin
                     pfu_pc_wr_o      = 1'b1;
-                    jump_fsm_n_state = `JUMP_STATE_IDLE;
+                    jump_fsm_n_state = JUMP_STATE_IDLE;
                 end
             end
         endcase
     end
     always @ (posedge clk_i or negedge resetb_i)
     begin
-        if (resetb_i) begin
-            jump_fsm_c_state <= `JUMP_STATE_IDLE;
+        if (~resetb_i) begin
+            jump_fsm_c_state <= JUMP_STATE_IDLE;
         end else if (clk_en_i) begin
             jump_fsm_c_state <= jump_fsm_n_state;
         end
