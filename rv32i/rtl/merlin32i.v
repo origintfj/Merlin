@@ -43,7 +43,11 @@ module merlin32i
 
     parameter C_XLEN = 32;
 
+    // hart vectoring and exception controller
+    wire                hvec_pfu_pc_wr;
+    wire   [C_XLEN-1:0] hvec_pfu_pc;
     // prefetch unit
+    wire                pfu_hvec_ready;
     wire                pfu_ids_dav;
     wire [`SOFID_RANGE] pfu_ids_sofid;
     wire   [C_XLEN-1:0] pfu_ids_ins;
@@ -70,12 +74,15 @@ module merlin32i
     wire                ids_exs_csr_access;
     wire         [11:0] ids_exs_csr_addr;
     wire   [C_XLEN-1:0] ids_exs_csr_wr_data;
-        // write-back interface
+    // execution stage
+    wire          [1:0] exs_pfu_hpl;
+    wire                exs_ids_stall;
+    wire                exs_ids_regd_cncl_load_o;
     wire                exs_ids_regd_wr;
     wire          [4:0] exs_ids_regd_addr;
     wire   [C_XLEN-1:0] exs_ids_regd_data;
-    // execution stage
-    wire                exs_ids_stall;
+    wire                exs_hvec_jump;
+    wire   [C_XLEN-1:0] exs_hvec_jump_addr;
 
     //--------------------------------------------------------------
 
@@ -83,6 +90,28 @@ module merlin32i
     assign dreqhpl_o   = 2'b0;
     assign dreqaddr_o  = 32'b0;
     assign drspready_o = 1'b0;
+
+
+    // hart vectoring and exception controller
+    //
+    hvec
+        #(
+            .C_XLEN          (C_XLEN)
+        ) i_hvec (
+            // global
+            .clk_i           (clk_i),
+            .clk_en_i        (clk_en_i),
+            .resetb_i        (resetb_i),
+            // external interrupt interface
+            // pfu interface
+            .pfu_pc_ready_i  (pfu_hvec_ready),
+            .pfu_pc_wr_o     (hvec_pfu_pc_wr),
+            .pfu_pc_o        (hvec_pfu_pc),
+            // ex stage interface
+            .exs_jump_i      (exs_hvec_jump),
+            .exs_jump_addr_i (exs_hvec_jump_addr)
+            // lsq interface
+        );
 
 
     // prefetch unit
@@ -106,19 +135,19 @@ module merlin32i
             .irspvalid_i     (irspvalid_i),
             .irsprerr_i      (irsprerr_i),
             .irspdata_i      (irspdata_i),
-            // vectoring and exception controller interface
-            // TODO
-            .vic_pc_ready_o  (), // TODO
-            .vic_pc_wr_i     (1'b0), // TODO
-            .vic_pc_din_i    (32'b0), // TODO
-            .vic_link_addr_o (), // TODO
             // decoder interface
-            .decoder_dav_o   (pfu_ids_dav),   // new fetch available
-            .decoder_ack_i   (ids_pfu_ack),   // ack this fetch
-            .decoder_sofid_o (pfu_ids_sofid), // first fetch since vectoring
-            .decoder_ins_o   (pfu_ids_ins),   // instruction fetched
-            .decoder_ferr_o  (pfu_ids_ferr),  // this instruction fetch resulted in error
-            .decoder_pc_o    (pfu_ids_pc)     // address of this instruction
+            .ids_dav_o       (pfu_ids_dav),   // new fetch available
+            .ids_ack_i       (ids_pfu_ack),   // ack this fetch
+            .ids_sofid_o     (pfu_ids_sofid), // first fetch since vectoring
+            .ids_ins_o       (pfu_ids_ins),   // instruction fetched
+            .ids_ferr_o      (pfu_ids_ferr),  // this instruction fetch resulted in error
+            .ids_pc_o        (pfu_ids_pc),    // address of this instruction
+            // vectoring and exception controller interface
+            .hvec_pc_ready_o (pfu_hvec_ready),
+            .hvec_pc_wr_i    (hvec_pfu_pc_wr),
+            .hvec_pc_din_i   (hvec_pfu_pc),
+            // pfu stage interface
+            .exs_hpl_i       (exs_pfu_hpl)
         );
 
 
@@ -126,48 +155,49 @@ module merlin32i
     //
     id_stage
         #(
-            .C_XLEN              (C_XLEN)
+            .C_XLEN               (C_XLEN)
         ) i_id_stage (
             // global
-            .clk_i               (clk_i),
-            .clk_en_i            (clk_en_i),
-            .resetb_i            (resetb_i),
+            .clk_i                (clk_i),
+            .clk_en_i             (clk_en_i),
+            .resetb_i             (resetb_i),
             // pfu interface
-            .pfu_dav_i           (pfu_ids_dav),   // new fetch available
-            .pfu_ack_o           (ids_pfu_ack),   // ack this fetch
-            .pfu_sofid_i         (pfu_ids_sofid), // first fetch since vectoring
-            .pfu_ins_i           (pfu_ids_ins),   // instruction fetched
-            .pfu_ferr_i          (pfu_ids_ferr),  // this instruction fetch resulted in error
-            .pfu_pc_i            (pfu_ids_pc),    // address of this instruction
+            .pfu_dav_i            (pfu_ids_dav),   // new fetch available
+            .pfu_ack_o            (ids_pfu_ack),   // ack this fetch
+            .pfu_sofid_i          (pfu_ids_sofid), // first fetch since vectoring
+            .pfu_ins_i            (pfu_ids_ins),   // instruction fetched
+            .pfu_ferr_i           (pfu_ids_ferr),  // this instruction fetch resulted in error
+            .pfu_pc_i             (pfu_ids_pc),    // address of this instruction
             // ex stage interface
-            .exs_valid_o         (ids_exs_valid),
-            .exs_stall_i         (exs_ids_stall),
-            .exs_sofid_o         (ids_exs_sofid),
-            .exs_ins_uerr_o      (ids_exs_ins_uerr),
-            .exs_ins_ferr_o      (ids_exs_ins_ferr),
-            .exs_jump_o          (ids_exs_jump),
-            .exs_cond_o          (ids_exs_cond),
-            .exs_zone_o          (ids_exs_zone),
-            .exs_link_o          (ids_exs_link),
-            .exs_pc_o            (ids_exs_pc),
-            .exs_alu_op_o        (ids_exs_alu_op),
-            .exs_operand_left_o  (ids_exs_operand_left),
-            .exs_operand_right_o (ids_exs_operand_right),
-            .exs_regs1_data_o    (ids_exs_regs1_data),
-            .exs_regs2_data_o    (ids_exs_regs2_data),
-            .exs_regd_addr_o     (ids_exs_regd_addr),
-            .exs_funct3_o        (ids_exs_funct3),
-            .exs_csr_access_o    (ids_exs_csr_access),
-            .exs_csr_addr_o      (ids_exs_csr_addr),
-            .exs_csr_wr_data_o   (ids_exs_csr_wr_data),
+            .exs_valid_o          (ids_exs_valid),
+            .exs_stall_i          (exs_ids_stall),
+            .exs_sofid_o          (ids_exs_sofid),
+            .exs_ins_uerr_o       (ids_exs_ins_uerr),
+            .exs_ins_ferr_o       (ids_exs_ins_ferr),
+            .exs_jump_o           (ids_exs_jump),
+            .exs_cond_o           (ids_exs_cond),
+            .exs_zone_o           (ids_exs_zone),
+            .exs_link_o           (ids_exs_link),
+            .exs_pc_o             (ids_exs_pc),
+            .exs_alu_op_o         (ids_exs_alu_op),
+            .exs_operand_left_o   (ids_exs_operand_left),
+            .exs_operand_right_o  (ids_exs_operand_right),
+            .exs_regs1_data_o     (ids_exs_regs1_data),
+            .exs_regs2_data_o     (ids_exs_regs2_data),
+            .exs_regd_addr_o      (ids_exs_regd_addr),
+            .exs_funct3_o         (ids_exs_funct3),
+            .exs_csr_access_o     (ids_exs_csr_access),
+            .exs_csr_addr_o       (ids_exs_csr_addr),
+            .exs_csr_wr_data_o    (ids_exs_csr_wr_data),
                 // write-back interface
-            .exs_regd_wr_i       (exs_ids_regd_wr),
-            .exs_regd_addr_i     (exs_ids_regd_addr),
-            .exs_regd_data_i     (exs_ids_regd_data),
+            .exs_regd_cncl_load_i (exs_ids_regd_cncl_load),
+            .exs_regd_wr_i        (exs_ids_regd_wr),
+            .exs_regd_addr_i      (exs_ids_regd_addr),
+            .exs_regd_data_i      (exs_ids_regd_data),
             // load/store queue interface
-            .lsq_reg_wr_i        (1'b0), // TODO
-            .lsq_reg_addr_i      (5'b0), // TODO
-            .lsq_reg_data_i      (32'b0) // TODO
+            .lsq_reg_wr_i         (1'b0), // TODO
+            .lsq_reg_addr_i       (5'b0), // TODO
+            .lsq_reg_data_i       (32'b0) // TODO
         );
 
 
@@ -175,53 +205,55 @@ module merlin32i
     //
     ex_stage
         #(
-            .C_XLEN              (C_XLEN)
+            .C_XLEN               (C_XLEN)
         ) i_ex_stage (
             // global
-            .clk_i               (clk_i),
-            .clk_en_i            (clk_en_i),
-            .resetb_i            (resetb_i),
+            .clk_i                (clk_i),
+            .clk_en_i             (clk_en_i),
+            .resetb_i             (resetb_i),
+            // pfu stage interface
+            .pfu_hpl_o            (exs_pfu_hpl),
             // instruction decoder stage interface
-            .ids_valid_i         (ids_exs_valid),
-            .ids_stall_o         (exs_ids_stall),
-            .ids_sofid_i         (ids_exs_sofid),
-            .ids_ins_uerr_i      (ids_exs_ins_uerr),
-            .ids_ins_ferr_i      (ids_exs_ins_ferr),
-            .ids_jump_i          (ids_exs_jump),
-            .ids_cond_i          (ids_exs_cond),
-            .ids_zone_i          (ids_exs_zone),
-            .ids_link_i          (ids_exs_link),
-            .ids_pc_i            (ids_exs_pc),
-            .ids_alu_op_i        (ids_exs_alu_op),
-            .ids_operand_left_i  (ids_exs_operand_left),
-            .ids_operand_right_i (ids_exs_operand_right),
-            .ids_regs1_data_i    (ids_exs_regs1_data),
-            .ids_regs2_data_i    (ids_exs_regs2_data),
-            .ids_regd_addr_i     (ids_exs_regd_addr),
-            .ids_funct3_i        (ids_exs_funct3),
-            .ids_csr_access_i    (ids_exs_csr_access),
-            .ids_csr_addr_i      (ids_exs_csr_addr),
-            .ids_csr_wr_data_i   (ids_exs_csr_wr_data),
+            .ids_valid_i          (ids_exs_valid),
+            .ids_stall_o          (exs_ids_stall),
+            .ids_sofid_i          (ids_exs_sofid),
+            .ids_ins_uerr_i       (ids_exs_ins_uerr),
+            .ids_ins_ferr_i       (ids_exs_ins_ferr),
+            .ids_jump_i           (ids_exs_jump),
+            .ids_cond_i           (ids_exs_cond),
+            .ids_zone_i           (ids_exs_zone),
+            .ids_link_i           (ids_exs_link),
+            .ids_pc_i             (ids_exs_pc),
+            .ids_alu_op_i         (ids_exs_alu_op),
+            .ids_operand_left_i   (ids_exs_operand_left),
+            .ids_operand_right_i  (ids_exs_operand_right),
+            .ids_regs1_data_i     (ids_exs_regs1_data),
+            .ids_regs2_data_i     (ids_exs_regs2_data),
+            .ids_regd_addr_i      (ids_exs_regd_addr),
+            .ids_funct3_i         (ids_exs_funct3),
+            .ids_csr_access_i     (ids_exs_csr_access),
+            .ids_csr_addr_i       (ids_exs_csr_addr),
+            .ids_csr_wr_data_i    (ids_exs_csr_wr_data),
                 // write-back interface
-            .ids_regd_wr_o       (exs_ids_regd_wr),
-            .ids_regd_addr_o     (exs_ids_regd_addr),
-            .ids_regd_data_o     (exs_ids_regd_data),
+            .ids_regd_cncl_load_o (exs_ids_regd_cncl_load),
+            .ids_regd_wr_o        (exs_ids_regd_wr),
+            .ids_regd_addr_o      (exs_ids_regd_addr),
+            .ids_regd_data_o      (exs_ids_regd_data),
             // hart vectoring and exception controller interface TODO
-            .hvec_jump_o         (),
-            .hvec_jump_addr_o    (),
-/*
-            .hvec_vec_strobe_o   (), // TODO
-            .hvec_vec_o          (), // TODO
-            .hvec_pc_o           (), // TODO
-*/
+            .hvec_ferr_o          (),
+            .hvec_uerr_o          (),
+            .hvec_maif_o          (),
+            .hvec_ilgl_o          (),
+            .hvec_jump_o          (exs_hvec_jump),
+            .hvec_jump_addr_o     (exs_hvec_jump_addr),
             // load/store queue interface
-            .lsq_lq_full_i       (1'b0), // TODO
-            .lsq_lq_wr_o         (), // TODO
-            .lsq_sq_wr_o         (), // TODO
-            .lsq_funct3_o        (), // TODO
-            .lsq_regd_addr_o     (), // TODO
-            .lsq_regs2_data_o    (), // TODO
-            .lsq_addr_o          () // TODO
+            .lsq_lq_full_i        (1'b1), // TODO
+            .lsq_lq_wr_o          (), // TODO
+            .lsq_sq_wr_o          (), // TODO
+            .lsq_funct3_o         (), // TODO
+            .lsq_regd_addr_o      (), // TODO
+            .lsq_regs2_data_o     (), // TODO
+            .lsq_addr_o           () // TODO
         );
 endmodule
 

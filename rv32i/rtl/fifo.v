@@ -7,27 +7,28 @@ module fifo
     )
     (
         // global
-        input  logic                    clk_i,
-        input  logic                    clk_en_i,
-        input  logic                    resetb_i,
+        input  wire                     clk_i,
+        input  wire                     clk_en_i,
+        input  wire                     resetb_i,
         // control and status
-        input  logic                    flush_i,
-        output logic                    empty_o,
-        output logic                    full_o,
+        input  wire                     flush_i,
+        output reg                      empty_o,
+        output reg                      full_o,
         // write port
-        input  logic                    wr_i,
-        input  logic [C_FIFO_WIDTH-1:0] din_i,
+        input  wire                     wr_i,
+        input  wire  [C_FIFO_WIDTH-1:0] din_i,
         // read port
-        input  logic                    rd_i,
-        output logic [C_FIFO_WIDTH-1:0] dout_o
+        input  wire                     rd_i,
+        output wire  [C_FIFO_WIDTH-1:0] dout_o
     );
 
     //--------------------------------------------------------------
 
-    logic [C_FIFO_WIDTH-1:0] mem[C_FIFO_DEPTH-1:0];
-
-    logic [C_FIFO_DEPTH_X:0] rd_ptr_q;
-    logic [C_FIFO_DEPTH_X:0] wr_ptr_q;
+    // pointers
+    reg [C_FIFO_DEPTH_X:0] rd_ptr_q;
+    reg [C_FIFO_DEPTH_X:0] wr_ptr_q;
+    // memory
+    reg [C_FIFO_WIDTH-1:0] mem[C_FIFO_DEPTH-1:0];
 
     //--------------------------------------------------------------
 

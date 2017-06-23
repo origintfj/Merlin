@@ -65,15 +65,15 @@ module alu
     begin
         if (clk_en_i) begin
             cmp_result_o <= 1'b0;
-            case (op_opcode_i)
+            case (cmp_opcode_i)
                 `ALUCOND_EQ  : begin
-                    if (op_left_i == op_right_i) begin
-                        cmp_result_o = 1'b1;
+                    if (cmp_left_i == cmp_right_i) begin
+                        cmp_result_o <= 1'b1;
                     end
                 end
                 `ALUCOND_NE  : begin
-                    if (op_left_i != op_right_i) begin
-                        cmp_result_o = 1'b1;
+                    if (cmp_left_i != cmp_right_i) begin
+                        cmp_result_o <= 1'b1;
                     end
                 end
                 `ALUCOND_LT  : begin // TODO

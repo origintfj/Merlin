@@ -33,15 +33,15 @@ module decoder
 
     // global
     // instruction type decoder
-    `define IMM_TYPE_UDEF       3'd0 // TODO
-    `define IMM_TYPE_R          3'd0
-    `define IMM_TYPE_I          3'd1
-    `define IMM_TYPE_I_ZIMM     3'd2
-    `define IMM_TYPE_S          3'd3
-    `define IMM_TYPE_SB         3'd4
-    `define IMM_TYPE_U          3'd5
-    `define IMM_TYPE_UJ         3'd6
-    `define IMM_TYPE_MISC_MEM   3'd7
+    parameter C_IMM_TYPE_UDEF     = 3'd0; // TODO
+    parameter C_IMM_TYPE_R        = 3'd0;
+    parameter C_IMM_TYPE_I        = 3'd1;
+    parameter C_IMM_TYPE_I_ZIMM   = 3'd2;
+    parameter C_IMM_TYPE_S        = 3'd3;
+    parameter C_IMM_TYPE_SB       = 3'd4;
+    parameter C_IMM_TYPE_U        = 3'd5;
+    parameter C_IMM_TYPE_UJ       = 3'd6;
+    parameter C_IMM_TYPE_MISC_MEM = 3'd7;
     //
     wire [6:0] opcode;
     wire [2:0] funct3;
@@ -80,22 +80,22 @@ module decoder
         sel_csr_wr_data_imm_o = 1'b0;
         csr_access_o          = 1'b0;
         conditional_o         = 1'b0;
-        ins_type              = `IMM_TYPE_UDEF;
+        ins_type              = C_IMM_TYPE_UDEF;
         //
         case (opcode)
             7'b0110111 : begin // lui
-                ins_type    = `IMM_TYPE_U;
+                ins_type    = C_IMM_TYPE_U;
                 aluop_o     = `ALUOP_MOV;
                 sels2_imm_o = 1'b1;
             end
             7'b0010111 : begin // auipc
-                ins_type    = `IMM_TYPE_U;
+                ins_type    = C_IMM_TYPE_U;
                 aluop_o     = `ALUOP_ADD;
                 sels1_pc_o  = 1'b1;
                 sels2_imm_o = 1'b1;
             end
             7'b1101111 : begin // jal
-                ins_type    = `IMM_TYPE_UJ;
+                ins_type    = C_IMM_TYPE_UJ;
                 jump_o      = 1'b1;
                 aluop_o     = `ALUOP_ADD;
                 link_o      = 1'b1;
@@ -103,7 +103,7 @@ module decoder
                 sels2_imm_o = 1'b1;
             end
             7'b1100111 : begin // jalr
-                ins_type    = `IMM_TYPE_I;
+                ins_type    = C_IMM_TYPE_I;
                 jump_o      = 1'b1;
                 regs1_rd_o  = 1'b1;
                 aluop_o     = `ALUOP_ADD;
@@ -114,7 +114,7 @@ module decoder
                 end
             end
             7'b1100011 : begin // branch
-                ins_type      = `IMM_TYPE_SB;
+                ins_type      = C_IMM_TYPE_SB;
                 jump_o        = 1'b1;
                 regs1_rd_o    = 1'b1;
                 regs2_rd_o    = 1'b1;
@@ -132,7 +132,7 @@ module decoder
                 end
             end
             7'b0000011 : begin // load
-                ins_type    = `IMM_TYPE_I;
+                ins_type    = C_IMM_TYPE_I;
                 regs1_rd_o  = 1'b1;
                 zone_o      = `ZONE_LOADQ;
                 aluop_o     = `ALUOP_ADD;
@@ -146,7 +146,7 @@ module decoder
                 end
             end
             7'b0100011 : begin // store
-                ins_type    = `IMM_TYPE_S;
+                ins_type    = C_IMM_TYPE_S;
                 regs1_rd_o  = 1'b1;
                 regs2_rd_o  = 1'b1;
                 zone_o      = `ZONE_STOREQ;
@@ -159,7 +159,7 @@ module decoder
                 end
             end
             7'b0010011 : begin // op-imm
-                ins_type    = `IMM_TYPE_I;
+                ins_type    = C_IMM_TYPE_I;
                 regs1_rd_o  = 1'b1;
                 sels2_imm_o = 1'b1;
                 case (funct3)
@@ -202,7 +202,7 @@ module decoder
                 endcase
             end
             7'b0110011 : begin // op
-                ins_type   = `IMM_TYPE_R;
+                ins_type   = C_IMM_TYPE_R;
                 regs1_rd_o = 1'b1;
                 regs2_rd_o = 1'b1;
                 case (funct3)
@@ -266,7 +266,7 @@ module decoder
                 endcase
             end
             7'b0001111 : begin // misc-mem TODO
-                ins_type = `IMM_TYPE_MISC_MEM;
+                ins_type = C_IMM_TYPE_MISC_MEM;
             end
             7'b1110011 : begin // system
                 if (funct3 == 3'b000) begin // TODO ECALL/EBREAK
@@ -278,7 +278,7 @@ module decoder
                 end else if (funct3 == 3'b101 ||
                              funct3 == 3'b110 ||
                              funct3 == 3'b111) begin // CSR access with zimm
-                    ins_type              = `IMM_TYPE_I_ZIMM;
+                    ins_type              = C_IMM_TYPE_I_ZIMM;
                     sel_csr_wr_data_imm_o = 1'b1;
                     csr_access_o          = 1'b1;
                 end else begin
@@ -303,12 +303,12 @@ module decoder
         end
         //
         case (ins_type)
-            `IMM_TYPE_I      : imm_o = { sign_imm[C_XLEN-1:11], ins_i[30:20] };
-            `IMM_TYPE_I_ZIMM : imm_o = {   { C_XLEN-5 {1'b0} }, ins_i[19:15] };
-            `IMM_TYPE_S      : imm_o = { sign_imm[C_XLEN-1:11], ins_i[30:25], ins_i[11:7] };
-            `IMM_TYPE_SB     : imm_o = { sign_imm[C_XLEN-1:12], ins_i[7], ins_i[30:25], ins_i[11:6] };
-            `IMM_TYPE_U      : imm_o = { sign_imm[C_XLEN-1:31], ins_i[30:12], 12'b0 };
-            `IMM_TYPE_UJ     : imm_o = { sign_imm[C_XLEN-1:20], ins_i[19:12], ins_i[20], ins_i[30:21], 1'b0 };
+            C_IMM_TYPE_I      : imm_o = { sign_imm[C_XLEN-1:11], ins_i[30:20] };
+            C_IMM_TYPE_I_ZIMM : imm_o = {   { C_XLEN-5 {1'b0} }, ins_i[19:15] };
+            C_IMM_TYPE_S      : imm_o = { sign_imm[C_XLEN-1:11], ins_i[30:25], ins_i[11:7] };
+            C_IMM_TYPE_SB     : imm_o = { sign_imm[C_XLEN-1:12], ins_i[7],     ins_i[30:25], ins_i[11:8],  1'b0 };
+            C_IMM_TYPE_U      : imm_o = { sign_imm[C_XLEN-1:31], ins_i[30:12], 12'b0 };
+            C_IMM_TYPE_UJ     : imm_o = { sign_imm[C_XLEN-1:20], ins_i[19:12], ins_i[20],    ins_i[30:21], 1'b0 };
             default          : imm_o = { C_XLEN {1'b0} }; // NOTE don't care
         endcase
     end

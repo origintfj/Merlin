@@ -1,6 +1,3 @@
-// TODO - ability to mark a register as clean if a load is subsiquently
-//        canceled in the exs
-
 `include "riscv_defs.v"
 
 module id_stage
@@ -41,6 +38,7 @@ module id_stage
         output reg           [11:0] exs_csr_addr_o,
         output reg     [C_XLEN-1:0] exs_csr_wr_data_o,
             // write-back interface
+        input  wire                 exs_regd_cncl_load_i,
         input  wire                 exs_regd_wr_i,
         input  wire           [4:0] exs_regd_addr_i,
         input  wire    [C_XLEN-1:0] exs_regd_data_i,
@@ -171,7 +169,7 @@ module id_stage
         if (~resetb_i) begin
             reg_loading_vector_q <= 31'b0;
         end else if (clk_en_i) begin
-            if (lsq_reg_wr_i && lsq_reg_addr_i != 0) begin
+            if ((exs_regd_cncl_load_i | lsq_reg_wr_i) && lsq_reg_addr_i != 0) begin
                 reg_loading_vector_q[lsq_reg_addr_i] <= 1'b0;
             end else if (pfu_ack_o && zone_d == `ZONE_LOADQ) begin
                 reg_loading_vector_q[regd_addr_d] <= 1'b1;
