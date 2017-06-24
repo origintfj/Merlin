@@ -1,3 +1,6 @@
+// TODO csr writes neet to happen at the execute/commit boundary so
+// exceptions don't result in half done csr instructions (i.e. csr writes
+// without the read)
 // TODO can branches also cause miss-aligned instruction fetch exceptions?
 //
 
@@ -44,11 +47,12 @@ module ex_stage
         output wire                 hvec_ferr_o,
         output wire                 hvec_uerr_o,
         output wire                 hvec_maif_o,
+        output wire                 hvec_ldx0_o,
         output wire                 hvec_ilgl_o,
         output wire                 hvec_jump_o,
         output wire    [C_XLEN-1:0] hvec_jump_addr_o,
         // load/store queue interface
-        input  wire                 lsq_lq_full_i,
+        input  wire                 lsq_full_i,
         output reg                  lsq_lq_wr_o,
         output reg                  lsq_sq_wr_o,
         output wire           [2:0] lsq_funct3_o,
@@ -59,8 +63,9 @@ module ex_stage
 
     //--------------------------------------------------------------
 
-    // miss-aligned instruction fetch
-    reg                 ex_maif;
+    // instruction specific exceptions
+    wire                ex_maif;
+    reg                 ex_load_x0;
     // ex stage qualifier logic
     wire                ex_valid;
     wire                ex_commit;
@@ -96,7 +101,6 @@ module ex_stage
     wire   [C_XLEN-1:0] csr_data_out;
     wire                csr_illegal_access;
 
-
     //--------------------------------------------------------------
 
     // interface assignments
@@ -108,6 +112,7 @@ module ex_stage
     assign hvec_ferr_o      = ex_stage_en & ex_commit & ids_ins_ferr_q;
     assign hvec_uerr_o      = ex_stage_en & ex_commit & ids_ins_uerr_q;
     assign hvec_maif_o      = ex_stage_en & ex_commit & ids_jump_q & ex_maif; // TODO
+    assign hvec_ldx0_o      = ex_stage_en & ex_commit & ex_load_x0;
     assign hvec_ilgl_o      = ex_stage_en & ex_commit & csr_illegal_access;
     assign hvec_jump_o      = ex_stage_en & ex_commit & ids_jump_q;
     assign hvec_jump_addr_o = alu_data_out;
@@ -120,9 +125,16 @@ module ex_stage
     assign lsq_addr_o       = alu_data_out;
 
 
-    // miss-aligned instruction fetch
+    // instruction specific exceptions
     //
     assign ex_maif = |(alu_data_out[1:0]); // TODO this will change for compressed instructions
+    //
+    always @ (*) begin
+        ex_load_x0 = 1'b0;
+        if (lq_wr_q && regd_addr_q == 5'b0) begin
+            ex_load_x0 = 1'b1;
+        end
+    end
 
 
     // ex stage qualifier logic
@@ -197,7 +209,7 @@ module ex_stage
     begin
         exs_stall = 1'b0;
         if (ex_commit) begin
-            if (lsq_lq_full_i & (lq_wr_q | sq_wr_q)) begin
+            if (lsq_full_i & (lq_wr_q | sq_wr_q)) begin
                 exs_stall = 1'b1;
             end
         end

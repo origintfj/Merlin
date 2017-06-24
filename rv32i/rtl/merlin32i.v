@@ -243,11 +243,12 @@ module merlin32i
             .hvec_ferr_o          (),
             .hvec_uerr_o          (),
             .hvec_maif_o          (),
+            .hvec_ldx0_o          (),
             .hvec_ilgl_o          (),
             .hvec_jump_o          (exs_hvec_jump),
             .hvec_jump_addr_o     (exs_hvec_jump_addr),
             // load/store queue interface
-            .lsq_lq_full_i        (1'b1), // TODO
+            .lsq_full_i           (1'b1), // TODO
             .lsq_lq_wr_o          (), // TODO
             .lsq_sq_wr_o          (), // TODO
             .lsq_funct3_o         (), // TODO
