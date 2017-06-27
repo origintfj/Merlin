@@ -34,9 +34,16 @@ module merlin32i
         input  wire                  drspvalid_i, // TODO
         input  wire                  drsprerr_i, // TODO
         input  wire                  drspwerr_i, // TODO
-        input  wire           [31:0] drspdata_i // TODO
+        input  wire           [31:0] drspdata_i, // TODO
         // debug interface
         // TODO - debug interface
+        input  wire                 lsq_exs_full,
+        output wire                 exs_lsq_lq_wr,
+        output wire                 exs_lsq_sq_wr,
+        output wire           [2:0] exs_lsq_funct3,
+        output wire           [4:0] exs_lsq_regd_addr,
+        output wire    [C_XLEN-1:0] exs_lsq_regs2_data,
+        output wire    [C_XLEN-1:0] exs_lsq_addr
     );
 
     //--------------------------------------------------------------
@@ -71,7 +78,8 @@ module merlin32i
     wire   [C_XLEN-1:0] ids_exs_regs2_data;
     wire          [4:0] ids_exs_regd_addr;
     wire          [2:0] ids_exs_funct3;
-    wire                ids_exs_csr_access;
+    wire                ids_exs_csr_rd;
+    wire                ids_exs_csr_wr;
     wire         [11:0] ids_exs_csr_addr;
     wire   [C_XLEN-1:0] ids_exs_csr_wr_data;
     // execution stage
@@ -186,7 +194,8 @@ module merlin32i
             .exs_regs2_data_o     (ids_exs_regs2_data),
             .exs_regd_addr_o      (ids_exs_regd_addr),
             .exs_funct3_o         (ids_exs_funct3),
-            .exs_csr_access_o     (ids_exs_csr_access),
+            .exs_csr_rd_o         (ids_exs_csr_rd),
+            .exs_csr_wr_o         (ids_exs_csr_wr),
             .exs_csr_addr_o       (ids_exs_csr_addr),
             .exs_csr_wr_data_o    (ids_exs_csr_wr_data),
                 // write-back interface
@@ -231,7 +240,8 @@ module merlin32i
             .ids_regs2_data_i     (ids_exs_regs2_data),
             .ids_regd_addr_i      (ids_exs_regd_addr),
             .ids_funct3_i         (ids_exs_funct3),
-            .ids_csr_access_i     (ids_exs_csr_access),
+            .ids_csr_rd_i         (ids_exs_csr_rd),
+            .ids_csr_wr_i         (ids_exs_csr_wr),
             .ids_csr_addr_i       (ids_exs_csr_addr),
             .ids_csr_wr_data_i    (ids_exs_csr_wr_data),
                 // write-back interface
@@ -248,13 +258,13 @@ module merlin32i
             .hvec_jump_o          (exs_hvec_jump),
             .hvec_jump_addr_o     (exs_hvec_jump_addr),
             // load/store queue interface
-            .lsq_full_i           (1'b1), // TODO
-            .lsq_lq_wr_o          (), // TODO
-            .lsq_sq_wr_o          (), // TODO
-            .lsq_funct3_o         (), // TODO
-            .lsq_regd_addr_o      (), // TODO
-            .lsq_regs2_data_o     (), // TODO
-            .lsq_addr_o           () // TODO
+            .lsq_full_i           (lsq_exs_full), // TODO
+            .lsq_lq_wr_o          (exs_lsq_lq_wr), // TODO
+            .lsq_sq_wr_o          (exs_lsq_sq_wr), // TODO
+            .lsq_funct3_o         (exs_lsq_funct3), // TODO
+            .lsq_regd_addr_o      (exs_lsq_regd_addr), // TODO
+            .lsq_regs2_data_o     (exs_lsq_regs2_data), // TODO
+            .lsq_addr_o           (exs_lsq_addr) // TODO
         );
 endmodule
 

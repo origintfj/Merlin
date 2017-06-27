@@ -57,6 +57,8 @@ module alu
             `ALUOP_OR   : op_result_mux_out = op_left_i | op_right_i;
             `ALUOP_AND  : op_result_mux_out = op_left_i & op_right_i;
             `ALUOP_MOV  : op_result_mux_out = op_right_i;
+            default : begin
+            end
         endcase
     end
 
@@ -85,6 +87,8 @@ module alu
                 `ALUCOND_LTU : begin // TODO
                 end
                 `ALUCOND_GEU : begin // TODO
+                end
+                default : begin
                 end
             endcase
         end

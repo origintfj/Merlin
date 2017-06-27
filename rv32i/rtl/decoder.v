@@ -24,7 +24,8 @@ module decoder
         output reg                   sels2_imm_o,
         output reg    [`ALUOP_RANGE] aluop_o,
         output wire            [2:0] funct3_o,
-        output reg                   csr_access_o,
+        output reg                   csr_rd_o,
+        output reg                   csr_wr_o,
         output wire           [11:0] csr_addr_o,
         output reg                   conditional_o
     );
@@ -46,6 +47,8 @@ module decoder
     wire [6:0] opcode;
     wire [2:0] funct3;
     wire [6:0] funct7;
+    wire [4:0] regd_addr;
+    wire [4:0] regs1_addr;
     reg  [2:0] ins_type;
     // field extraction
     reg [C_XLEN-1:0] sign_imm;
@@ -53,8 +56,8 @@ module decoder
     //--------------------------------------------------------------
 
     // global
-    assign regd_addr_o  = ins_i[11: 7];
-    assign regs1_addr_o = ins_i[19:15];
+    assign regd_addr_o  = regd_addr;
+    assign regs1_addr_o = regs1_addr;
     assign regs2_addr_o = ins_i[24:20];
     assign funct3_o     = funct3;
     assign csr_addr_o   = ins_i[31:20];
@@ -62,9 +65,11 @@ module decoder
 
     // instruction type decode
     //
-    assign opcode = ins_i[6: 0];
-    assign funct3 = ins_i[14:12];
-    assign funct7 = ins_i[31:25];
+    assign opcode     = ins_i[ 6: 0];
+    assign funct3     = ins_i[14:12];
+    assign funct7     = ins_i[31:25];
+    assign regd_addr  = ins_i[11: 7];
+    assign regs1_addr = ins_i[19:15];
     //
     always @ (*)
     begin
@@ -78,7 +83,8 @@ module decoder
         sels1_pc_o            = 1'b0;
         sels2_imm_o           = 1'b0;
         sel_csr_wr_data_imm_o = 1'b0;
-        csr_access_o          = 1'b0;
+        csr_rd_o              = 1'b0;
+        csr_wr_o              = 1'b0;
         conditional_o         = 1'b0;
         ins_type              = C_IMM_TYPE_UDEF;
         //
@@ -274,13 +280,23 @@ module decoder
                              funct3 == 3'b010 ||
                              funct3 == 3'b011) begin // CSR access with rs1
                     regs1_rd_o   = 1'b1;
-                    csr_access_o = 1'b1;
+                    if (regd_addr != 5'b0) begin
+                        csr_rd_o = 1'b1;
+                    end
+                    if (regs1_addr != 5'b0) begin
+                        csr_wr_o = 1'b1;
+                    end
                 end else if (funct3 == 3'b101 ||
                              funct3 == 3'b110 ||
                              funct3 == 3'b111) begin // CSR access with zimm
                     ins_type              = C_IMM_TYPE_I_ZIMM;
                     sel_csr_wr_data_imm_o = 1'b1;
-                    csr_access_o          = 1'b1;
+                    if (regd_addr != 5'b0) begin
+                        csr_rd_o = 1'b1;
+                    end
+                    if (regs1_addr != 5'b0) begin
+                        csr_wr_o = 1'b1;
+                    end
                 end else begin
                     ins_err_o = 1'b1;
                 end
@@ -309,7 +325,7 @@ module decoder
             C_IMM_TYPE_SB     : imm_o = { sign_imm[C_XLEN-1:12], ins_i[7],     ins_i[30:25], ins_i[11:8],  1'b0 };
             C_IMM_TYPE_U      : imm_o = { sign_imm[C_XLEN-1:31], ins_i[30:12], 12'b0 };
             C_IMM_TYPE_UJ     : imm_o = { sign_imm[C_XLEN-1:20], ins_i[19:12], ins_i[20],    ins_i[30:21], 1'b0 };
-            default          : imm_o = { C_XLEN {1'b0} }; // NOTE don't care
+            default           : imm_o = { C_XLEN {1'b0} }; // NOTE don't care
         endcase
     end
 endmodule

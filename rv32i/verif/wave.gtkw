@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.75 (w)1999-2016 BSI
-[*] Fri Jun 23 07:09:05 2017
+[*] Tue Jun 27 05:00:24 2017
 [*]
-[dumpfile] "C:\Users\Tom\riscv\rv32i - Copy\verif\wave.lxt"
-[dumpfile_mtime] "Fri Jun 23 07:00:35 2017"
-[dumpfile_size] 7076
-[savefile] "C:\Users\Tom\riscv\rv32i - Copy\verif\wave.gtkw"
+[dumpfile] "C:\Users\Tom\riscv\rv32i\verif\wave.lxt"
+[dumpfile_mtime] "Tue Jun 27 04:55:59 2017"
+[dumpfile_size] 7750
+[savefile] "C:\Users\Tom\riscv\rv32i\verif\wave.gtkw"
 [timestart] 0
 [size] 2048 1089
 [pos] -1 -1
-*-8.000000 250 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-12.000000 3800 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_core.
 [treeopen] tb_core.i_merlin32i.
 [treeopen] tb_core.i_merlin32i.i_ex_stage.
@@ -36,13 +36,22 @@ tb_core.i_merlin32i.i_pfu.irsprerr_i[0]
 tb_core.i_merlin32i.i_pfu.irspdata_i[31:0]
 @28
 tb_core.i_merlin32i.i_pfu.hvec_pc_ready_o[0]
+tb_core.i_merlin32i.i_pfu.sofid_q[1:0]
 tb_core.i_merlin32i.i_pfu.hvec_pc_wr_i[0]
 @22
 tb_core.i_merlin32i.i_pfu.hvec_pc_din_i[31:0]
 @28
 tb_core.i_merlin32i.i_pfu.fifo_level_q[2:0]
+tb_core.i_merlin32i.i_pfu.ids_sofid_o[1:0]
+@22
+tb_core.i_merlin32i.i_pfu.ids_pc_o[31:0]
+tb_core.i_merlin32i.i_pfu.ids_ins_o[31:0]
 @1000200
 -pfu
+@28
+tb_core.i_merlin32i.i_id_stage.i_decoder.jump_o[0]
+@22
+tb_core.i_merlin32i.i_id_stage.i_decoder.imm_o[31:0]
 @800200
 -id_stage rhs
 @28
@@ -65,9 +74,11 @@ tb_core.i_merlin32i.i_id_stage.exs_regs2_data_o[31:0]
 tb_core.i_merlin32i.i_id_stage.exs_regd_addr_o[4:0]
 @28
 tb_core.i_merlin32i.i_id_stage.exs_funct3_o[2:0]
-tb_core.i_merlin32i.i_id_stage.exs_csr_access_o[0]
+tb_core.i_merlin32i.i_id_stage.exs_csr_rd_o[0]
+tb_core.i_merlin32i.i_id_stage.exs_csr_wr_o[0]
 @22
 tb_core.i_merlin32i.i_id_stage.exs_csr_addr_o[11:0]
+@23
 tb_core.i_merlin32i.i_id_stage.exs_csr_wr_data_o[31:0]
 @28
 tb_core.i_merlin32i.i_id_stage.exs_regd_cncl_load_i[0]
@@ -77,20 +88,37 @@ tb_core.i_merlin32i.i_id_stage.exs_regd_addr_i[4:0]
 tb_core.i_merlin32i.i_id_stage.exs_regd_data_i[31:0]
 @1000200
 -id_stage rhs
+@28
+tb_core.i_merlin32i.i_ex_stage.i_alu.cmp_opcode_i[2:0]
+@22
+tb_core.i_merlin32i.i_ex_stage.i_alu.cmp_left_i[31:0]
+tb_core.i_merlin32i.i_ex_stage.i_alu.cmp_right_i[31:0]
+@28
+tb_core.i_merlin32i.i_ex_stage.i_alu.cmp_result_o[0]
 @800200
 -ex stage rhs
-@29
-tb_core.i_merlin32i.i_ex_stage.alu_cmp_out[0]
 @28
-tb_core.i_merlin32i.i_ex_stage.ids_jump_q[0]
-tb_core.i_merlin32i.i_ex_stage.sofid_run[0]
-tb_core.i_merlin32i.i_ex_stage.ex_valid[0]
-tb_core.i_merlin32i.i_ex_stage.ex_stage_en[0]
-tb_core.i_merlin32i.i_ex_stage.ex_commit[0]
+tb_core.i_merlin32i.i_ex_stage.execute_commit[0]
+tb_core.i_merlin32i.i_ex_stage.commit_gating_exception[0]
+tb_core.i_merlin32i.i_ex_stage.excp_csr_illegal_access[0]
 tb_core.i_merlin32i.i_ex_stage.hvec_jump_o[0]
 @22
 tb_core.i_merlin32i.i_ex_stage.hvec_jump_addr_o[31:0]
 @28
+tb_core.i_merlin32i.i_ex_stage.hvec_ferr_o[0]
+tb_core.i_merlin32i.i_ex_stage.hvec_uerr_o[0]
+tb_core.i_merlin32i.i_ex_stage.hvec_ilgl_o[0]
+tb_core.i_merlin32i.i_ex_stage.hvec_maif_o[0]
+@22
+tb_core.i_merlin32i.i_ex_stage.i_alu.op_left_i[31:0]
+tb_core.i_merlin32i.i_ex_stage.i_alu.op_right_i[31:0]
+tb_core.i_merlin32i.i_ex_stage.alu_data_out[31:0]
+@28
+tb_core.i_merlin32i.i_ex_stage.alu_cmp_out[0]
+tb_core.i_merlin32i.i_ex_stage.ids_jump_q[0]
+tb_core.i_merlin32i.i_ex_stage.sofid_run[0]
+tb_core.i_merlin32i.i_ex_stage.ex_valid[0]
+tb_core.i_merlin32i.i_ex_stage.ex_stage_en[0]
 tb_core.i_merlin32i.i_ex_stage.ex_valid[0]
 tb_core.i_merlin32i.i_ex_stage.lq_wr_q[0]
 tb_core.i_merlin32i.i_ex_stage.sq_wr_q[0]

@@ -17,7 +17,7 @@ module id_stage
         input  wire                 pfu_ferr_i,  // this instruction fetch resulted in error
         input  wire          [31:0] pfu_pc_i,    // address of this instruction
         // ex stage interface
-        output reg                  exs_valid_o,
+        output wire                 exs_valid_o,
         input  wire                 exs_stall_i,
         output reg   [`SOFID_RANGE] exs_sofid_o,
         output reg                  exs_ins_uerr_o,
@@ -34,7 +34,8 @@ module id_stage
         output wire    [C_XLEN-1:0] exs_regs2_data_o,
         output reg            [4:0] exs_regd_addr_o,
         output reg            [2:0] exs_funct3_o,
-        output reg                  exs_csr_access_o,
+        output reg                  exs_csr_rd_o,
+        output reg                  exs_csr_wr_o,
         output reg           [11:0] exs_csr_addr_o,
         output reg     [C_XLEN-1:0] exs_csr_wr_data_o,
             // write-back interface
@@ -67,7 +68,8 @@ module id_stage
     wire                sels2_imm_d;
     wire [`ALUOP_RANGE] alu_op_d;
     wire          [2:0] funct3_d;
-    wire                csr_access_d;
+    wire                csr_rd_d;
+    wire                csr_wr_d;
     wire         [11:0] csr_addr_d;
     wire                conditional_d;
     // id stage stall controller
@@ -137,7 +139,8 @@ module id_stage
             .sels2_imm_o           (sels2_imm_d),
             .aluop_o               (alu_op_d),
             .funct3_o              (funct3_d),
-            .csr_access_o          (csr_access_d),
+            .csr_rd_o              (csr_rd_d),
+            .csr_wr_o              (csr_wr_d),
             .csr_addr_o            (csr_addr_d),
             .conditional_o         (conditional_d)
         );
@@ -157,9 +160,9 @@ module id_stage
         ids_stall = 1'b0;
         //
         if (pfu_dav_i) begin
-            if ( (regs1_rd && reg_loading_vector_q[regs1_addr] ) ||
-                 (regs2_rd && reg_loading_vector_q[regs2_addr] ) ||
-                 (zone_d == `ZONE_REGFILE && reg_loading_vector_q[regd_addr_d] ) ) begin
+            if ( ( regs1_addr != 5'b0 && regs1_rd && reg_loading_vector_q[regs1_addr]) ||
+                 ( regs2_addr != 5'b0 && regs2_rd && reg_loading_vector_q[regs2_addr]) ||
+                 (regd_addr_d != 5'b0 && zone_d == `ZONE_REGFILE && reg_loading_vector_q[regd_addr_d]) ) begin
                 ids_stall = 1'b1;
             end
         end
@@ -169,9 +172,9 @@ module id_stage
         if (~resetb_i) begin
             reg_loading_vector_q <= 31'b0;
         end else if (clk_en_i) begin
-            if ((exs_regd_cncl_load_i | lsq_reg_wr_i) && lsq_reg_addr_i != 0) begin
+            if (lsq_reg_addr_i != 5'b0 && (exs_regd_cncl_load_i | lsq_reg_wr_i)) begin
                 reg_loading_vector_q[lsq_reg_addr_i] <= 1'b0;
-            end else if (pfu_ack_o && zone_d == `ZONE_LOADQ) begin
+            end else if (regd_addr_d != 5'b0 && pfu_ack_o && zone_d == `ZONE_LOADQ) begin
                 reg_loading_vector_q[regd_addr_d] <= 1'b1;
             end
         end
@@ -244,7 +247,8 @@ module id_stage
                 sels2_imm_q           <= sels2_imm_d;
                 exs_alu_op_o          <= alu_op_d;
                 exs_funct3_o          <= funct3_d;
-                exs_csr_access_o      <= csr_access_d;
+                exs_csr_rd_o          <= csr_rd_d;
+                exs_csr_wr_o          <= csr_wr_d;
                 exs_csr_addr_o        <= csr_addr_d;
                 exs_cond_o            <= conditional_d;
                 // register addr delay register
