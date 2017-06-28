@@ -3,11 +3,7 @@
 module merlin32i
     #(
         parameter C_IRQV_SZ           = 32,
-        parameter C_RESET_VECTOR      = 32'h0,
-        parameter C_VENDOR_ID         = 32'h0,
-        parameter C_ARCHITECTURE_ID   = 32'h0,
-        parameter C_IMPLEMENTATION_ID = 32'h0,
-        parameter C_HART_ID           = 32'h0
+        parameter C_RESET_VECTOR      = 32'h0
     )
     (
         // global
@@ -48,7 +44,8 @@ module merlin32i
 
     //--------------------------------------------------------------
 
-    parameter C_XLEN = 32;
+    parameter C_XLEN_X = 5;
+    parameter C_XLEN   = 2**C_XLEN_X;
 
     // hart vectoring and exception controller
     wire                hvec_pfu_pc_wr;
@@ -214,7 +211,7 @@ module merlin32i
     //
     ex_stage
         #(
-            .C_XLEN               (C_XLEN)
+            .C_XLEN_X             (C_XLEN_X)
         ) i_ex_stage (
             // global
             .clk_i                (clk_i),
@@ -253,7 +250,8 @@ module merlin32i
             .hvec_ferr_o          (),
             .hvec_uerr_o          (),
             .hvec_maif_o          (),
-            .hvec_ldx0_o          (),
+            .hvec_mala_o          (),
+            .hvec_masa_o          (),
             .hvec_ilgl_o          (),
             .hvec_jump_o          (exs_hvec_jump),
             .hvec_jump_addr_o     (exs_hvec_jump_addr),

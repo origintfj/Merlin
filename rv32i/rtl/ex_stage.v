@@ -6,7 +6,9 @@
 
 module ex_stage
     #(
-        parameter C_XLEN = 32
+        parameter C_XLEN_X = 5,
+        // derived parameters
+        parameter C_XLEN   = 2**C_XLEN_X
     )
     (
         // global
@@ -43,11 +45,12 @@ module ex_stage
         output wire           [4:0] ids_regd_addr_o,
         output reg     [C_XLEN-1:0] ids_regd_data_o,
         // hart vectoring and exception controller interface TODO
-        output wire                 hvec_ferr_o,
-        output wire                 hvec_uerr_o,
-        output wire                 hvec_maif_o,
-        output wire                 hvec_ldx0_o,
-        output wire                 hvec_ilgl_o,
+        output wire                 hvec_ferr_o, // instruction fetch error
+        output wire                 hvec_uerr_o, // undefined instruction
+        output wire                 hvec_maif_o, // missaligned instruction fetch
+        output wire                 hvec_mala_o, // missaligned load address
+        output wire                 hvec_masa_o, // missaligned store address
+        output wire                 hvec_ilgl_o, // illegal instruction
         output wire                 hvec_jump_o,
         output wire    [C_XLEN-1:0] hvec_jump_addr_o,
         // load/store queue interface
@@ -70,7 +73,8 @@ module ex_stage
     wire                excp_ferr;
     wire                excp_uerr;
     wire                excp_maif;
-    reg                 excp_load_x0;
+    reg                 excp_mala;
+    reg                 excp_masa;
     wire                excp_csr_illegal_access;
     // ex stage qualifier logic
     wire                ex_valid;
@@ -118,7 +122,8 @@ module ex_stage
     assign hvec_ferr_o      = ex_stage_en & excp_ferr;
     assign hvec_uerr_o      = ex_stage_en & excp_uerr;
     assign hvec_maif_o      = ex_stage_en & excp_maif;
-    assign hvec_ldx0_o      = ex_stage_en & excp_load_x0;
+    assign hvec_mala_o      = ex_stage_en & excp_mala;
+    assign hvec_masa_o      = ex_stage_en & excp_masa;
     assign hvec_ilgl_o      = ex_stage_en & excp_csr_illegal_access;
         //
     assign hvec_jump_addr_o = alu_data_out;
@@ -147,16 +152,26 @@ module ex_stage
     assign commit_gating_exception = excp_ferr |
                                      excp_uerr |
                                      excp_maif |
+                                     excp_mala |
+                                     excp_masa |
                                      excp_csr_illegal_access;
     //
     assign excp_ferr = ex_valid & ids_ins_ferr_q;
     assign excp_uerr = ex_valid & ids_ins_uerr_q;
     assign excp_maif = ex_valid & ids_jump_q & (|(alu_data_out[1:0])); // TODO this will change for compressed instructions
     //
-    always @ (*) begin // ex_load_x0 is not a commit gating exception
-        excp_load_x0 = 1'b0;
-        if (ex_valid && lq_wr_q && regd_addr_q == 5'b0) begin
-            excp_load_x0 = 1'b1;
+    always @ (*)
+    begin
+        excp_mala = 1'b0;
+        excp_masa = 1'b0;
+        if (ex_valid) begin
+            if (funct3_q == 3'b001 && alu_data_out[0] != 1'b0) begin
+                excp_mala = lq_wr_q;
+                excp_masa = sq_wr_q;
+            end else if (funct3_q == 3'b010 && alu_data_out[1:0] != 2'b00) begin
+                excp_mala = lq_wr_q;
+                excp_masa = sq_wr_q;
+            end
         end
     end
     //
@@ -272,7 +287,7 @@ module ex_stage
     //
     alu
         #(
-            .C_XLEN       (C_XLEN)
+            .C_XLEN_X     (C_XLEN_X)
         ) i_alu (
             //
             .clk_i        (clk_i),

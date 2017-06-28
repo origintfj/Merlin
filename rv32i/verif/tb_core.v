@@ -22,7 +22,7 @@ module tb_core;
     begin
         $dumpfile("wave.lxt");
         $dumpvars(0, tb_core);
-        #(20_000);
+        #(200_000);
         $finish();
     end
 
@@ -49,11 +49,7 @@ module tb_core;
     merlin32i
         #(
             .C_IRQV_SZ           (C_IRQV_SZ),
-            .C_RESET_VECTOR      ('0),
-            .C_VENDOR_ID         ('0),
-            .C_ARCHITECTURE_ID   ('0),
-            .C_IMPLEMENTATION_ID ('0),
-            .C_HART_ID           ('0)
+            .C_RESET_VECTOR      ('0)
         ) i_merlin32i (
             // global
             .clk_i               (clk),
