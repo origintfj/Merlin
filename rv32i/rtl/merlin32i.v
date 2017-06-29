@@ -1,3 +1,5 @@
+// TODO - generalise interface data widths
+
 `include "riscv_defs.v"
 
 module merlin32i
@@ -22,24 +24,19 @@ module merlin32i
         input  wire                  irsprerr_i,
         input  wire           [31:0] irspdata_i,
         // data port
-        input  wire                  dreqready_i, // TODO
-        output wire                  dreqvalid_o, // TODO
-        output wire            [1:0] dreqhpl_o, // TODO
-        output wire           [31:0] dreqaddr_o, // TODO
-        output wire                  drspready_o, // TODO
-        input  wire                  drspvalid_i, // TODO
-        input  wire                  drsprerr_i, // TODO
-        input  wire                  drspwerr_i, // TODO
-        input  wire           [31:0] drspdata_i, // TODO
+        input  wire                  dreqready_i,
+        output wire                  dreqvalid_o,
+        output wire                  dreqdvalid_o,
+        output wire            [1:0] dreqhpl_o,
+        output wire           [31:0] dreqaddr_o,
+        output wire           [31:0] dreqdata_o,
+        output wire                  drspready_o,
+        input  wire                  drspvalid_i,
+        input  wire                  drsprerr_i,
+        input  wire                  drspwerr_i,
+        input  wire           [31:0] drspdata_i
         // debug interface
         // TODO - debug interface
-        input  wire                 lsq_exs_full,
-        output wire                 exs_lsq_lq_wr,
-        output wire                 exs_lsq_sq_wr,
-        output wire           [2:0] exs_lsq_funct3,
-        output wire           [4:0] exs_lsq_regd_addr,
-        output wire  [`RV_XLEN-1:0] exs_lsq_regs2_data,
-        output wire  [`RV_XLEN-1:0] exs_lsq_addr
     );
 
     //--------------------------------------------------------------
@@ -76,6 +73,8 @@ module merlin32i
     wire                ids_exs_csr_wr;
     wire         [11:0] ids_exs_csr_addr;
     wire [`RV_XLEN-1:0] ids_exs_csr_wr_data;
+    wire          [4:0] lsq_ids_reg_addr;
+    wire [`RV_XLEN-1:0] lsq_ids_reg_data;
     // execution stage
     wire          [1:0] exs_pfu_hpl;
     wire                exs_ids_stall;
@@ -85,13 +84,18 @@ module merlin32i
     wire [`RV_XLEN-1:0] exs_ids_regd_data;
     wire                exs_hvec_jump;
     wire [`RV_XLEN-1:0] exs_hvec_jump_addr;
+    wire                exs_lsq_lq_wr;
+    wire                exs_lsq_sq_wr;
+    wire          [1:0] exs_lsq_hpl;
+    wire          [2:0] exs_lsq_funct3;
+    wire          [4:0] exs_lsq_regd_addr;
+    wire [`RV_XLEN-1:0] exs_lsq_regs2_data;
+    wire [`RV_XLEN-1:0] exs_lsq_addr;
+    // load/store queue interface
+    wire                lsq_exs_full;
+    wire                lsq_ids_reg_wr;
 
     //--------------------------------------------------------------
-
-    assign dreqvalid_o = 1'b0;
-    assign dreqhpl_o   = 2'b0;
-    assign dreqaddr_o  = 32'b0;
-    assign drspready_o = 1'b0;
 
 
     // hart vectoring and exception controller
@@ -192,9 +196,9 @@ module merlin32i
             .exs_regd_addr_i      (exs_ids_regd_addr),
             .exs_regd_data_i      (exs_ids_regd_data),
             // load/store queue interface
-            .lsq_reg_wr_i         (1'b0), // TODO
-            .lsq_reg_addr_i       (5'b0), // TODO
-            .lsq_reg_data_i       (32'b0) // TODO
+            .lsq_reg_wr_i         (lsq_ids_reg_wr),
+            .lsq_reg_addr_i       (lsq_ids_reg_addr),
+            .lsq_reg_data_i       (lsq_ids_reg_data)
         );
 
 
@@ -244,13 +248,56 @@ module merlin32i
             .hvec_jump_o          (exs_hvec_jump),
             .hvec_jump_addr_o     (exs_hvec_jump_addr),
             // load/store queue interface
-            .lsq_full_i           (lsq_exs_full), // TODO
-            .lsq_lq_wr_o          (exs_lsq_lq_wr), // TODO
-            .lsq_sq_wr_o          (exs_lsq_sq_wr), // TODO
-            .lsq_funct3_o         (exs_lsq_funct3), // TODO
-            .lsq_regd_addr_o      (exs_lsq_regd_addr), // TODO
-            .lsq_regs2_data_o     (exs_lsq_regs2_data), // TODO
-            .lsq_addr_o           (exs_lsq_addr) // TODO
+            .lsq_full_i           (lsq_exs_full),
+            .lsq_lq_wr_o          (exs_lsq_lq_wr),
+            .lsq_sq_wr_o          (exs_lsq_sq_wr),
+            .lsq_hpl_o            (exs_lsq_hpl),
+            .lsq_funct3_o         (exs_lsq_funct3),
+            .lsq_regd_addr_o      (exs_lsq_regd_addr),
+            .lsq_regs2_data_o     (exs_lsq_regs2_data),
+            .lsq_addr_o           (exs_lsq_addr)
         );
+
+
+        // load/store queue
+        //
+        lsqueue
+            #(
+                .C_FIFO_DEPTH_X   (2)
+            ) i_lsqueue (
+                // global
+                .clk_i            (clk_i),
+                .clk_en_i         (clk_en_i),
+                .resetb_i         (resetb_i),
+                // instruction decoder stage interface
+                .lsq_reg_wr_o     (lsq_ids_reg_wr),
+                .lsq_reg_addr_o   (lsq_ids_reg_addr),
+                .lsq_reg_data_o   (lsq_ids_reg_data),
+                // execution stage interface
+                .exs_full_o       (lsq_exs_full),
+                .exs_lq_wr_i      (exs_lsq_lq_wr),
+                .exs_sq_wr_i      (exs_lsq_sq_wr),
+                .exs_hpl_i        (exs_lsq_hpl),
+                .exs_funct3_i     (exs_lsq_funct3),
+                .exs_regd_addr_i  (exs_lsq_regd_addr),
+                .exs_regs2_data_i (exs_lsq_regs2_data),
+                .exs_addr_i       (exs_lsq_addr),
+                // data port
+                .dreqready_i      (dreqready_i),
+                .dreqvalid_o      (dreqvalid_o),
+                .dreqdvalid_o     (dreqdvalid_o),
+                .dreqhpl_o        (dreqhpl_o),
+                .dreqaddr_o       (dreqaddr_o),
+                .dreqdata_o       (dreqdata_o),
+                .drspready_o      (drspready_o),
+                .drspvalid_i      (drspvalid_i),
+                .drsprerr_i       (drsprerr_i),
+                .drspwerr_i       (drspwerr_i),
+                .drspdata_i       (drspdata_i),
+                // hart vectoring and exception controller interface TODO
+                .hvec_laf_o       (), // load access fault
+                .hvec_saf_o       (), // store access fault
+                .hvec_badaddr_o   ()  // bad address
+            );
 endmodule
 

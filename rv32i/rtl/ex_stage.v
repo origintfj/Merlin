@@ -52,6 +52,7 @@ module ex_stage
         input  wire                 lsq_full_i,
         output wire                 lsq_lq_wr_o,
         output wire                 lsq_sq_wr_o,
+        output wire           [1:0] lsq_hpl_o,
         output wire           [2:0] lsq_funct3_o,
         output wire           [4:0] lsq_regd_addr_o,
         output wire  [`RV_XLEN-1:0] lsq_regs2_data_o,
@@ -107,6 +108,7 @@ module ex_stage
     wire [`RV_XLEN-1:0] csr_data_out;
     wire                csr_rd_illegal;
     wire                csr_wr_illegal;
+    wire          [1:0] csr_hpl;
 
     //--------------------------------------------------------------
 
@@ -300,6 +302,9 @@ module ex_stage
 
     // cs registers
     //
+    assign pfu_hpl_o = csr_hpl;
+    assign lsq_hpl_o = csr_hpl;
+    //
     cs_registers i_cs_registers (
             //
             .clk_i              (clk_i),
@@ -316,6 +321,6 @@ module ex_stage
             .wr_addr_i          (ids_csr_addr_q),
             .wr_data_i          (ids_csr_wr_data_q),
             // static i/o
-            .hpl_o              (pfu_hpl_o)
+            .hpl_o              (csr_hpl)
         );
 endmodule

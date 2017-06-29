@@ -1,3 +1,5 @@
+// TODO clk_en should prob. gate all interface control signals, such as reqvalid
+
 `ifndef RISCV_DEFS_
 `define RISCV_DEFS_
 
