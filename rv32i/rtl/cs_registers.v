@@ -54,7 +54,23 @@ module cs_registers // TODO
     begin
         rd_data = 32'bx;
         case (rd_addr_i)
-            12'hf11 : rd_data = 32'b0;
+            12'hf11 : rd_data = `RV_VENDOR_ID;
+            12'hf12 : rd_data = `RV_ARCHITECTURE_ID;
+            12'hf13 : rd_data = `RV_IMPLEMENTATION_ID;
+            12'hf14 : rd_data = `RV_HART_ID;
+            // TODO
+            12'h : rd_data = ; // mstatus
+            12'h : rd_data = ; // misa
+            12'h : rd_data = ; // medeleg
+            12'h : rd_data = ; // mideleg
+            12'h : rd_data = ; // mie
+            12'h : rd_data = ; // mtvec
+            12'h : rd_data = ; // mcounteren
+            12'h : rd_data = ; // mscratch
+            12'h : rd_data = ; // mepc
+            12'h : rd_data = ; // mcause
+            12'h : rd_data = ; // mtval
+            12'h : rd_data = ; // mip
             default : begin
             end
         endcase;
