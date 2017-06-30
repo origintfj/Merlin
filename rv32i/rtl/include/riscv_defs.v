@@ -9,10 +9,12 @@
 `define RV_XLEN_X               5
 `define RV_XLEN                 (2**`RV_XLEN_X)
 //
-`define RV_VENDOR_ID            { `RV_XLEN {1'b0} }
-`define RV_ARCHITECTURE_ID      { `RV_XLEN {1'b0} }
-`define RV_IMPLEMENTATION_ID    { `RV_XLEN {1'b0} }
-`define RV_HART_ID              { `RV_XLEN {1'b0} }
+`define RV_RESET_VECTOR         { `RV_XLEN {1'b0} } // Set the reset vector here
+//
+`define RV_VENDOR_ID            { `RV_XLEN {1'b0} } // Set the vendor ID here
+`define RV_ARCHITECTURE_ID      { `RV_XLEN {1'b0} } // TODO
+`define RV_IMPLEMENTATION_ID    { `RV_XLEN {1'b0} } // TODO
+`define RV_HART_ID              { `RV_XLEN {1'b0} } // Set the HART ID here
 
 //--------------------------------------------------------------
 // Pipeline Bundles
@@ -69,6 +71,8 @@
 //--------------------------------------------------------------
 // Exception/Interrupt Definitions
 //--------------------------------------------------------------
+`define RV_MEDELEG_LEGAL_MASK               16'h0bff
+//
 `define EXCP_MCAUSE_INS_ADDR_MISALIGNED     { 1'b0, 27'b0, 4'd00 }
 `define EXCP_MCAUSE_INS_ACCESS_FAULT        { 1'b0, 27'b0, 4'd01 }
 `define EXCP_MCAUSE_ILLEGAL_INS             { 1'b0, 27'b0, 4'd02 }

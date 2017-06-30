@@ -269,7 +269,7 @@ module id_stage
         // forwarding mux for s1
     always @ (*)
     begin
-        if (regs1_addr_q == 0) begin
+        if (regs1_addr_q == 5'b0) begin
             // register x0 is always valid
             fwd_mux_regs1_data = regs1_dout;
         end else if (exs_regd_wr_i && exs_regd_addr_i == regs1_addr_q) begin
@@ -286,7 +286,7 @@ module id_stage
         // forwarding mux for s2
     always @ (*)
     begin
-        if (regs2_addr_q == 0) begin
+        if (regs2_addr_q == 5'b0) begin
             // register x0 is always valid
             fwd_mux_regs2_data = regs2_dout;
         end else if (exs_regd_wr_i && exs_regd_addr_i == regs2_addr_q) begin
