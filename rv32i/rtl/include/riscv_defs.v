@@ -2,7 +2,18 @@
 `define RISCV_DEFS_
 
 //--------------------------------------------------------------
-// pipeline bundles
+// Global Definitions
+//--------------------------------------------------------------
+`define RV_XLEN_X               5
+`define RV_XLEN                 (2**`RV_XLEN_X)
+//
+`define RV_VENDOR_ID            { `RV_XLEN {1'b0} }
+`define RV_ARCHITECTURE_ID      { `RV_XLEN {1'b0} }
+`define RV_IMPLEMENTATION_ID    { `RV_XLEN {1'b0} }
+`define RV_HART_ID              { `RV_XLEN {1'b0} }
+
+//--------------------------------------------------------------
+// Pipeline Bundles
 //--------------------------------------------------------------
 // frame id
 `define SOFID_SZ        2
@@ -19,7 +30,7 @@
 `define ZONE_REGFILE    2'b00
 
 //--------------------------------------------------------------
-// ALU definitions
+// ALU Definitions
 //--------------------------------------------------------------
 `define ALUOP_FUNCT3_ADDSUB 3'b000
 `define ALUOP_FUNCT3_SLL    3'b001
@@ -51,6 +62,25 @@
 `define ALUCOND_GE      3'b101
 `define ALUCOND_LTU     3'b110
 `define ALUCOND_GEU     3'b111
+
+//--------------------------------------------------------------
+// Exception/Interrupt Definitions
+//--------------------------------------------------------------
+`define EXCP_MCAUSE_INS_ADDR_MISALIGNED     { 1'b0, 27'b0, 4'd00 }
+`define EXCP_MCAUSE_INS_ACCESS_FAULT        { 1'b0, 27'b0, 4'd01 }
+`define EXCP_MCAUSE_ILLEGAL_INS             { 1'b0, 27'b0, 4'd02 }
+//`define EXCP_MCAUSE_BREAKPOINT              { 1'b0, 27'b0, 4'd03 }
+`define EXCP_MCAUSE_LOAD_ADDR_MISALIGNED    { 1'b0, 27'b0, 4'd04 }
+`define EXCP_MCAUSE_LOAD_ACCESS_FAULT       { 1'b0, 27'b0, 4'd05 }
+`define EXCP_MCAUSE_STORE_ADDR_MISALIGNED   { 1'b0, 27'b0, 4'd06 }
+`define EXCP_MCAUSE_STORE_ACCESS_FAULT      { 1'b0, 27'b0, 4'd07 }
+`define EXCP_MCAUSE_ECALL_FROM_UMODE        { 1'b0, 27'b0, 4'd08 }
+`define EXCP_MCAUSE_ECALL_FROM_SMODE        { 1'b0, 27'b0, 4'd09 }
+`define EXCP_MCAUSE_ECALL_FROM_MMODE        { 1'b0, 27'b0, 4'd11 }
+//`define EXCP_MCAUSE_INS_PAGE_FAULT          { 1'b0, 27'b0, 4'd12 }
+//`define EXCP_MCAUSE_LOAD_PAGE_FAULT         { 1'b0, 27'b0, 4'd13 }
+//`define EXCP_MCAUSE_STORE_PAGE_FAULT        { 1'b0, 27'b0, 4'd15 }
+
 //--------------------------------------------------------------
 
 `endif

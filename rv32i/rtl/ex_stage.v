@@ -5,11 +5,6 @@
 `include "riscv_defs.v"
 
 module ex_stage
-    #(
-        parameter C_XLEN_X = 5,
-        // derived parameters
-        parameter C_XLEN   = 2**C_XLEN_X
-    )
     (
         // global
         input  wire                 clk_i,
@@ -27,23 +22,23 @@ module ex_stage
         input  wire                 ids_cond_i,
         input  wire   [`ZONE_RANGE] ids_zone_i,
         input  wire                 ids_link_i,
-        input  wire    [C_XLEN-1:0] ids_pc_i,
+        input  wire  [`RV_XLEN-1:0] ids_pc_i,
         input  wire  [`ALUOP_RANGE] ids_alu_op_i,
-        input  wire    [C_XLEN-1:0] ids_operand_left_i,
-        input  wire    [C_XLEN-1:0] ids_operand_right_i,
-        input  wire    [C_XLEN-1:0] ids_regs1_data_i,
-        input  wire    [C_XLEN-1:0] ids_regs2_data_i,
+        input  wire  [`RV_XLEN-1:0] ids_operand_left_i,
+        input  wire  [`RV_XLEN-1:0] ids_operand_right_i,
+        input  wire  [`RV_XLEN-1:0] ids_regs1_data_i,
+        input  wire  [`RV_XLEN-1:0] ids_regs2_data_i,
         input  wire           [4:0] ids_regd_addr_i,
         input  wire           [2:0] ids_funct3_i,
         input  wire                 ids_csr_rd_i,
         input  wire                 ids_csr_wr_i,
         input  wire          [11:0] ids_csr_addr_i,
-        input  wire    [C_XLEN-1:0] ids_csr_wr_data_i,
+        input  wire  [`RV_XLEN-1:0] ids_csr_wr_data_i,
             // write-back interface
         output wire                 ids_regd_cncl_load_o,
         output wire                 ids_regd_wr_o,
         output wire           [4:0] ids_regd_addr_o,
-        output reg     [C_XLEN-1:0] ids_regd_data_o,
+        output reg   [`RV_XLEN-1:0] ids_regd_data_o,
         // hart vectoring and exception controller interface TODO
         output wire                 hvec_ferr_o, // instruction fetch error
         output wire                 hvec_uerr_o, // undefined instruction
@@ -52,15 +47,15 @@ module ex_stage
         output wire                 hvec_masa_o, // missaligned store address
         output wire                 hvec_ilgl_o, // illegal instruction
         output wire                 hvec_jump_o,
-        output wire    [C_XLEN-1:0] hvec_jump_addr_o,
+        output wire  [`RV_XLEN-1:0] hvec_jump_addr_o,
         // load/store queue interface
         input  wire                 lsq_full_i,
         output wire                 lsq_lq_wr_o,
         output wire                 lsq_sq_wr_o,
         output wire           [2:0] lsq_funct3_o,
         output wire           [4:0] lsq_regd_addr_o,
-        output wire    [C_XLEN-1:0] lsq_regs2_data_o,
-        output wire    [C_XLEN-1:0] lsq_addr_o
+        output wire  [`RV_XLEN-1:0] lsq_regs2_data_o,
+        output wire  [`RV_XLEN-1:0] lsq_addr_o
     );
 
     //--------------------------------------------------------------
@@ -93,10 +88,10 @@ module ex_stage
     reg                 ids_csr_rd_q;
     reg                 ids_csr_wr_q;
     reg          [11:0] ids_csr_addr_q;
-    reg    [C_XLEN-1:0] ids_csr_wr_data_q;
+    reg  [`RV_XLEN-1:0] ids_csr_wr_data_q;
     reg                 link_q;
-    reg    [C_XLEN-1:0] pc_inc_q;
-    reg    [C_XLEN-1:0] regs2_data_q;
+    reg  [`RV_XLEN-1:0] pc_inc_q;
+    reg  [`RV_XLEN-1:0] regs2_data_q;
     reg           [4:0] regd_addr_q;
     reg           [2:0] funct3_q;
     // ex stage stall controller
@@ -104,12 +99,12 @@ module ex_stage
     reg                 exs_stall;
     // regd data out mux
     // alu pcinc mux
-    reg    [C_XLEN-1:0] alu_pcinc_mux_out;
+    reg  [`RV_XLEN-1:0] alu_pcinc_mux_out;
     // alu
-    wire   [C_XLEN-1:0] alu_data_out;
+    wire [`RV_XLEN-1:0] alu_data_out;
     wire                alu_cmp_out;
     // cs registers
-    wire   [C_XLEN-1:0] csr_data_out;
+    wire [`RV_XLEN-1:0] csr_data_out;
     wire                csr_rd_illegal;
     wire                csr_wr_illegal;
 
@@ -285,10 +280,7 @@ module ex_stage
 
     // alu
     //
-    alu
-        #(
-            .C_XLEN_X     (C_XLEN_X)
-        ) i_alu (
+    alu i_alu (
             //
             .clk_i        (clk_i),
             .clk_en_i     (clk_en_i & ex_stage_en),
@@ -308,10 +300,7 @@ module ex_stage
 
     // cs registers
     //
-    cs_registers
-        #(
-            .C_XLEN             (C_XLEN)
-        ) i_cs_registers (
+    cs_registers i_cs_registers (
             //
             .clk_i              (clk_i),
             .clk_en_i           (clk_en_i),

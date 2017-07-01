@@ -1,31 +1,28 @@
 module cs_registers // TODO
-    #(
-        parameter C_XLEN = 32
-    )
     (
         //
-        input  wire               clk_i,
-        input  wire               clk_en_i,
-        input  wire               resetb_i,
+        input  wire                clk_i,
+        input  wire                clk_en_i,
+        input  wire                resetb_i,
         // read and exception query interface
-        input  wire               rd_i,
-        input  wire        [11:0] rd_addr_i,
-        output reg   [C_XLEN-1:0] rd_data_o,
-        output reg                rd_illegal_rd_o,
-        output reg                rd_illegal_wr_o,
+        input  wire                rd_i,
+        input  wire         [11:0] rd_addr_i,
+        output reg  [`RV_XLEN-1:0] rd_data_o,
+        output reg                 rd_illegal_rd_o,
+        output reg                 rd_illegal_wr_o,
         // write-back interface
-        input  wire               wr_i, // the write will be ignored if it triggers an exception
-        input  wire        [11:0] wr_addr_i,
-        input  wire  [C_XLEN-1:0] wr_data_i,
+        input  wire                wr_i, // the write will be ignored if it triggers an exception
+        input  wire         [11:0] wr_addr_i,
+        input  wire [`RV_XLEN-1:0] wr_data_i,
         // static i/o
-        output wire         [1:0] hpl_o
+        output wire          [1:0] hpl_o
     );
 
     //--------------------------------------------------------------
 
     wire                wren;
     // read decode and o/p register
-    reg    [C_XLEN-1:0] rd_data;
+    reg  [`RV_XLEN-1:0] rd_data;
 
     assign hpl_o = 2'b0;
 

@@ -1,9 +1,6 @@
 `include "riscv_defs.v"
 
 module id_stage
-    #(
-        parameter C_XLEN = 32
-    )
     (
         // global
         input  wire                 clk_i,
@@ -26,27 +23,27 @@ module id_stage
         output reg                  exs_cond_o,
         output reg    [`ZONE_RANGE] exs_zone_o,
         output reg                  exs_link_o,
-        output wire    [C_XLEN-1:0] exs_pc_o,
+        output wire  [`RV_XLEN-1:0] exs_pc_o,
         output reg   [`ALUOP_RANGE] exs_alu_op_o,
-        output reg     [C_XLEN-1:0] exs_operand_left_o,
-        output reg     [C_XLEN-1:0] exs_operand_right_o,
-        output wire    [C_XLEN-1:0] exs_regs1_data_o,
-        output wire    [C_XLEN-1:0] exs_regs2_data_o,
+        output reg   [`RV_XLEN-1:0] exs_operand_left_o,
+        output reg   [`RV_XLEN-1:0] exs_operand_right_o,
+        output wire  [`RV_XLEN-1:0] exs_regs1_data_o,
+        output wire  [`RV_XLEN-1:0] exs_regs2_data_o,
         output reg            [4:0] exs_regd_addr_o,
         output reg            [2:0] exs_funct3_o,
         output reg                  exs_csr_rd_o,
         output reg                  exs_csr_wr_o,
         output reg           [11:0] exs_csr_addr_o,
-        output reg     [C_XLEN-1:0] exs_csr_wr_data_o,
+        output reg   [`RV_XLEN-1:0] exs_csr_wr_data_o,
             // write-back interface
         input  wire                 exs_regd_cncl_load_i,
         input  wire                 exs_regd_wr_i,
         input  wire           [4:0] exs_regd_addr_i,
-        input  wire    [C_XLEN-1:0] exs_regd_data_i,
+        input  wire  [`RV_XLEN-1:0] exs_regd_data_i,
         // load/store queue interface
         input  wire                 lsq_reg_wr_i,
         input  wire           [4:0] lsq_reg_addr_i,
-        input  wire    [C_XLEN-1:0] lsq_reg_data_i
+        input  wire  [`RV_XLEN-1:0] lsq_reg_data_i
     );
 
     //--------------------------------------------------------------
@@ -61,7 +58,7 @@ module id_stage
     wire          [4:0] regs1_addr;
     wire                regs2_rd;
     wire          [4:0] regs2_addr;
-    wire   [C_XLEN-1:0] imm_d;
+    wire [`RV_XLEN-1:0] imm_d;
     wire                link_d;
     wire                sels1_pc_d;
     wire                sel_csr_wr_data_imm_d;
@@ -77,25 +74,25 @@ module id_stage
     reg                 ids_stall;
     reg          [31:1] reg_loading_vector_q;
     // integer register file
-    wire   [C_XLEN-1:0] regs1_dout;
-    wire   [C_XLEN-1:0] regs2_dout;
+    wire [`RV_XLEN-1:0] regs1_dout;
+    wire [`RV_XLEN-1:0] regs2_dout;
     // forwarding register
     reg                 fwd_regd_wr_q;
     reg           [4:0] fwd_regd_addr_q;
-    reg    [C_XLEN-1:0] fwd_regd_data_q;
+    reg  [`RV_XLEN-1:0] fwd_regd_data_q;
     // id register stage
     reg                 valid_q;
-    reg    [C_XLEN-1:0] pc_q;
+    reg  [`RV_XLEN-1:0] pc_q;
     reg                 ex_udefins_err_q;
-    reg    [C_XLEN-1:0] imm_q;
+    reg  [`RV_XLEN-1:0] imm_q;
     reg                 sels1_pc_q;
     reg                 sel_csr_wr_data_imm_q;
     reg                 sels2_imm_q;
     reg           [4:0] regs1_addr_q;
     reg           [4:0] regs2_addr_q;
     // operand forwarding mux
-    reg    [C_XLEN-1:0] fwd_mux_regs1_data;
-    reg    [C_XLEN-1:0] fwd_mux_regs2_data;
+    reg  [`RV_XLEN-1:0] fwd_mux_regs1_data;
+    reg  [`RV_XLEN-1:0] fwd_mux_regs2_data;
     // left operand select mux
     // right operand select mux
     // csr write data select mux
@@ -116,10 +113,7 @@ module id_stage
 
     // instruction decoder
     //
-    decoder
-        #(
-            .C_XLEN                (C_XLEN)
-        ) i_decoder (
+    decoder i_decoder (
             // instruction decoder interface
                 // ingress side
             .ins_i                 (pfu_ins_i),
@@ -183,10 +177,7 @@ module id_stage
 
     // integer register file
     //
-    regfile_integer
-        #(
-            .C_XLEN        (C_XLEN)
-        ) i_regfile_integer (
+    regfile_integer i_regfile_integer (
             // global
             .clk_i         (clk_i),
             .clk_en_i      (clk_en_i),
@@ -215,7 +206,7 @@ module id_stage
         if (~resetb_i) begin
             fwd_regd_wr_q   <= 1'b0;
             //fwd_regd_addr_q <= 5'b0; // NOTE: don't actually care
-            //fwd_regd_data_q <= { C_XLEN {1'b0} }; // NOTE: don't actually care
+            //fwd_regd_data_q <= { `RV_XLEN {1'b0} }; // NOTE: don't actually care
         end else if (clk_en_i) begin
             fwd_regd_wr_q   <= exs_regd_wr_i;
             fwd_regd_addr_q <= exs_regd_addr_i;

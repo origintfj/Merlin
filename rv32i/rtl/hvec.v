@@ -1,7 +1,6 @@
+`include "riscv_defs.v"
+
 module hvec
-    #(
-        parameter C_XLEN = 32
-    )
     (
         // global
         input  wire                 clk_i,
@@ -11,26 +10,26 @@ module hvec
         // pfu interface
         input  wire                 pfu_pc_ready_i,
         output reg                  pfu_pc_wr_o,
-        output reg     [C_XLEN-1:0] pfu_pc_o,
+        output reg   [`RV_XLEN-1:0] pfu_pc_o,
         // ex stage interface
         input  wire                 exs_jump_i,
-        input  wire    [C_XLEN-1:0] exs_jump_addr_i
+        input  wire  [`RV_XLEN-1:0] exs_jump_addr_i
         // lsq interface
     );
 
     //--------------------------------------------------------------
 
     // jump address register
-    reg [C_XLEN-1:0] jump_addr_q;
+    reg [`RV_XLEN-1:0] jump_addr_q;
     // jump fsm
     parameter JUMP_STATE_IDLE    = 1'b0;
     parameter JUMP_STATE_WAITING = 1'b1;
     //
-    reg              jump_fsm_c_state;
-    reg              jump_fsm_n_state;
+    reg                jump_fsm_c_state;
+    reg                jump_fsm_n_state;
     //
-    reg              jump_addr_reg_en;
-    reg              jump_addr_reg_bypass;
+    reg                jump_addr_reg_en;
+    reg                jump_addr_reg_bypass;
     
 
 

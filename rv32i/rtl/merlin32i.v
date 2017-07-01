@@ -38,25 +38,22 @@ module merlin32i
         output wire                 exs_lsq_sq_wr,
         output wire           [2:0] exs_lsq_funct3,
         output wire           [4:0] exs_lsq_regd_addr,
-        output wire    [C_XLEN-1:0] exs_lsq_regs2_data,
-        output wire    [C_XLEN-1:0] exs_lsq_addr
+        output wire  [`RV_XLEN-1:0] exs_lsq_regs2_data,
+        output wire  [`RV_XLEN-1:0] exs_lsq_addr
     );
 
     //--------------------------------------------------------------
 
-    parameter C_XLEN_X = 5;
-    parameter C_XLEN   = 2**C_XLEN_X;
-
     // hart vectoring and exception controller
     wire                hvec_pfu_pc_wr;
-    wire   [C_XLEN-1:0] hvec_pfu_pc;
+    wire [`RV_XLEN-1:0] hvec_pfu_pc;
     // prefetch unit
     wire                pfu_hvec_ready;
     wire                pfu_ids_dav;
     wire [`SOFID_RANGE] pfu_ids_sofid;
-    wire   [C_XLEN-1:0] pfu_ids_ins;
+    wire [`RV_XLEN-1:0] pfu_ids_ins;
     wire                pfu_ids_ferr;
-    wire   [C_XLEN-1:0] pfu_ids_pc;
+    wire [`RV_XLEN-1:0] pfu_ids_pc;
     // instruction decoder stage
     wire                ids_pfu_ack;
     wire                ids_exs_valid;
@@ -67,27 +64,27 @@ module merlin32i
     wire                ids_exs_cond;
     wire  [`ZONE_RANGE] ids_exs_zone;
     wire                ids_exs_link;
-    wire   [C_XLEN-1:0] ids_exs_pc;
+    wire [`RV_XLEN-1:0] ids_exs_pc;
     wire [`ALUOP_RANGE] ids_exs_alu_op;
-    wire   [C_XLEN-1:0] ids_exs_operand_left;
-    wire   [C_XLEN-1:0] ids_exs_operand_right;
-    wire   [C_XLEN-1:0] ids_exs_regs1_data;
-    wire   [C_XLEN-1:0] ids_exs_regs2_data;
+    wire [`RV_XLEN-1:0] ids_exs_operand_left;
+    wire [`RV_XLEN-1:0] ids_exs_operand_right;
+    wire [`RV_XLEN-1:0] ids_exs_regs1_data;
+    wire [`RV_XLEN-1:0] ids_exs_regs2_data;
     wire          [4:0] ids_exs_regd_addr;
     wire          [2:0] ids_exs_funct3;
     wire                ids_exs_csr_rd;
     wire                ids_exs_csr_wr;
     wire         [11:0] ids_exs_csr_addr;
-    wire   [C_XLEN-1:0] ids_exs_csr_wr_data;
+    wire [`RV_XLEN-1:0] ids_exs_csr_wr_data;
     // execution stage
     wire          [1:0] exs_pfu_hpl;
     wire                exs_ids_stall;
     wire                exs_ids_regd_cncl_load;
     wire                exs_ids_regd_wr;
     wire          [4:0] exs_ids_regd_addr;
-    wire   [C_XLEN-1:0] exs_ids_regd_data;
+    wire [`RV_XLEN-1:0] exs_ids_regd_data;
     wire                exs_hvec_jump;
-    wire   [C_XLEN-1:0] exs_hvec_jump_addr;
+    wire [`RV_XLEN-1:0] exs_hvec_jump_addr;
 
     //--------------------------------------------------------------
 
@@ -99,10 +96,7 @@ module merlin32i
 
     // hart vectoring and exception controller
     //
-    hvec
-        #(
-            .C_XLEN          (C_XLEN)
-        ) i_hvec (
+    hvec i_hvec (
             // global
             .clk_i           (clk_i),
             .clk_en_i        (clk_en_i),
@@ -158,10 +152,7 @@ module merlin32i
 
     // instruction decoder stage
     //
-    id_stage
-        #(
-            .C_XLEN               (C_XLEN)
-        ) i_id_stage (
+    id_stage i_id_stage (
             // global
             .clk_i                (clk_i),
             .clk_en_i             (clk_en_i),
@@ -209,10 +200,7 @@ module merlin32i
 
     // execution stage
     //
-    ex_stage
-        #(
-            .C_XLEN_X             (C_XLEN_X)
-        ) i_ex_stage (
+    ex_stage i_ex_stage (
             // global
             .clk_i                (clk_i),
             .clk_en_i             (clk_en_i),

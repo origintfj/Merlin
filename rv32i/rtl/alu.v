@@ -3,24 +3,19 @@
 `include "riscv_defs.v"
 
 module alu
-    #(
-        parameter C_XLEN_X = 5,
-        // derived parameters
-        parameter C_XLEN   = 2**C_XLEN_X
-    )
     (
         //
         input  wire                clk_i,
         input  wire                clk_en_i,
         input  wire                resetb_i,
         //
-        input  wire   [C_XLEN-1:0] op_left_i,
-        input  wire   [C_XLEN-1:0] op_right_i,
-        output reg    [C_XLEN-1:0] op_result_o,
+        input  wire [`RV_XLEN-1:0] op_left_i,
+        input  wire [`RV_XLEN-1:0] op_right_i,
+        output reg  [`RV_XLEN-1:0] op_result_o,
         input  wire [`ALUOP_RANGE] op_opcode_i,
         //
-        input  wire   [C_XLEN-1:0] cmp_left_i,
-        input  wire   [C_XLEN-1:0] cmp_right_i,
+        input  wire [`RV_XLEN-1:0] cmp_left_i,
+        input  wire [`RV_XLEN-1:0] cmp_right_i,
         output reg                 cmp_result_o,
         input  wire          [2:0] cmp_opcode_i
     );
@@ -29,11 +24,11 @@ module alu
 
     // alu output register
     // operation result mux
-    reg  [C_XLEN-1:0] op_result_mux_out;
+    reg  [`RV_XLEN-1:0] op_result_mux_out;
     // shifter
     genvar genvar_i;
-    reg  [C_XLEN-1:0] shift_left_array[0:C_XLEN_X];
-    reg  [C_XLEN-1:0] shift_right_array[0:C_XLEN_X];
+    reg  [`RV_XLEN-1:0] shift_left_array[0:`RV_XLEN_X];
+    reg  [`RV_XLEN-1:0] shift_right_array[0:`RV_XLEN_X];
 
     //--------------------------------------------------------------
 
@@ -52,16 +47,16 @@ module alu
     //
     always @ (*)
     begin
-        op_result_mux_out = { C_XLEN {1'b0} }; // NOTE: don't actually care
+        op_result_mux_out = { `RV_XLEN {1'b0} }; // NOTE: don't actually care
         case (op_opcode_i)
             `ALUOP_ADD  : op_result_mux_out = op_left_i + op_right_i;
             `ALUOP_SUB  : op_result_mux_out = op_left_i - op_right_i;
-            `ALUOP_SLL  : op_result_mux_out = shift_left_array[C_XLEN_X];
-            `ALUOP_SLT  : op_result_mux_out = { C_XLEN {1'b0} }; // TODO
-            `ALUOP_SLTU : op_result_mux_out = { C_XLEN {1'b0} }; // TODO
+            `ALUOP_SLL  : op_result_mux_out = shift_left_array[`RV_XLEN_X];
+            `ALUOP_SLT  : op_result_mux_out = { `RV_XLEN {1'b0} }; // TODO
+            `ALUOP_SLTU : op_result_mux_out = { `RV_XLEN {1'b0} }; // TODO
             `ALUOP_XOR  : op_result_mux_out = op_left_i ^ op_right_i;
-            `ALUOP_SRL  : op_result_mux_out = shift_right_array[C_XLEN_X];
-            `ALUOP_SRA  : op_result_mux_out = shift_right_array[C_XLEN_X];
+            `ALUOP_SRL  : op_result_mux_out = shift_right_array[`RV_XLEN_X];
+            `ALUOP_SRA  : op_result_mux_out = shift_right_array[`RV_XLEN_X];
             `ALUOP_OR   : op_result_mux_out = op_left_i | op_right_i;
             `ALUOP_AND  : op_result_mux_out = op_left_i & op_right_i;
             `ALUOP_MOV  : op_result_mux_out = op_right_i;
@@ -74,7 +69,7 @@ module alu
     // shifter
     //
     generate
-    for (genvar_i = 0; genvar_i < C_XLEN_X; genvar_i = genvar_i + 1) begin : shifter
+    for (genvar_i = 0; genvar_i < `RV_XLEN_X; genvar_i = genvar_i + 1) begin : shifter
         always @ (*)
         begin
             shift_left_array[0]  = op_left_i;
@@ -83,14 +78,14 @@ module alu
             if (op_right_i[genvar_i] == 1'b1) begin
                 // left shift
                 shift_left_array[genvar_i + 1][2**genvar_i - 1:   0] = { 2**genvar_i {1'b0} };
-                shift_left_array[genvar_i + 1][C_XLEN - 1:2**genvar_i] = shift_left_array[genvar_i][C_XLEN - 1 - 2**genvar_i:0];
+                shift_left_array[genvar_i + 1][`RV_XLEN - 1:2**genvar_i] = shift_left_array[genvar_i][`RV_XLEN - 1 - 2**genvar_i:0];
                 // right shift
-                if (op_opcode_i == `ALUOP_SRA && op_left_i[C_XLEN-1] == 1'b1) begin
-                    shift_right_array[genvar_i + 1][C_XLEN - 1:C_XLEN - 2**genvar_i] = { 2**genvar_i {1'b1} };
+                if (op_opcode_i == `ALUOP_SRA && op_left_i[`RV_XLEN-1] == 1'b1) begin
+                    shift_right_array[genvar_i + 1][`RV_XLEN - 1:`RV_XLEN - 2**genvar_i] = { 2**genvar_i {1'b1} };
                 end else begin
-                    shift_right_array[genvar_i + 1][C_XLEN - 1:C_XLEN - 2**genvar_i] = { 2**genvar_i {1'b0} };
+                    shift_right_array[genvar_i + 1][`RV_XLEN - 1:`RV_XLEN - 2**genvar_i] = { 2**genvar_i {1'b0} };
                 end
-                shift_right_array[genvar_i + 1][C_XLEN - 1 - 2**genvar_i:0] = shift_right_array[genvar_i][C_XLEN - 1:2**genvar_i];
+                shift_right_array[genvar_i + 1][`RV_XLEN - 1 - 2**genvar_i:0] = shift_right_array[genvar_i][`RV_XLEN - 1:2**genvar_i];
             end else begin
                 // left shift
                 shift_left_array[genvar_i + 1] = shift_left_array[genvar_i];

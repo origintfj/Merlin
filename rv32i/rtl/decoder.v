@@ -1,9 +1,6 @@
 `include "riscv_defs.v"
 
 module decoder
-    #(
-        parameter C_XLEN = 32
-    )
     (
         // instruction decoder interface
             // ingress side
@@ -17,7 +14,7 @@ module decoder
         output wire            [4:0] regs1_addr_o,
         output reg                   regs2_rd_o,
         output wire            [4:0] regs2_addr_o,
-        output reg      [C_XLEN-1:0] imm_o,
+        output reg    [`RV_XLEN-1:0] imm_o,
         output reg                   link_o,
         output reg                   sels1_pc_o,
         output reg                   sel_csr_wr_data_imm_o,
@@ -51,7 +48,7 @@ module decoder
     wire [4:0] regs1_addr;
     reg  [2:0] ins_type;
     // field extraction
-    reg [C_XLEN-1:0] sign_imm;
+    reg [`RV_XLEN-1:0] sign_imm;
 
     //--------------------------------------------------------------
 
@@ -313,19 +310,19 @@ module decoder
     always @ (*)
     begin
         if (ins_i[31]) begin
-            sign_imm = { C_XLEN {1'b1} };
+            sign_imm = { `RV_XLEN {1'b1} };
         end else begin
-            sign_imm = { C_XLEN {1'b0} };
+            sign_imm = { `RV_XLEN {1'b0} };
         end
         //
         case (ins_type)
-            C_IMM_TYPE_I      : imm_o = { sign_imm[C_XLEN-1:11], ins_i[30:20] };
-            C_IMM_TYPE_I_ZIMM : imm_o = {   { C_XLEN-5 {1'b0} }, ins_i[19:15] };
-            C_IMM_TYPE_S      : imm_o = { sign_imm[C_XLEN-1:11], ins_i[30:25], ins_i[11:7] };
-            C_IMM_TYPE_SB     : imm_o = { sign_imm[C_XLEN-1:12], ins_i[7],     ins_i[30:25], ins_i[11:8],  1'b0 };
-            C_IMM_TYPE_U      : imm_o = { sign_imm[C_XLEN-1:31], ins_i[30:12], 12'b0 };
-            C_IMM_TYPE_UJ     : imm_o = { sign_imm[C_XLEN-1:20], ins_i[19:12], ins_i[20],    ins_i[30:21], 1'b0 };
-            default           : imm_o = { C_XLEN {1'b0} }; // NOTE don't care
+            C_IMM_TYPE_I      : imm_o = { sign_imm[`RV_XLEN-1:11], ins_i[30:20] };
+            C_IMM_TYPE_I_ZIMM : imm_o = {   { `RV_XLEN-5 {1'b0} }, ins_i[19:15] };
+            C_IMM_TYPE_S      : imm_o = { sign_imm[`RV_XLEN-1:11], ins_i[30:25], ins_i[11:7] };
+            C_IMM_TYPE_SB     : imm_o = { sign_imm[`RV_XLEN-1:12], ins_i[7],     ins_i[30:25], ins_i[11:8],  1'b0 };
+            C_IMM_TYPE_U      : imm_o = { sign_imm[`RV_XLEN-1:31], ins_i[30:12], 12'b0 };
+            C_IMM_TYPE_UJ     : imm_o = { sign_imm[`RV_XLEN-1:20], ins_i[19:12], ins_i[20],    ins_i[30:21], 1'b0 };
+            default           : imm_o = { `RV_XLEN {1'b0} }; // NOTE don't care
         endcase
     end
 endmodule
