@@ -192,10 +192,10 @@ module id_stage
             .wreg_b_addr_i (lsq_reg_addr_i),
             .wreg_b_data_i (lsq_reg_data_i),
             // read port
-            .rreg_a_rd_i   (regs1_rd),
+            .rreg_a_rd_i   (id_stage_en & regs1_rd),
             .rreg_a_addr_i (regs1_addr),
             .rreg_a_data_o (regs1_dout),
-            .rreg_b_rd_i   (regs2_rd),
+            .rreg_b_rd_i   (id_stage_en & regs2_rd),
             .rreg_b_addr_i (regs2_addr),
             .rreg_b_data_o (regs2_dout)
         );

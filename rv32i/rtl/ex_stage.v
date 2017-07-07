@@ -311,7 +311,7 @@ module ex_stage
             .clk_en_i           (clk_en_i),
             .resetb_i           (resetb_i),
             // read and exception query interface
-            .rd_i               (ids_csr_rd_i),
+            .rd_i               (ids_csr_rd_i & ex_stage_en),
             .rd_addr_i          (ids_csr_addr_i),
             .rd_data_o          (csr_data_out),
             .rd_illegal_rd_o    (csr_rd_illegal),
