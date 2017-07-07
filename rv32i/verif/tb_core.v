@@ -14,6 +14,14 @@ module tb_core;
     logic        irsprerr;
     logic [31:0] irspdata;
 
+    wire        dreqready;
+    wire        dreqvalid;
+    wire        dreqdvalid;
+    wire [31:0] dreqaddr;
+    wire [31:0] dreqdata;
+    wire        drspready;
+    wire        drspvalid;
+    wire [31:0] drspdata;
     //--------------------------------------------------------------
 
     // general setup
@@ -67,21 +75,23 @@ module tb_core;
             .irsprerr_i          (irsprerr),
             .irspdata_i          (irspdata),
             // data port
-            .dreqready_i         (1'b0),
-            .dreqvalid_o         (),
+            .dreqready_i         (dreqready),
+            .dreqvalid_o         (dreqvalid),
+            .dreqdvalid_o        (dreqdvalid),
             .dreqhpl_o           (),
-            .dreqaddr_o          (),
-            .drspready_o         (),
-            .drspvalid_i         (1'b0),
+            .dreqaddr_o          (dreqaddr),
+            .dreqdata_o          (dreqdata),
+            .drspready_o         (drspready),
+            .drspvalid_i         (drspvalid),
             .drsprerr_i          (1'b0),
             .drspwerr_i          (1'b0),
-            .drspdata_i          (32'b0)
+            .drspdata_i          (drspdata)
             // debug interface
             // TODO - debug interface
         );
 
 
-    //
+    // boot rom
     //
     boot_rom i_boot_rom
         (
@@ -97,6 +107,26 @@ module tb_core;
             .trspvalid (irspvalid),
             .trsprerr  (irsprerr),
             .trspdata  (irspdata)
+        );
+
+
+    // sram
+    //
+    ssram i_ssram
+        (
+            // global
+            .clk_i        (clk),
+            .clk_en_i     (1'b1),
+            .resetb_i     (resetb),
+            //
+            .treqready_o  (dreqready),
+            .treqvalid_i  (dreqvalid),
+            .treqdvalid_i (dreqdvalid),
+            .treqaddr_i   (dreqaddr),
+            .treqdata_i   (dreqdata),
+            .trspready_i  (drspready),
+            .trspvalid_o  (drspvalid),
+            .trspdata_o   (drspdata)
         );
 endmodule
 

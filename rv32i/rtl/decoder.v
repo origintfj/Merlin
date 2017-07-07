@@ -9,6 +9,7 @@ module decoder
         output reg                   ins_err_o,
         output reg                   jump_o,
         output reg     [`ZONE_RANGE] zone_o,
+        output reg                   regd_tgt_o,
         output wire            [4:0] regd_addr_o,
         output reg                   regs1_rd_o,
         output wire            [4:0] regs1_addr_o,
@@ -73,6 +74,7 @@ module decoder
         ins_err_o             = 1'b0;
         jump_o                = 1'b0;
         zone_o                = `ZONE_REGFILE;
+        regd_tgt_o            = 1'b0;
         regs1_rd_o            = 1'b0;
         regs2_rd_o            = 1'b0;
         aluop_o               = `ALUOP_ADD; // NOTE don't actually care
@@ -88,11 +90,13 @@ module decoder
         case (opcode)
             7'b0110111 : begin // lui
                 ins_type    = C_IMM_TYPE_U;
+                regd_tgt_o  = 1'b1;
                 aluop_o     = `ALUOP_MOV;
                 sels2_imm_o = 1'b1;
             end
             7'b0010111 : begin // auipc
                 ins_type    = C_IMM_TYPE_U;
+                regd_tgt_o  = 1'b1;
                 aluop_o     = `ALUOP_ADD;
                 sels1_pc_o  = 1'b1;
                 sels2_imm_o = 1'b1;
@@ -100,6 +104,7 @@ module decoder
             7'b1101111 : begin // jal
                 ins_type    = C_IMM_TYPE_UJ;
                 jump_o      = 1'b1;
+                regd_tgt_o  = 1'b1;
                 aluop_o     = `ALUOP_ADD;
                 link_o      = 1'b1;
                 sels1_pc_o  = 1'b1;
@@ -108,6 +113,7 @@ module decoder
             7'b1100111 : begin // jalr
                 ins_type    = C_IMM_TYPE_I;
                 jump_o      = 1'b1;
+                regd_tgt_o  = 1'b1;
                 regs1_rd_o  = 1'b1;
                 aluop_o     = `ALUOP_ADD;
                 link_o      = 1'b1;
@@ -136,6 +142,7 @@ module decoder
             end
             7'b0000011 : begin // load
                 ins_type    = C_IMM_TYPE_I;
+                regd_tgt_o  = 1'b1;
                 regs1_rd_o  = 1'b1;
                 zone_o      = `ZONE_LOADQ;
                 aluop_o     = `ALUOP_ADD;
@@ -163,6 +170,7 @@ module decoder
             end
             7'b0010011 : begin // op-imm
                 ins_type    = C_IMM_TYPE_I;
+                regd_tgt_o  = 1'b1;
                 regs1_rd_o  = 1'b1;
                 sels2_imm_o = 1'b1;
                 case (funct3)
@@ -206,6 +214,7 @@ module decoder
             end
             7'b0110011 : begin // op
                 ins_type   = C_IMM_TYPE_R;
+                regd_tgt_o = 1'b1;
                 regs1_rd_o = 1'b1;
                 regs2_rd_o = 1'b1;
                 case (funct3)
@@ -276,7 +285,8 @@ module decoder
                 end else if (funct3 == 3'b001 ||
                              funct3 == 3'b010 ||
                              funct3 == 3'b011) begin // CSR access with rs1
-                    regs1_rd_o   = 1'b1;
+                    regd_tgt_o = 1'b1;
+                    regs1_rd_o = 1'b1;
                     if (regd_addr != 5'b0) begin
                         csr_rd_o = 1'b1;
                     end
@@ -287,6 +297,7 @@ module decoder
                              funct3 == 3'b110 ||
                              funct3 == 3'b111) begin // CSR access with zimm
                     ins_type              = C_IMM_TYPE_I_ZIMM;
+                    regd_tgt_o            = 1'b1;
                     sel_csr_wr_data_imm_o = 1'b1;
                     if (regd_addr != 5'b0) begin
                         csr_rd_o = 1'b1;

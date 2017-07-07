@@ -53,6 +53,7 @@ module id_stage
     wire                ins_uerr_d;
     wire                jump_d;
     wire  [`ZONE_RANGE] zone_d;
+    wire                regd_tgt;
     wire          [4:0] regd_addr_d;
     wire                regs1_rd;
     wire          [4:0] regs1_addr;
@@ -121,6 +122,7 @@ module id_stage
             .ins_err_o             (ins_uerr_d),
             .jump_o                (jump_d),
             .zone_o                (zone_d),
+            .regd_tgt_o            (regd_tgt),
             .regd_addr_o           (regd_addr_d),
             .regs1_rd_o            (regs1_rd),
             .regs1_addr_o          (regs1_addr),
@@ -156,7 +158,7 @@ module id_stage
         if (pfu_dav_i) begin
             if ( ( regs1_addr != 5'b0 && regs1_rd && reg_loading_vector_q[regs1_addr]) ||
                  ( regs2_addr != 5'b0 && regs2_rd && reg_loading_vector_q[regs2_addr]) ||
-                 (regd_addr_d != 5'b0 && zone_d == `ZONE_REGFILE && reg_loading_vector_q[regd_addr_d]) ) begin
+                 (regd_addr_d != 5'b0 && regd_tgt && reg_loading_vector_q[regd_addr_d]) ) begin
                 ids_stall = 1'b1;
             end
         end

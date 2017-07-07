@@ -42,7 +42,7 @@ module lsqueue
 
     //--------------------------------------------------------------
 
-    // interface assignments
+    // top-level assignments
     wire                             response;
     // request fifo
     parameter C_REQ_FIFO_WIDTH = `RV_XLEN + `RV_XLEN + 3 + 2 + 1;
@@ -64,7 +64,7 @@ module lsqueue
 
     //--------------------------------------------------------------
 
-    // interface assignments
+    // top-level assignments
     assign lsq_reg_wr_o   = ~rsp_data_fifo_empty;
     assign lsq_reg_addr_o =  rsp_ctrl_fifo_rd_data[3 +: 5];
     assign lsq_reg_data_o =  rsp_data_fifo_rd_data; // TODO rsp_ctrl_fifo_rd_data[0 +: 3] is rsp funct3
@@ -74,8 +74,9 @@ module lsqueue
     assign dreqvalid_o    = ~req_fifo_empty & ~rsp_ctrl_fifo_full;
     assign dreqdvalid_o   =  req_fifo_rd_data[0];
     assign dreqhpl_o      =  req_fifo_rd_data[2:1];
-    assign dreqaddr_o     =  req_fifo_rd_data[           6 +: `RV_XLEN];
-    assign dreqdata_o     =  req_fifo_rd_data[`RV_XLEN + 6 +: `RV_XLEN]; // TODO req_fifo_rd_data[3 +: 3] is req funct3
+    // TODO req_fifo_rd_data[3 +: 3] is req funct3
+    assign dreqdata_o     =  req_fifo_rd_data[           6 +: `RV_XLEN];
+    assign dreqaddr_o     =  req_fifo_rd_data[`RV_XLEN + 6 +: `RV_XLEN];
     assign drspready_o    = ~rsp_data_fifo_full;
     assign response       =  drspvalid_i & drspready_o;
     //
@@ -87,7 +88,7 @@ module lsqueue
     // request fifo
     //
     assign req_fifo_rd = dreqready_i & ~req_fifo_empty;
-    assign req_fifo_wr = exs_lq_wr_i &  exs_sq_wr_i;
+    assign req_fifo_wr = exs_lq_wr_i |  exs_sq_wr_i;
     //
     always @ (*)
     begin

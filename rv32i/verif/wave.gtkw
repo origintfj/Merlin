@@ -1,19 +1,20 @@
 [*]
 [*] GTKWave Analyzer v3.3.75 (w)1999-2016 BSI
-[*] Tue Jun 27 05:00:24 2017
+[*] Fri Jul 07 02:23:17 2017
 [*]
 [dumpfile] "C:\Users\Tom\riscv\rv32i\verif\wave.lxt"
-[dumpfile_mtime] "Tue Jun 27 04:55:59 2017"
-[dumpfile_size] 7750
+[dumpfile_mtime] "Fri Jul 07 02:20:22 2017"
+[dumpfile_size] 34604
 [savefile] "C:\Users\Tom\riscv\rv32i\verif\wave.gtkw"
 [timestart] 0
 [size] 2048 1089
 [pos] -1 -1
-*-12.000000 3800 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-10.000000 87353 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_core.
 [treeopen] tb_core.i_merlin32i.
 [treeopen] tb_core.i_merlin32i.i_ex_stage.
 [treeopen] tb_core.i_merlin32i.i_id_stage.
+[treeopen] tb_core.i_merlin32i.i_lsqueue.
 [treeopen] tb_core.i_merlin32i.i_pfu.
 [sst_width] 290
 [signals_width] 329
@@ -23,7 +24,7 @@
 tb_core.i_merlin32i.i_id_stage.clk_i[0]
 tb_core.i_merlin32i.i_id_stage.resetb_i[0]
 @800200
--pfu
+-I Port
 @28
 tb_core.i_merlin32i.i_pfu.ireqready_i[0]
 tb_core.i_merlin32i.i_pfu.ireqvalid_o[0]
@@ -34,6 +35,32 @@ tb_core.i_merlin32i.i_pfu.irspvalid_i[0]
 tb_core.i_merlin32i.i_pfu.irsprerr_i[0]
 @22
 tb_core.i_merlin32i.i_pfu.irspdata_i[31:0]
+@1000200
+-I Port
+@800200
+-D Port
+@28
+tb_core.i_merlin32i.i_lsqueue.dreqready_i[0]
+tb_core.i_merlin32i.i_lsqueue.dreqvalid_o[0]
+tb_core.i_merlin32i.i_lsqueue.dreqhpl_o[1:0]
+@22
+tb_core.i_merlin32i.i_lsqueue.dreqaddr_o[31:0]
+@28
+tb_core.i_merlin32i.i_lsqueue.dreqdvalid_o[0]
+@22
+tb_core.i_merlin32i.i_lsqueue.dreqdata_o[31:0]
+@28
+tb_core.i_merlin32i.i_lsqueue.drspready_o[0]
+tb_core.i_merlin32i.i_lsqueue.drspvalid_i[0]
+@23
+tb_core.i_merlin32i.i_lsqueue.drspdata_i[31:0]
+@28
+tb_core.i_merlin32i.i_lsqueue.drsprerr_i[0]
+tb_core.i_merlin32i.i_lsqueue.drspwerr_i[0]
+@1000200
+-D Port
+@800200
+-pfu
 @28
 tb_core.i_merlin32i.i_pfu.hvec_pc_ready_o[0]
 tb_core.i_merlin32i.i_pfu.sofid_q[1:0]
@@ -78,7 +105,6 @@ tb_core.i_merlin32i.i_id_stage.exs_csr_rd_o[0]
 tb_core.i_merlin32i.i_id_stage.exs_csr_wr_o[0]
 @22
 tb_core.i_merlin32i.i_id_stage.exs_csr_addr_o[11:0]
-@23
 tb_core.i_merlin32i.i_id_stage.exs_csr_wr_data_o[31:0]
 @28
 tb_core.i_merlin32i.i_id_stage.exs_regd_cncl_load_i[0]
