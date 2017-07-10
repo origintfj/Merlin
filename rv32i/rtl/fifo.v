@@ -3,7 +3,7 @@ module fifo
         parameter C_FIFO_WIDTH   = 1,
         parameter C_FIFO_DEPTH_X = 1,
         //
-        parameter C_FIFO_DEPTH = 2**C_FIFO_DEPTH_X
+        parameter C_FIFO_DEPTH   = 2**C_FIFO_DEPTH_X
     )
     (
         // global

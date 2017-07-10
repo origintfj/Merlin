@@ -27,9 +27,10 @@
 `define ZONE_SZ         2
 `define ZONE_RANGE      `ZONE_SZ-1:0
 //
-`define ZONE_LOADQ      2'b11
+`define ZONE_NONE       2'b00
+`define ZONE_REGFILE    2'b01
 `define ZONE_STOREQ     2'b10
-`define ZONE_REGFILE    2'b00
+`define ZONE_LOADQ      2'b11
 
 //--------------------------------------------------------------
 // ALU Definitions
