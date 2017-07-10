@@ -14,7 +14,7 @@ module id_stage
         input  wire                 pfu_ferr_i,  // this instruction fetch resulted in error
         input  wire          [31:0] pfu_pc_i,    // address of this instruction
         // ex stage interface
-        output wire                 exs_valid_o,
+        output reg                  exs_valid_o,
         input  wire                 exs_stall_i,
         output reg   [`SOFID_RANGE] exs_sofid_o,
         output reg                  exs_ins_uerr_o,
@@ -71,7 +71,6 @@ module id_stage
     wire         [11:0] csr_addr_d;
     wire                conditional_d;
     // id stage stall controller
-    wire                id_stage_en;
     reg                 ids_stall;
     reg          [31:1] reg_loading_vector_q;
     // integer register file
@@ -82,7 +81,6 @@ module id_stage
     reg           [4:0] fwd_regd_addr_q;
     reg  [`RV_XLEN-1:0] fwd_regd_data_q;
     // id register stage
-    reg                 valid_q;
     reg  [`RV_XLEN-1:0] pc_q;
     reg                 ex_udefins_err_q;
     reg  [`RV_XLEN-1:0] imm_q;
@@ -108,8 +106,7 @@ module id_stage
 
     // id stage qualifier logic
     //
-    assign pfu_ack_o   = id_stage_en & pfu_dav_i;
-    assign exs_valid_o = id_stage_en & valid_q;
+    assign pfu_ack_o = pfu_dav_i & ~ids_stall & (~exs_stall_i | exs_valid_o);
 
 
     // instruction decoder
@@ -150,7 +147,6 @@ module id_stage
      * No register can be targeted if it has a pending load
      *
      */
-    assign id_stage_en = ~ids_stall & ~exs_stall_i;
     always @ (*)
     begin
         ids_stall = 1'b0;
@@ -168,10 +164,14 @@ module id_stage
         if (~resetb_i) begin
             reg_loading_vector_q <= 31'b0;
         end else if (clk_en_i) begin
-            if (lsq_reg_addr_i != 5'b0 && (exs_regd_cncl_load_i | lsq_reg_wr_i)) begin
-                reg_loading_vector_q[lsq_reg_addr_i] <= 1'b0;
-            end else if (regd_addr_d != 5'b0 && pfu_ack_o && zone_d == `ZONE_LOADQ) begin
+            if (regd_addr_d != 5'b0 && pfu_ack_o && zone_d == `ZONE_LOADQ) begin
                 reg_loading_vector_q[regd_addr_d] <= 1'b1;
+            end
+            if (exs_regd_addr_i != 5'b0 && exs_regd_cncl_load_i) begin
+                reg_loading_vector_q[exs_regd_addr_i] <= 1'b0;
+            end
+            if (lsq_reg_addr_i != 5'b0 && lsq_reg_wr_i) begin
+                reg_loading_vector_q[lsq_reg_addr_i] <= 1'b0;
             end
         end
     end
@@ -192,10 +192,10 @@ module id_stage
             .wreg_b_addr_i (lsq_reg_addr_i),
             .wreg_b_data_i (lsq_reg_data_i),
             // read port
-            .rreg_a_rd_i   (id_stage_en & regs1_rd),
+            .rreg_a_rd_i   (pfu_ack_o & regs1_rd),
             .rreg_a_addr_i (regs1_addr),
             .rreg_a_data_o (regs1_dout),
-            .rreg_b_rd_i   (id_stage_en & regs2_rd),
+            .rreg_b_rd_i   (pfu_ack_o & regs2_rd),
             .rreg_b_addr_i (regs2_addr),
             .rreg_b_data_o (regs2_dout)
         );
@@ -222,10 +222,17 @@ module id_stage
     always @ (posedge clk_i or negedge resetb_i)
     begin
         if (~resetb_i) begin
-            valid_q <= 1'b0;
+            exs_valid_o <= 1'b0;
         end else if (clk_en_i) begin
-            if (id_stage_en) begin
-                valid_q               <= pfu_ack_o;
+            if (~exs_stall_i) begin
+                exs_valid_o <= pfu_ack_o;
+            end
+        end
+    end
+    always @ (posedge clk_i)
+    begin
+        if (clk_en_i) begin
+            if (pfu_ack_o) begin
                 exs_sofid_o           <= pfu_sofid_i;
                 exs_jump_o            <= jump_d;
                 pc_q                  <= pfu_pc_i;
