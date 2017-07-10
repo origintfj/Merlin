@@ -77,6 +77,7 @@ module tb_core;
             // data port
             .dreqready_i         (dreqready),
             .dreqvalid_o         (dreqvalid),
+            .dreqsize_o          (),
             .dreqdvalid_o        (dreqdvalid),
             .dreqhpl_o           (),
             .dreqaddr_o          (dreqaddr),

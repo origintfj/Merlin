@@ -26,6 +26,7 @@ module merlin32i
         // data port
         input  wire                  dreqready_i,
         output wire                  dreqvalid_o,
+        output wire            [1:0] dreqsize_o,
         output wire                  dreqdvalid_o,
         output wire            [1:0] dreqhpl_o,
         output wire           [31:0] dreqaddr_o,
@@ -73,8 +74,6 @@ module merlin32i
     wire                ids_exs_csr_wr;
     wire         [11:0] ids_exs_csr_addr;
     wire [`RV_XLEN-1:0] ids_exs_csr_wr_data;
-    wire          [4:0] lsq_ids_reg_addr;
-    wire [`RV_XLEN-1:0] lsq_ids_reg_data;
     // execution stage
     wire          [1:0] exs_pfu_hpl;
     wire                exs_ids_stall;
@@ -92,8 +91,10 @@ module merlin32i
     wire [`RV_XLEN-1:0] exs_lsq_regs2_data;
     wire [`RV_XLEN-1:0] exs_lsq_addr;
     // load/store queue interface
-    wire                lsq_exs_full;
     wire                lsq_ids_reg_wr;
+    wire          [4:0] lsq_ids_reg_addr;
+    wire [`RV_XLEN-1:0] lsq_ids_reg_data;
+    wire                lsq_exs_full;
 
     //--------------------------------------------------------------
 
@@ -259,45 +260,46 @@ module merlin32i
         );
 
 
-        // load/store queue
-        //
-        lsqueue
-            #(
-                .C_FIFO_DEPTH_X   (2)
-            ) i_lsqueue (
-                // global
-                .clk_i            (clk_i),
-                .clk_en_i         (clk_en_i),
-                .resetb_i         (resetb_i),
-                // instruction decoder stage interface
-                .lsq_reg_wr_o     (lsq_ids_reg_wr),
-                .lsq_reg_addr_o   (lsq_ids_reg_addr),
-                .lsq_reg_data_o   (lsq_ids_reg_data),
-                // execution stage interface
-                .exs_full_o       (lsq_exs_full),
-                .exs_lq_wr_i      (exs_lsq_lq_wr),
-                .exs_sq_wr_i      (exs_lsq_sq_wr),
-                .exs_hpl_i        (exs_lsq_hpl),
-                .exs_funct3_i     (exs_lsq_funct3),
-                .exs_regd_addr_i  (exs_lsq_regd_addr),
-                .exs_regs2_data_i (exs_lsq_regs2_data),
-                .exs_addr_i       (exs_lsq_addr),
-                // data port
-                .dreqready_i      (dreqready_i),
-                .dreqvalid_o      (dreqvalid_o),
-                .dreqdvalid_o     (dreqdvalid_o),
-                .dreqhpl_o        (dreqhpl_o),
-                .dreqaddr_o       (dreqaddr_o),
-                .dreqdata_o       (dreqdata_o),
-                .drspready_o      (drspready_o),
-                .drspvalid_i      (drspvalid_i),
-                .drsprerr_i       (drsprerr_i),
-                .drspwerr_i       (drspwerr_i),
-                .drspdata_i       (drspdata_i),
-                // hart vectoring and exception controller interface TODO
-                .hvec_laf_o       (), // load access fault
-                .hvec_saf_o       (), // store access fault
-                .hvec_badaddr_o   ()  // bad address
-            );
+    // load/store queue
+    //
+    lsqueue
+        #(
+            .C_FIFO_DEPTH_X     (2)
+        ) i_lsqueue (
+            // global
+            .clk_i              (clk_i),
+            .clk_en_i           (clk_en_i),
+            .resetb_i           (resetb_i),
+            // instruction decoder stage interface
+            .lsq_reg_wr_o       (lsq_ids_reg_wr),
+            .lsq_reg_addr_o     (lsq_ids_reg_addr),
+            .lsq_reg_data_o     (lsq_ids_reg_data),
+            // execution stage interface
+            .exs_full_o         (lsq_exs_full),
+            .exs_lq_wr_i        (exs_lsq_lq_wr),
+            .exs_sq_wr_i        (exs_lsq_sq_wr),
+            .exs_hpl_i          (exs_lsq_hpl),
+            .exs_funct3_i       (exs_lsq_funct3),
+            .exs_regd_addr_i    (exs_lsq_regd_addr),
+            .exs_regs2_data_i   (exs_lsq_regs2_data),
+            .exs_addr_i         (exs_lsq_addr),
+                // imprecise exceptions
+            .plic_int_laf_o     (), // load access fault
+            .plic_int_saf_o     (), // store access fault
+            .plic_int_rspdata_o (), // response data
+            // data port
+            .dreqready_i        (dreqready_i),
+            .dreqvalid_o        (dreqvalid_o),
+            .dreqsize_o         (dreqsize_o),
+            .dreqdvalid_o       (dreqdvalid_o),
+            .dreqhpl_o          (dreqhpl_o),
+            .dreqaddr_o         (dreqaddr_o),
+            .dreqdata_o         (dreqdata_o),
+            .drspready_o        (drspready_o),
+            .drspvalid_i        (drspvalid_i),
+            .drsprerr_i         (drsprerr_i),
+            .drspwerr_i         (drspwerr_i),
+            .drspdata_i         (drspdata_i)
+        );
 endmodule
 
