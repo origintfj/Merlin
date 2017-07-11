@@ -56,6 +56,7 @@ module pfu
     reg                     fifo_accepting;
     // program counter
     reg      [C_BUS_SZ-1:0] pc_q;
+    reg      [C_BUS_SZ-1:0] request_addr_q;
     // sofid register
     reg                     hvec_pc_wr_q;
     reg      [`SOFID_RANGE] sofid_q;
@@ -147,11 +148,14 @@ module pfu
         if (~resetb_i) begin
             fifo_level_q <= { 1'b1, { C_FIFO_DEPTH_X {1'b0} } };
         end else if (clk_en_i) begin
+/*
             if (hvec_pc_wr_i) begin
                 fifo_level_q <= { 1'b1, { C_FIFO_DEPTH_X {1'b0} } };
-            end else if (request_accepted & ~irspvalid_i) begin
+            end else if (request_accepted & ~ids_ack_i) begin
+*/
+            if (request_accepted & ~ids_ack_i) begin
                 fifo_level_q <= fifo_level_q - 1;
-            end else if (~request_accepted & irspvalid_i) begin
+            end else if (~request_accepted & ids_ack_i) begin
                 fifo_level_q <= fifo_level_q + 1;
             end
         end
@@ -180,6 +184,12 @@ module pfu
             end
         end
     end
+    always @ (posedge clk_i)
+    begin
+        if (request_accepted) begin
+            request_addr_q <= pc_q;
+        end
+    end
 
 
     // sofid register
@@ -204,7 +214,7 @@ module pfu
     //
     assign fifo_din[   C_SOFID_LSB +: C_SOFID_SZ] = sofid_q; // TODO
     assign fifo_din[    C_FERR_LSB +: 1]          = irsprerr_i;
-    assign fifo_din[ C_FIFO_PC_LSB +: C_BUS_SZ]   = pc_q - 4; // TODO
+    assign fifo_din[ C_FIFO_PC_LSB +: C_BUS_SZ]   = request_addr_q;
     assign fifo_din[C_FIFO_INS_LSB +: C_BUS_SZ]   = irspdata_i;
     //
     assign ids_sofid_o = fifo_dout[   C_SOFID_LSB +: C_SOFID_SZ];
@@ -222,11 +232,11 @@ module pfu
             .clk_en_i       (clk_en_i),
             .resetb_i       (resetb_i),
             // control and status
-            .flush_i        (hvec_pc_wr_i),
+            .flush_i        (1'b0),//hvec_pc_wr_i),
             .empty_o        (fifo_empty),
             .full_o         (),
             // write port
-            .wr_i           (irspvalid_i & ~hvec_pc_wr_i),
+            .wr_i           (irspvalid_i),// & ~hvec_pc_wr_i),
             .din_i          (fifo_din),
             // read port
             .rd_i           (ids_ack_i),
