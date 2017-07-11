@@ -1,3 +1,5 @@
+`timescale 1ns / 10ps
+
 module tb_core;
     //--------------------------------------------------------------
 
@@ -30,7 +32,17 @@ module tb_core;
     begin
         $dumpfile("wave.lxt");
         $dumpvars(0, tb_core);
-        #(200_000);
+
+        $display("******************* SIMULATION START *******************");
+        $display();
+        $display();
+
+        #(1_000_000);
+
+        $display();
+        $display();
+        $display("*******************  SIMULATION END! *******************");
+
         $finish();
     end
 
@@ -39,7 +51,7 @@ module tb_core;
     //
     always
     begin
-        #50;
+        #10;
         clk = ~clk;
     end
 

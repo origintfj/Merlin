@@ -17,7 +17,7 @@ module boot_rom
     //--------------------------------------------------------------
 
     logic        gate;
-    logic [31:0] mem[0:547];
+    logic [7:0] mem[0:2048];
 
     //--------------------------------------------------------------
 
@@ -36,18 +36,10 @@ module boot_rom
     integer i;
 
     initial $readmemh("mem.hex", mem);
-/*
-    initial
-    begin
-        for (i = 0; i < 547; ++i) begin
-            $display("DATA=0x%08x", mem[i]);
-        end
-    end
-*/
     //
     //
     logic [9:0] reqaddr;
-    assign reqaddr = treqaddr[11:2];
+    assign reqaddr = treqaddr[10:0];
     always @ (posedge clk or negedge resetb)
     begin
         if (~resetb) begin
@@ -56,8 +48,7 @@ module boot_rom
             trspdata  <= 32'hbaadf00d;
         end else begin
             trspvalid <= gate & treqvalid;
-            trspdata  <= mem[{1'b0, reqaddr}];
-            //trspdata  <= treqaddr;
+            trspdata  <= { mem[reqaddr+3], mem[reqaddr+2], mem[reqaddr+1], mem[reqaddr+0] };
         end
     end
 endmodule
