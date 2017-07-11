@@ -22,6 +22,7 @@ module decoder
         output reg                   sels1_pc_o,
         output reg                   sel_csr_wr_data_imm_o,
         output reg                   sels2_imm_o,
+        output reg                   selcmps2_imm_o,
         output reg    [`ALUOP_RANGE] aluop_o,
         output wire            [2:0] funct3_o,
         output reg                   csr_rd_o,
@@ -83,6 +84,7 @@ module decoder
         link_o                = 1'b0;
         sels1_pc_o            = 1'b0;
         sels2_imm_o           = 1'b0;
+        selcmps2_imm_o        = 1'b0;
         sel_csr_wr_data_imm_o = 1'b0;
         csr_rd_o              = 1'b0;
         csr_wr_o              = 1'b0;
@@ -191,10 +193,12 @@ module decoder
                         end
                     end
                     `ALUOP_FUNCT3_SLT : begin
-                        aluop_o = `ALUOP_SLT;
+                        aluop_o        = `ALUOP_SLT;
+                        selcmps2_imm_o = 1'b1;
                     end
                     `ALUOP_FUNCT3_SLTU : begin
-                        aluop_o = `ALUOP_SLTU;
+                        aluop_o        = `ALUOP_SLTU;
+                        selcmps2_imm_o = 1'b1;
                     end
                     `ALUOP_FUNCT3_XOR : begin
                         aluop_o = `ALUOP_XOR;

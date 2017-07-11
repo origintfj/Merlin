@@ -66,6 +66,7 @@ module merlin32i
     wire [`ALUOP_RANGE] ids_exs_alu_op;
     wire [`RV_XLEN-1:0] ids_exs_operand_left;
     wire [`RV_XLEN-1:0] ids_exs_operand_right;
+    wire [`RV_XLEN-1:0] ids_exs_cmp_right;
     wire [`RV_XLEN-1:0] ids_exs_regs1_data;
     wire [`RV_XLEN-1:0] ids_exs_regs2_data;
     wire          [4:0] ids_exs_regd_addr;
@@ -183,6 +184,7 @@ module merlin32i
             .exs_alu_op_o         (ids_exs_alu_op),
             .exs_operand_left_o   (ids_exs_operand_left),
             .exs_operand_right_o  (ids_exs_operand_right),
+            .exs_cmp_right_o      (ids_exs_cmp_right),
             .exs_regs1_data_o     (ids_exs_regs1_data),
             .exs_regs2_data_o     (ids_exs_regs2_data),
             .exs_regd_addr_o      (ids_exs_regd_addr),
@@ -226,6 +228,7 @@ module merlin32i
             .ids_alu_op_i         (ids_exs_alu_op),
             .ids_operand_left_i   (ids_exs_operand_left),
             .ids_operand_right_i  (ids_exs_operand_right),
+            .ids_cmp_right_i      (ids_exs_cmp_right),
             .ids_regs1_data_i     (ids_exs_regs1_data),
             .ids_regs2_data_i     (ids_exs_regs2_data),
             .ids_regd_addr_i      (ids_exs_regd_addr),

@@ -26,6 +26,7 @@ module ex_stage
         input  wire  [`ALUOP_RANGE] ids_alu_op_i,
         input  wire  [`RV_XLEN-1:0] ids_operand_left_i,
         input  wire  [`RV_XLEN-1:0] ids_operand_right_i,
+        input  wire  [`RV_XLEN-1:0] ids_cmp_right_i,
         input  wire  [`RV_XLEN-1:0] ids_regs1_data_i,
         input  wire  [`RV_XLEN-1:0] ids_regs2_data_i,
         input  wire           [4:0] ids_regd_addr_i,
@@ -294,7 +295,7 @@ module ex_stage
             .op_opcode_i  (ids_alu_op_i),
             //
             .cmp_left_i   (ids_regs1_data_i),
-            .cmp_right_i  (ids_regs2_data_i),
+            .cmp_right_i  (ids_cmp_right_i),
             .cmp_result_o (alu_cmp_out),
             .cmp_opcode_i (ids_funct3_i)
         );

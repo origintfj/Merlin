@@ -27,6 +27,7 @@ module id_stage
         output reg   [`ALUOP_RANGE] exs_alu_op_o,
         output reg   [`RV_XLEN-1:0] exs_operand_left_o,
         output reg   [`RV_XLEN-1:0] exs_operand_right_o,
+        output reg   [`RV_XLEN-1:0] exs_cmp_right_o,
         output wire  [`RV_XLEN-1:0] exs_regs1_data_o,
         output wire  [`RV_XLEN-1:0] exs_regs2_data_o,
         output reg            [4:0] exs_regd_addr_o,
@@ -64,6 +65,7 @@ module id_stage
     wire                sels1_pc_d;
     wire                sel_csr_wr_data_imm_d;
     wire                sels2_imm_d;
+    wire                selcmps2_imm_d;
     wire [`ALUOP_RANGE] alu_op_d;
     wire          [2:0] funct3_d;
     wire                csr_rd_d;
@@ -87,6 +89,7 @@ module id_stage
     reg                 sels1_pc_q;
     reg                 sel_csr_wr_data_imm_q;
     reg                 sels2_imm_q;
+    reg                 selcmps2_imm_q;
     reg           [4:0] regs1_addr_q;
     reg           [4:0] regs2_addr_q;
     // operand forwarding mux
@@ -130,6 +133,7 @@ module id_stage
             .sels1_pc_o            (sels1_pc_d),
             .sel_csr_wr_data_imm_o (sel_csr_wr_data_imm_d),
             .sels2_imm_o           (sels2_imm_d),
+            .selcmps2_imm_o        (selcmps2_imm_d),
             .aluop_o               (alu_op_d),
             .funct3_o              (funct3_d),
             .csr_rd_o              (csr_rd_d),
@@ -245,6 +249,7 @@ module id_stage
                 sels1_pc_q            <= sels1_pc_d;
                 sel_csr_wr_data_imm_q <= sel_csr_wr_data_imm_d;
                 sels2_imm_q           <= sels2_imm_d;
+                selcmps2_imm_q        <= selcmps2_imm_d;
                 exs_alu_op_o          <= alu_op_d;
                 exs_funct3_o          <= funct3_d;
                 exs_csr_rd_o          <= csr_rd_d;
@@ -317,6 +322,18 @@ module id_stage
             exs_operand_right_o = imm_q;
         end else begin
             exs_operand_right_o = fwd_mux_regs2_data;
+        end
+    end
+
+
+    // right cmp select mux
+    //
+    always @ (*)
+    begin
+        if (selcmps2_imm_q) begin
+            exs_cmp_right_o = imm_q;
+        end else begin
+            exs_cmp_right_o = fwd_mux_regs2_data;
         end
     end
 

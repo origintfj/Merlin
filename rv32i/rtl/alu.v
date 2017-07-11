@@ -26,9 +26,12 @@ module alu
     // operation result mux
     reg  [`RV_XLEN-1:0] op_result_mux_out;
     // shifter
-    genvar genvar_i;
+    genvar              genvar_i;
     reg  [`RV_XLEN-1:0] shift_left_array[0:`RV_XLEN_X];
     reg  [`RV_XLEN-1:0] shift_right_array[0:`RV_XLEN_X];
+    // alu comparitor
+    reg                 cmp_lts;
+    reg                 cmp_ltu;
 
     //--------------------------------------------------------------
 
@@ -52,8 +55,8 @@ module alu
             `ALUOP_ADD  : op_result_mux_out = op_left_i + op_right_i;
             `ALUOP_SUB  : op_result_mux_out = op_left_i - op_right_i;
             `ALUOP_SLL  : op_result_mux_out = shift_left_array[`RV_XLEN_X];
-            `ALUOP_SLT  : op_result_mux_out = { `RV_XLEN {1'b0} }; // TODO
-            `ALUOP_SLTU : op_result_mux_out = { `RV_XLEN {1'b0} }; // TODO
+            `ALUOP_SLT  : op_result_mux_out = { { `RV_XLEN-1 {1'b0} }, cmp_lts };
+            `ALUOP_SLTU : op_result_mux_out = { { `RV_XLEN-1 {1'b0} }, cmp_ltu };
             `ALUOP_XOR  : op_result_mux_out = op_left_i ^ op_right_i;
             `ALUOP_SRL  : op_result_mux_out = shift_right_array[`RV_XLEN_X];
             `ALUOP_SRA  : op_result_mux_out = shift_right_array[`RV_XLEN_X];
@@ -99,6 +102,13 @@ module alu
 
     // alu comparitor
     //
+    always @ (*) // TODO consider using one compariter here and switching the MSBs to do signed vs. unsigned
+    begin
+        cmp_lts = $signed(cmp_left_i) < $signed(cmp_right_i);
+
+        cmp_ltu = cmp_left_i < cmp_right_i;
+    end
+    //
     always @ (posedge clk_i)
     begin
         if (clk_en_i) begin
@@ -114,13 +124,17 @@ module alu
                         cmp_result_o <= 1'b1;
                     end
                 end
-                `ALUCOND_LT  : begin // TODO
+                `ALUCOND_LT  : begin
+                    cmp_result_o <= cmp_lts;
                 end
-                `ALUCOND_GE  : begin // TODO
+                `ALUCOND_GE  : begin
+                    cmp_result_o <= ~cmp_lts;
                 end
-                `ALUCOND_LTU : begin // TODO
+                `ALUCOND_LTU : begin
+                    cmp_result_o <= cmp_ltu;
                 end
-                `ALUCOND_GEU : begin // TODO
+                `ALUCOND_GEU : begin
+                    cmp_result_o <= ~cmp_ltu;
                 end
                 default : begin
                 end
