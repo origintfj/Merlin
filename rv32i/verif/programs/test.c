@@ -42,7 +42,7 @@ void writes(char const* str) {
         c = word >> (index << 3);
 
         if (c != '\0') {
-            *(unsigned *const)0x600 = c;
+            *(unsigned *const)0x80000000 = c;
             ++str;
         }
     } while (c != '\0');

@@ -45,7 +45,7 @@ module ssram
                     `ifdef TESTBENCH_DBG_MSG
                         $display("SSRAM Write: ADDR=0x%08X, DATA=0x%08X", treqaddr_i, treqdata_i);
                     `endif
-                    if (treqaddr_i == 32'h600) begin
+                    if (treqaddr_i == 32'h80000000) begin
                         $write("%c", treqdata_i[7:0]);
                         $fflush();
                     end else if (treqaddr_i == 32'hfffffffc) begin
