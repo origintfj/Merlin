@@ -2,14 +2,19 @@ asm (
     "li     sp,     0x1000"
 );
 
+int a = (unsigned const)'0';
+
 int add1(int a);
 void writes(char const* const str);
 
 void main(void) {
     int i, j;
 
-    for (j = 0; j <= 3; ++j) {
+    for (j = 0; j < 4; ++j) {
         for (i = 0; i < j; ++i) {
+            writes((char const *const)&a);
+            a += 1;
+
             writes("Hello World!\n");
         }
     }

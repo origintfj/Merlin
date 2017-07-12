@@ -13,12 +13,12 @@ endif
 all:
 
 clean:
-	rm *.out &
-	rm *.hex &
-	rm *.lxt &
+	rm *.out
+	rm *.hex
+	rm *.lxt
 
 build_mem: # -ffreestanding -fPIC -fno-builtin
-	riscv32-unknown-elf-gcc -nostdinc -nostdlib -T link.ld $(CARGS) $(BOOT_ROM_FILE) -o test.out -O0
+	riscv32-unknown-elf-gcc -nostdinc -nostdlib -fPIC -e main -T link.ld $(CARGS) $(BOOT_ROM_FILE) -o test.out -O0
 	riscv32-unknown-elf-objcopy -O verilog test.out mem.hex
 
 rtl: build_mem

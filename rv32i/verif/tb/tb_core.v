@@ -37,13 +37,15 @@ module tb_core;
         $display();
         $display();
 
-        #(1_000_000);
+        #(1_000_000_000);
 
         $display();
         $display();
-        $display("*******************  SIMULATION END! *******************");
+        //$display("*******************  SIMULATION END! *******************");
+        //$finish();
 
-        $finish();
+        $display("*******************   FAIL - TIMEOUT   *******************");
+        $fatal();
     end
 
 
