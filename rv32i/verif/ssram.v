@@ -47,6 +47,12 @@ module ssram
                     `endif
                     if (treqaddr_i == 32'h600) begin
                         $write("%c", treqdata_i[7:0]);
+                        $fflush();
+                    end else if (treqaddr_i == 32'hfffffffc) begin
+                        $display();
+                        $display();
+                        $display("Program wrote to address 0xFFFFFFFC => End of test!");
+                        $finish();
                     end
                 end else begin
                     trspvalid_o <= 1'b1;

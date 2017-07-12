@@ -1,3 +1,5 @@
+`include "riscv_defs.v"
+
 module cs_registers // TODO
     (
         //

@@ -1,3 +1,5 @@
+`include "riscv_defs.v"
+
 module regfile_integer
     (
         // global
