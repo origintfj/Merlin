@@ -1,28 +1,39 @@
 module boot_rom
     (
         // global
-        input  logic                 clk,
-        input  logic                 resetb,
+        input  wire                  clk,
+        input  wire                  resetb,
         // instruction port
-        output logic                 treqready,
-        input  logic                 treqvalid,
-        input  logic           [1:0] treqpriv,
-        input  logic          [31:0] treqaddr,
-        input  logic                 trspready,
-        output logic                 trspvalid,
-        output logic                 trsprerr,
-        output logic          [31:0] trspdata
+        output wire                  treqready,
+        input  wire                  treqvalid,
+        input  wire            [1:0] treqpriv,
+        input  wire           [31:0] treqaddr,
+        input  wire                  trspready,
+        output reg                   trspvalid,
+        output reg                   trsprerr,
+        output reg            [31:0] trspdata
     );
 
     //--------------------------------------------------------------
 
-    logic        gate;
-    logic [7:0] mem[0:2048];
+    //
+    reg        gate;
+    //
+    wire [9:0] reqaddr;
+    reg  [7:0] mem[0:2048];
 
     //--------------------------------------------------------------
 
+    initial $readmemh("mem.hex", mem);
+
+
+    //
+    //
     assign treqready = gate;
 
+
+    //
+    //
     always @ (posedge clk)
     begin
         if ($random() % 10 != 0) begin
@@ -33,12 +44,9 @@ module boot_rom
         gate <= 1'b1;
     end
 
-    integer i;
 
-    initial $readmemh("mem.hex", mem);
     //
     //
-    logic [9:0] reqaddr;
     assign reqaddr = treqaddr[10:0];
     always @ (posedge clk or negedge resetb)
     begin
