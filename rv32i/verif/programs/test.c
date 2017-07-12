@@ -1,5 +1,7 @@
 asm (
-    "li     sp,     0x1000"
+    "_entry:\n"
+    "   li     sp,     0x1000\n"
+    "   j      main\n"
 );
 
 int a = (unsigned const)'0';

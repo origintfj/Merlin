@@ -5,16 +5,16 @@ module tb_core;
 
     parameter C_IRQV_SZ = 32;
 
-    logic clk    = 1'b1;
-    logic resetb = 1'b0;
+    reg         clk    = 1'b1;
+    reg         resetb = 1'b0;
 
-    logic        ireqready;
-    logic        ireqvalid;
-    logic [31:0] ireqaddr;
-    logic        irspready;
-    logic        irspvalid;
-    logic        irsprerr;
-    logic [31:0] irspdata;
+    wire        ireqready;
+    wire        ireqvalid;
+    wire [31:0] ireqaddr;
+    wire        irspready;
+    wire        irspvalid;
+    wire        irsprerr;
+    wire [31:0] irspdata;
 
     wire        dreqready;
     wire        dreqvalid;
