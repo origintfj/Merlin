@@ -1,5 +1,5 @@
 # default greylock boot rom
-BOOT_ROM_FILE := programs/test.c
+BOOT_ROM_FILE := programs/hello_world.c
 
 CARGS := -O0
 
