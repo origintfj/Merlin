@@ -35,31 +35,35 @@
 `define ZONE_LOADQ      2'b11
 
 //--------------------------------------------------------------
+// OPCODEs
+//--------------------------------------------------------------
+`define MINOR_OPCODE_ADDSUB 3'b000
+`define MINOR_OPCODE_SLL    3'b001
+`define MINOR_OPCODE_SLT    3'b010
+`define MINOR_OPCODE_SLTU   3'b011
+`define MINOR_OPCODE_XOR    3'b100
+`define MINOR_OPCODE_SRLSRA 3'b101
+`define MINOR_OPCODE_OR     3'b110
+`define MINOR_OPCODE_AND    3'b111
+//
+`define MINOR_OPCODE_PRIV   3'b000
+//--------------------------------------------------------------
 // ALU Definitions
 //--------------------------------------------------------------
-`define ALUOP_FUNCT3_ADDSUB 3'b000
-`define ALUOP_FUNCT3_SLL    3'b001
-`define ALUOP_FUNCT3_SLT    3'b010
-`define ALUOP_FUNCT3_SLTU   3'b011
-`define ALUOP_FUNCT3_XOR    3'b100
-`define ALUOP_FUNCT3_SRLSRA 3'b101
-`define ALUOP_FUNCT3_OR     3'b110
-`define ALUOP_FUNCT3_AND    3'b111
-//
 `define ALUOP_SZ        4
 `define ALUOP_RANGE     `ALUOP_SZ-1:0
 // alu opcodes - top bit is for uniquification
-`define ALUOP_ADD       { 1'b0, `ALUOP_FUNCT3_ADDSUB }
-`define ALUOP_SUB       { 1'b1, `ALUOP_FUNCT3_ADDSUB }
-`define ALUOP_SLL       { 1'b0, `ALUOP_FUNCT3_SLL    }
-`define ALUOP_SLT       { 1'b0, `ALUOP_FUNCT3_SLT    }
-`define ALUOP_SLTU      { 1'b0, `ALUOP_FUNCT3_SLTU   }
-`define ALUOP_XOR       { 1'b0, `ALUOP_FUNCT3_XOR    }
-`define ALUOP_SRL       { 1'b0, `ALUOP_FUNCT3_SRLSRA }
-`define ALUOP_SRA       { 1'b1, `ALUOP_FUNCT3_SRLSRA }
-`define ALUOP_OR        { 1'b0, `ALUOP_FUNCT3_OR     }
-`define ALUOP_AND       { 1'b0, `ALUOP_FUNCT3_AND    }
-`define ALUOP_MOV       { 1'b1, `ALUOP_FUNCT3_AND    } // pass right operand to output (e.g. LUI)
+`define ALUOP_ADD       { 1'b0, `MINOR_OPCODE_ADDSUB }
+`define ALUOP_SUB       { 1'b1, `MINOR_OPCODE_ADDSUB }
+`define ALUOP_SLL       { 1'b0, `MINOR_OPCODE_SLL    }
+`define ALUOP_SLT       { 1'b0, `MINOR_OPCODE_SLT    }
+`define ALUOP_SLTU      { 1'b0, `MINOR_OPCODE_SLTU   }
+`define ALUOP_XOR       { 1'b0, `MINOR_OPCODE_XOR    }
+`define ALUOP_SRL       { 1'b0, `MINOR_OPCODE_SRLSRA }
+`define ALUOP_SRA       { 1'b1, `MINOR_OPCODE_SRLSRA }
+`define ALUOP_OR        { 1'b0, `MINOR_OPCODE_OR     }
+`define ALUOP_AND       { 1'b0, `MINOR_OPCODE_AND    }
+`define ALUOP_MOV       { 1'b1, `MINOR_OPCODE_AND    } // pass right operand to output (e.g. LUI)
 // alu condition codes - used in conditional branching
 `define ALUCOND_EQ      3'b000
 `define ALUCOND_NE      3'b001
@@ -69,9 +73,24 @@
 `define ALUCOND_GEU     3'b111
 
 //--------------------------------------------------------------
-// Exception/Interrupt Definitions
+// CSR/Exception/Interrupt Definitions
 //--------------------------------------------------------------
+`define RV_MODE_MACHINE                     2'b11
+`define RV_MODE_SUPERVISOR                  2'b01
+`define RV_MODE_USER                        2'b00
+//
+`define RV_MSTATUS_MPP_RANGE                12:11
+`define RV_MSTATUS_SPP_INDEX                8
+`define RV_MSTATUS_MPIE_INDEX               7
+`define RV_MSTATUS_SPIE_INDEX               5
+`define RV_MSTATUS_UPIE_INDEX               4
+`define RV_MSTATUS_MIE_INDEX                3
+`define RV_MSTATUS_SIE_INDEX                1
+`define RV_MSTATUS_UIE_INDEX                0
+//
 `define RV_MEDELEG_LEGAL_MASK               16'h0bff
+`define RV_MEPC_RANGE                       `RV_XLEN-1:2 // TODO :1 iff Ext. C is supported
+`define RV_MEPC_LOB                         2'b0 // Low Order Bits TODO 1'b1 iff Ext. C is supported
 //
 `define EXCP_MCAUSE_INS_ADDR_MISALIGNED     { 1'b0, 27'b0, 4'd00 }
 `define EXCP_MCAUSE_INS_ACCESS_FAULT        { 1'b0, 27'b0, 4'd01 }

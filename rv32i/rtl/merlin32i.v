@@ -59,6 +59,8 @@ module merlin32i
     wire                ids_exs_ins_uerr;
     wire                ids_exs_ins_ferr;
     wire                ids_exs_jump;
+    wire                ids_exs_trap_rtn;
+    wire          [1:0] ids_exs_trap_rtn_mode;
     wire                ids_exs_cond;
     wire  [`ZONE_RANGE] ids_exs_zone;
     wire                ids_exs_link;
@@ -177,6 +179,8 @@ module merlin32i
             .exs_ins_uerr_o       (ids_exs_ins_uerr),
             .exs_ins_ferr_o       (ids_exs_ins_ferr),
             .exs_jump_o           (ids_exs_jump),
+            .exs_trap_rtn_o       (ids_exs_trap_rtn),
+            .exs_trap_rtn_mode_o  (ids_exs_trap_rtn_mode),
             .exs_cond_o           (ids_exs_cond),
             .exs_zone_o           (ids_exs_zone),
             .exs_link_o           (ids_exs_link),
@@ -221,6 +225,8 @@ module merlin32i
             .ids_ins_uerr_i       (ids_exs_ins_uerr),
             .ids_ins_ferr_i       (ids_exs_ins_ferr),
             .ids_jump_i           (ids_exs_jump),
+            .ids_trap_rtn_i       (ids_exs_trap_rtn),
+            .ids_trap_rtn_mode_i  (ids_exs_trap_rtn_mode),
             .ids_cond_i           (ids_exs_cond),
             .ids_zone_i           (ids_exs_zone),
             .ids_link_i           (ids_exs_link),
@@ -242,13 +248,7 @@ module merlin32i
             .ids_regd_wr_o        (exs_ids_regd_wr),
             .ids_regd_addr_o      (exs_ids_regd_addr),
             .ids_regd_data_o      (exs_ids_regd_data),
-            // hart vectoring and exception controller interface TODO
-            .hvec_ferr_o          (),
-            .hvec_uerr_o          (),
-            .hvec_maif_o          (),
-            .hvec_mala_o          (),
-            .hvec_masa_o          (),
-            .hvec_ilgl_o          (),
+            // hart vectoring interface
             .hvec_jump_o          (exs_hvec_jump),
             .hvec_jump_addr_o     (exs_hvec_jump_addr),
             // load/store queue interface

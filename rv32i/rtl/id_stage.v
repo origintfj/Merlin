@@ -20,6 +20,8 @@ module id_stage
         output reg                  exs_ins_uerr_o,
         output reg                  exs_ins_ferr_o,
         output reg                  exs_jump_o,
+        output reg                  exs_trap_rtn_o,
+        output reg            [1:0] exs_trap_rtn_mode_o,
         output reg                  exs_cond_o,
         output reg    [`ZONE_RANGE] exs_zone_o,
         output reg                  exs_link_o,
@@ -53,6 +55,8 @@ module id_stage
     // instruction decoder
     wire                ins_uerr_d;
     wire                jump_d;
+    wire                trap_rtn_d;
+    wire          [1:0] trap_rtn_mode_d;
     wire  [`ZONE_RANGE] zone_d;
     wire                regd_tgt;
     wire          [4:0] regd_addr_d;
@@ -121,6 +125,8 @@ module id_stage
                 // egress side
             .ins_err_o             (ins_uerr_d),
             .jump_o                (jump_d),
+            .trap_rtn_o            (trap_rtn_d),
+            .trap_rtn_mode_o       (trap_rtn_mode_d),
             .zone_o                (zone_d),
             .regd_tgt_o            (regd_tgt),
             .regd_addr_o           (regd_addr_d),
@@ -239,6 +245,8 @@ module id_stage
             if (pfu_ack_o) begin
                 exs_sofid_o           <= pfu_sofid_i;
                 exs_jump_o            <= jump_d;
+                exs_trap_rtn_o        <= trap_rtn_d;
+                exs_trap_rtn_mode_o   <= trap_rtn_mode_d;
                 pc_q                  <= pfu_pc_i;
                 exs_ins_uerr_o        <= ins_uerr_d;
                 exs_ins_ferr_o        <= pfu_ferr_i;

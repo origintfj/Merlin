@@ -10,6 +10,8 @@ module decoder
             // egress side
         output reg                   ins_err_o,
         output reg                   jump_o,
+        output reg                   trap_rtn_o,
+        output reg             [1:0] trap_rtn_mode_o,
         output reg     [`ZONE_RANGE] zone_o,
         output reg                   regd_tgt_o,
         output wire            [4:0] regd_addr_o,
@@ -57,11 +59,12 @@ module decoder
     //--------------------------------------------------------------
 
     // global
-    assign regd_addr_o  = regd_addr;
-    assign regs1_addr_o = regs1_addr;
-    assign regs2_addr_o = ins_i[24:20];
-    assign funct3_o     = funct3;
-    assign csr_addr_o   = ins_i[31:20];
+    assign trap_rtn_mode_o = ins_i[29:28];
+    assign regd_addr_o     = regd_addr;
+    assign regs1_addr_o    = regs1_addr;
+    assign regs2_addr_o    = ins_i[24:20];
+    assign funct3_o        = funct3;
+    assign csr_addr_o      = ins_i[31:20];
 
 
     // instruction type decode
@@ -76,6 +79,7 @@ module decoder
     begin
         ins_err_o             = 1'b0;
         jump_o                = 1'b0;
+        trap_rtn_o            = 1'b0;
         zone_o                = `ZONE_NONE;
         regd_tgt_o            = 1'b0;
         regs1_rd_o            = 1'b0;
@@ -183,27 +187,27 @@ module decoder
                 regs1_rd_o  = 1'b1;
                 sels2_imm_o = 1'b1;
                 case (funct3)
-                    `ALUOP_FUNCT3_ADDSUB : begin
+                    `MINOR_OPCODE_ADDSUB : begin
                         aluop_o = `ALUOP_ADD;
                     end
-                    `ALUOP_FUNCT3_SLL : begin
+                    `MINOR_OPCODE_SLL : begin
                         aluop_o = `ALUOP_SLL;
                         if (funct7 != 7'b0000000) begin
                             ins_err_o = 1'b1;
                         end
                     end
-                    `ALUOP_FUNCT3_SLT : begin
+                    `MINOR_OPCODE_SLT : begin
                         aluop_o        = `ALUOP_SLT;
                         selcmps2_imm_o = 1'b1;
                     end
-                    `ALUOP_FUNCT3_SLTU : begin
+                    `MINOR_OPCODE_SLTU : begin
                         aluop_o        = `ALUOP_SLTU;
                         selcmps2_imm_o = 1'b1;
                     end
-                    `ALUOP_FUNCT3_XOR : begin
+                    `MINOR_OPCODE_XOR : begin
                         aluop_o = `ALUOP_XOR;
                     end
-                    `ALUOP_FUNCT3_SRLSRA : begin
+                    `MINOR_OPCODE_SRLSRA : begin
                         if (funct7 == 7'b0000000) begin
                             aluop_o = `ALUOP_SRL;
                         end else if (funct7 == 7'b0100000) begin
@@ -212,10 +216,10 @@ module decoder
                             ins_err_o = 1'b1;
                         end
                     end
-                    `ALUOP_FUNCT3_OR : begin
+                    `MINOR_OPCODE_OR : begin
                         aluop_o = `ALUOP_OR;
                     end
-                    `ALUOP_FUNCT3_AND : begin
+                    `MINOR_OPCODE_AND : begin
                         aluop_o = `ALUOP_AND;
                     end
                     default : begin
@@ -230,7 +234,7 @@ module decoder
                 regs1_rd_o = 1'b1;
                 regs2_rd_o = 1'b1;
                 case (funct3)
-                    `ALUOP_FUNCT3_ADDSUB : begin
+                    `MINOR_OPCODE_ADDSUB : begin
                         if (funct7 == 7'b0000000) begin
                             aluop_o = `ALUOP_ADD;
                         end else if (funct7 == 7'b0100000) begin
@@ -239,31 +243,31 @@ module decoder
                             ins_err_o = 1'b1;
                         end
                     end
-                    `ALUOP_FUNCT3_SLL : begin
+                    `MINOR_OPCODE_SLL : begin
                         aluop_o = `ALUOP_SLL;
                         if (funct7 != 7'b0000000) begin
                             ins_err_o = 1'b1;
                         end
                     end
-                    `ALUOP_FUNCT3_SLT : begin
+                    `MINOR_OPCODE_SLT : begin
                         aluop_o = `ALUOP_SLT;
                         if (funct7 != 7'b0000000) begin
                             ins_err_o = 1'b1;
                         end
                     end
-                    `ALUOP_FUNCT3_SLTU : begin
+                    `MINOR_OPCODE_SLTU : begin
                         aluop_o = `ALUOP_SLTU;
                         if (funct7 != 7'b0000000) begin
                             ins_err_o = 1'b1;
                         end
                     end
-                    `ALUOP_FUNCT3_XOR : begin
+                    `MINOR_OPCODE_XOR : begin
                         aluop_o = `ALUOP_XOR;
                         if (funct7 != 7'b0000000) begin
                             ins_err_o = 1'b1;
                         end
                     end
-                    `ALUOP_FUNCT3_SRLSRA : begin
+                    `MINOR_OPCODE_SRLSRA : begin
                         if (funct7 == 7'b0000000) begin
                             aluop_o = `ALUOP_SRL;
                         end else if (funct7 == 7'b0100000) begin
@@ -272,13 +276,13 @@ module decoder
                             ins_err_o = 1'b1;
                         end
                     end
-                    `ALUOP_FUNCT3_OR : begin
+                    `MINOR_OPCODE_OR : begin
                         aluop_o = `ALUOP_OR;
                         if (funct7 != 7'b0000000) begin
                             ins_err_o = 1'b1;
                         end
                     end
-                    `ALUOP_FUNCT3_AND : begin
+                    `MINOR_OPCODE_AND : begin
                         aluop_o = `ALUOP_AND;
                         if (funct7 != 7'b0000000) begin
                             ins_err_o = 1'b1;
@@ -293,7 +297,26 @@ module decoder
                 ins_type = C_IMM_TYPE_MISC_MEM;
             end
             7'b1110011 : begin // system
-                if (funct3 == 3'b000) begin // TODO ECALL/EBREAK
+                if (funct3 == `MINOR_OPCODE_PRIV) begin
+                    if (regd_addr == 5'b0) begin
+                        if (funct7 == 7'b0001001) begin // TODO SFENCE.VMA
+                            ins_err_o = 1'b1;
+                        end else if (regs1_addr == 5'b0) begin
+                            if (ins_i[31:20] == 12'h000) begin // TODO ECALL
+                            end else if (ins_i[31:20] == 12'h001) begin // TODO EBREAK
+                            end else if (ins_i[31:30] == 2'b0 && ins_i[27:20] == 8'h02) begin // TRAP RETURN
+                                jump_o     = 1'b1;
+                                trap_rtn_o = 1'b1;
+                            end else if (ins_i[31:20] == 12'h105) begin // TODO WFI
+                            end else begin
+                                ins_err_o = 1'b1;
+                            end
+                        end else begin
+                            ins_err_o = 1'b1;
+                        end
+                    end else begin
+                        ins_err_o = 1'b1;
+                    end
                 end else if (funct3 == 3'b001 ||
                              funct3 == 3'b010 ||
                              funct3 == 3'b011) begin // CSR access with rs1
