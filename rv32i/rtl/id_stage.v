@@ -3,128 +3,140 @@
 module id_stage
     (
         // global
-        input  wire                 clk_i,
-        input  wire                 clk_en_i,
-        input  wire                 resetb_i,
+        input  wire                      clk_i,
+        input  wire                      clk_en_i,
+        input  wire                      resetb_i,
         // pfu interface
-        input  wire                 pfu_dav_i,   // new fetch available
-        output wire                 pfu_ack_o,   // ack this fetch
-        input  wire  [`SOFID_RANGE] pfu_sofid_i, // first fetch since vectoring
-        input  wire          [31:0] pfu_ins_i,   // instruction fetched
-        input  wire                 pfu_ferr_i,  // this instruction fetch resulted in error
-        input  wire          [31:0] pfu_pc_i,    // address of this instruction
+        input  wire                      pfu_dav_i,   // new fetch available
+        output wire                      pfu_ack_o,   // ack this fetch
+        input  wire       [`SOFID_RANGE] pfu_sofid_i, // first fetch since vectoring
+        input  wire               [31:0] pfu_ins_i,   // instruction fetched
+        input  wire                      pfu_ferr_i,  // this instruction fetch resulted in error
+        input  wire               [31:0] pfu_pc_i,    // address of this instruction
         // ex stage interface
-        output reg                  exs_valid_o,
-        input  wire                 exs_stall_i,
-        output reg   [`SOFID_RANGE] exs_sofid_o,
-        output reg                  exs_ins_uerr_o,
-        output reg                  exs_ins_ferr_o,
-        output reg                  exs_jump_o,
-        output reg                  exs_trap_rtn_o,
-        output reg            [1:0] exs_trap_rtn_mode_o,
-        output reg                  exs_cond_o,
-        output reg    [`ZONE_RANGE] exs_zone_o,
-        output reg                  exs_link_o,
-        output wire  [`RV_XLEN-1:0] exs_pc_o,
-        output reg   [`ALUOP_RANGE] exs_alu_op_o,
-        output reg   [`RV_XLEN-1:0] exs_operand_left_o,
-        output reg   [`RV_XLEN-1:0] exs_operand_right_o,
-        output reg   [`RV_XLEN-1:0] exs_cmp_right_o,
-        output wire  [`RV_XLEN-1:0] exs_regs1_data_o,
-        output wire  [`RV_XLEN-1:0] exs_regs2_data_o,
-        output reg            [4:0] exs_regd_addr_o,
-        output reg            [2:0] exs_funct3_o,
-        output reg                  exs_csr_rd_o,
-        output reg                  exs_csr_wr_o,
-        output reg           [11:0] exs_csr_addr_o,
-        output reg   [`RV_XLEN-1:0] exs_csr_wr_data_o,
+        output reg                       exs_valid_o,
+        input  wire                      exs_stall_i,
+        output reg        [`SOFID_RANGE] exs_sofid_o,
+        output reg   [`RV_INSSIZE_RANGE] exs_ins_size_o,
+        output reg                       exs_ins_uerr_o,
+        output reg                       exs_ins_ferr_o,
+        output reg                       exs_jump_o,
+        output reg                       exs_ecall_o,
+        output reg                       exs_trap_rtn_o,
+        output reg                 [1:0] exs_trap_rtn_mode_o,
+        output reg                       exs_cond_o,
+        output reg         [`ZONE_RANGE] exs_zone_o,
+        output reg                       exs_link_o,
+        output wire       [`RV_XLEN-1:0] exs_pc_o,
+        output reg        [`ALUOP_RANGE] exs_alu_op_o,
+        output reg        [`RV_XLEN-1:0] exs_operand_left_o,
+        output reg        [`RV_XLEN-1:0] exs_operand_right_o,
+        output reg        [`RV_XLEN-1:0] exs_cmp_right_o,
+        output wire       [`RV_XLEN-1:0] exs_regs1_data_o,
+        output wire       [`RV_XLEN-1:0] exs_regs2_data_o,
+        output reg                 [4:0] exs_regd_addr_o,
+        output reg                 [2:0] exs_funct3_o,
+        output reg                       exs_csr_rd_o,
+        output reg                       exs_csr_wr_o,
+        output reg                [11:0] exs_csr_addr_o,
+        output reg        [`RV_XLEN-1:0] exs_csr_wr_data_o,
             // write-back interface
-        input  wire                 exs_regd_cncl_load_i,
-        input  wire                 exs_regd_wr_i,
-        input  wire           [4:0] exs_regd_addr_i,
-        input  wire  [`RV_XLEN-1:0] exs_regd_data_i,
+        input  wire                      exs_regd_cncl_load_i,
+        input  wire                      exs_regd_wr_i,
+        input  wire                [4:0] exs_regd_addr_i,
+        input  wire       [`RV_XLEN-1:0] exs_regd_data_i,
         // load/store queue interface
-        input  wire                 lsq_reg_wr_i,
-        input  wire           [4:0] lsq_reg_addr_i,
-        input  wire  [`RV_XLEN-1:0] lsq_reg_data_i
+        input  wire                      lsq_reg_wr_i,
+        input  wire                [4:0] lsq_reg_addr_i,
+        input  wire       [`RV_XLEN-1:0] lsq_reg_data_i
     );
 
     //--------------------------------------------------------------
 
+    // interface assignments
     // id stage qualifier logic
     // instruction decoder
-    wire                ins_uerr_d;
-    wire                jump_d;
-    wire                trap_rtn_d;
-    wire          [1:0] trap_rtn_mode_d;
-    wire  [`ZONE_RANGE] zone_d;
-    wire                regd_tgt;
-    wire          [4:0] regd_addr_d;
-    wire                regs1_rd;
-    wire          [4:0] regs1_addr;
-    wire                regs2_rd;
-    wire          [4:0] regs2_addr;
-    wire [`RV_XLEN-1:0] imm_d;
-    wire                link_d;
-    wire                sels1_pc_d;
-    wire                sel_csr_wr_data_imm_d;
-    wire                sels2_imm_d;
-    wire                selcmps2_imm_d;
-    wire [`ALUOP_RANGE] alu_op_d;
-    wire          [2:0] funct3_d;
-    wire                csr_rd_d;
-    wire                csr_wr_d;
-    wire         [11:0] csr_addr_d;
-    wire                conditional_d;
+    wire [`RV_INSSIZE_RANGE] ins_size_d;
+    wire                     ins_uerr_d;
+    wire                     jump_d;
+    wire                     ecall_d;
+    wire                     trap_rtn_d;
+    wire               [1:0] trap_rtn_mode_d;
+    wire       [`ZONE_RANGE] zone_d;
+    wire                     regd_tgt;
+    wire               [4:0] regd_addr_d;
+    wire                     regs1_rd;
+    wire               [4:0] regs1_addr;
+    wire                     regs2_rd;
+    wire               [4:0] regs2_addr;
+    wire      [`RV_XLEN-1:0] imm_d;
+    wire                     link_d;
+    wire                     sels1_pc_d;
+    wire                     sel_csr_wr_data_imm_d;
+    wire                     sels2_imm_d;
+    wire                     selcmps2_imm_d;
+    wire      [`ALUOP_RANGE] alu_op_d;
+    wire               [2:0] funct3_d;
+    wire                     csr_rd_d;
+    wire                     csr_wr_d;
+    wire              [11:0] csr_addr_d;
+    wire                     conditional_d;
     // id stage stall controller
-    reg                 ids_stall;
-    reg          [31:1] reg_loading_vector_q;
+    reg                      ids_stall;
+    reg               [31:1] reg_loading_vector_q;
     // integer register file
-    wire [`RV_XLEN-1:0] regs1_dout;
-    wire [`RV_XLEN-1:0] regs2_dout;
+    wire      [`RV_XLEN-1:0] regs1_dout;
+    wire      [`RV_XLEN-1:0] regs2_dout;
     // forwarding register
-    reg                 fwd_regd_wr_q;
-    reg           [4:0] fwd_regd_addr_q;
-    reg  [`RV_XLEN-1:0] fwd_regd_data_q;
+    reg                      fwd_regd_wr_q;
+    reg                [4:0] fwd_regd_addr_q;
+    reg       [`RV_XLEN-1:0] fwd_regd_data_q;
     // id register stage
-    reg  [`RV_XLEN-1:0] pc_q;
-    reg                 ex_udefins_err_q;
-    reg  [`RV_XLEN-1:0] imm_q;
-    reg                 sels1_pc_q;
-    reg                 sel_csr_wr_data_imm_q;
-    reg                 sels2_imm_q;
-    reg                 selcmps2_imm_q;
-    reg           [4:0] regs1_addr_q;
-    reg           [4:0] regs2_addr_q;
+    reg       [`RV_XLEN-1:0] pc_q;
+    reg                      ex_udefins_err_q;
+    reg       [`RV_XLEN-1:0] imm_q;
+    reg                      sels1_pc_q;
+    reg                      sel_csr_wr_data_imm_q;
+    reg                      sels2_imm_q;
+    reg                      selcmps2_imm_q;
+    reg                [4:0] regs1_addr_q;
+    reg                [4:0] regs2_addr_q;
     // operand forwarding mux
-    reg  [`RV_XLEN-1:0] fwd_mux_regs1_data;
-    reg  [`RV_XLEN-1:0] fwd_mux_regs2_data;
+    reg       [`RV_XLEN-1:0] fwd_mux_regs1_data;
+    reg       [`RV_XLEN-1:0] fwd_mux_regs2_data;
     // left operand select mux
     // right operand select mux
+    // right cmp select mux
     // csr write data select mux
 
     //--------------------------------------------------------------
 
+    //--------------------------------------------------------------
     // interface assignments
+    //--------------------------------------------------------------
     assign exs_pc_o         = pc_q;
     assign exs_regs1_data_o = fwd_mux_regs1_data;
     assign exs_regs2_data_o = fwd_mux_regs2_data;
 
 
+    //--------------------------------------------------------------
     // id stage qualifier logic
-    //
+    //--------------------------------------------------------------
     assign pfu_ack_o = pfu_dav_i & ~ids_stall & (~exs_stall_i | exs_valid_o);
 
 
+    //--------------------------------------------------------------
     // instruction decoder
-    //
+    //--------------------------------------------------------------
     decoder i_decoder (
             // instruction decoder interface
                 // ingress side
             .ins_i                 (pfu_ins_i),
                 // egress side
+            .ins_size_o            (ins_size_d),
             .ins_err_o             (ins_uerr_d),
             .jump_o                (jump_d),
+            .ecall_o               (ecall_d),
             .trap_rtn_o            (trap_rtn_d),
             .trap_rtn_mode_o       (trap_rtn_mode_d),
             .zone_o                (zone_d),
@@ -149,8 +161,9 @@ module id_stage
         );
 
 
+    //--------------------------------------------------------------
     // id stage stall controller
-    //
+    //--------------------------------------------------------------
     /* *** RULES ***
      * No register can have more than one pending load at any given time
      *  - This is to prevent the flag being cleared prematuraly by the first load
@@ -187,8 +200,9 @@ module id_stage
     end
 
 
+    //--------------------------------------------------------------
     // integer register file
-    //
+    //--------------------------------------------------------------
     regfile_integer i_regfile_integer (
             // global
             .clk_i         (clk_i),
@@ -211,8 +225,9 @@ module id_stage
         );
 
 
+    //--------------------------------------------------------------
     // forwarding register
-    //
+    //--------------------------------------------------------------
     always @ (posedge clk_i or negedge resetb_i)
     begin
         if (~resetb_i) begin
@@ -227,8 +242,9 @@ module id_stage
     end
 
 
+    //--------------------------------------------------------------
     // id register stage
-    //
+    //--------------------------------------------------------------
     always @ (posedge clk_i or negedge resetb_i)
     begin
         if (~resetb_i) begin
@@ -245,9 +261,11 @@ module id_stage
             if (pfu_ack_o) begin
                 exs_sofid_o           <= pfu_sofid_i;
                 exs_jump_o            <= jump_d;
+                exs_ecall_o           <= ecall_d;
                 exs_trap_rtn_o        <= trap_rtn_d;
                 exs_trap_rtn_mode_o   <= trap_rtn_mode_d;
                 pc_q                  <= pfu_pc_i;
+                exs_ins_size_o        <= ins_size_d;
                 exs_ins_uerr_o        <= ins_uerr_d;
                 exs_ins_ferr_o        <= pfu_ferr_i;
                 exs_zone_o            <= zone_d;
@@ -272,9 +290,10 @@ module id_stage
     end
 
 
+    //--------------------------------------------------------------
     // operand forwarding mux
-    //
-        // forwarding mux for s1
+    //--------------------------------------------------------------
+    // forwarding mux for s1
     always @ (*)
     begin
         if (regs1_addr_q == 5'b0) begin
@@ -291,7 +310,7 @@ module id_stage
             fwd_mux_regs1_data = regs1_dout;
         end
     end
-        // forwarding mux for s2
+    // forwarding mux for s2
     always @ (*)
     begin
         if (regs2_addr_q == 5'b0) begin
@@ -310,8 +329,9 @@ module id_stage
     end
 
 
+    //--------------------------------------------------------------
     // left operand select mux
-    //
+    //--------------------------------------------------------------
     always @ (*)
     begin
         if (sels1_pc_q) begin
@@ -322,8 +342,9 @@ module id_stage
     end
 
 
+    //--------------------------------------------------------------
     // right operand select mux
-    //
+    //--------------------------------------------------------------
     always @ (*)
     begin
         if (sels2_imm_q) begin
@@ -334,8 +355,9 @@ module id_stage
     end
 
 
+    //--------------------------------------------------------------
     // right cmp select mux
-    //
+    //--------------------------------------------------------------
     always @ (*)
     begin
         if (selcmps2_imm_q) begin
@@ -346,8 +368,9 @@ module id_stage
     end
 
 
+    //--------------------------------------------------------------
     // csr write data select mux
-    //
+    //--------------------------------------------------------------
     always @ (*)
     begin
         if (sel_csr_wr_data_imm_q) begin

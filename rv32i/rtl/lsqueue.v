@@ -75,7 +75,9 @@ module lsqueue
 
     //--------------------------------------------------------------
 
+    //--------------------------------------------------------------
     // top-level assignments
+    //--------------------------------------------------------------
     assign request = dreqvalid_o & dreqready_i;
     //
     assign lsq_reg_wr_o = ~rsp_data_fifo_empty;
@@ -94,8 +96,9 @@ module lsqueue
     assign drspready_o = drspvalid_i & (~rsp_data_fifo_full | drspwerr_i);
 
 
+    //--------------------------------------------------------------
     // request fifo
-    //
+    //--------------------------------------------------------------
     assign req_fifo_wr = exs_lq_wr_i | exs_sq_wr_i;
     //
     always @ (*)
@@ -144,8 +147,9 @@ module lsqueue
         );
 
 
+    //--------------------------------------------------------------
     // response control fifo
-    //
+    //--------------------------------------------------------------
     assign req_ctrl_fifo_wr_data        = { req_fifo_rd_data_regd, req_fifo_rd_data_funct3 };
     //
     assign lsq_reg_addr_o               = req_ctrl_fifo_rd_data[3 +: 5];
@@ -173,8 +177,9 @@ module lsqueue
         );
 
 
+    //--------------------------------------------------------------
     // response data fifo
-    //
+    //--------------------------------------------------------------
     assign rsp_data_fifo_wr_data = (drsprerr_i ? { `RV_XLEN {1'b0} } : drspdata_i); // if read error -> return 0
     //
     fifo
@@ -199,8 +204,9 @@ module lsqueue
         );
 
 
+    //--------------------------------------------------------------
     // response data formatter
-    //
+    //--------------------------------------------------------------
     always @ (*)
     begin
         case (req_ctrl_fifo_rd_data_funct3)

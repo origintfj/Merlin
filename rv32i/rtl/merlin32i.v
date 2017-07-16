@@ -42,68 +42,71 @@ module merlin32i
 
     //--------------------------------------------------------------
 
-    // hart vectoring and exception controller
-    wire                hvec_pfu_pc_wr;
-    wire [`RV_XLEN-1:0] hvec_pfu_pc;
+    // hart vectoring sequencer
+    wire                     hvec_pfu_pc_wr;
+    wire      [`RV_XLEN-1:0] hvec_pfu_pc;
     // prefetch unit
-    wire                pfu_hvec_ready;
-    wire                pfu_ids_dav;
-    wire [`SOFID_RANGE] pfu_ids_sofid;
-    wire [`RV_XLEN-1:0] pfu_ids_ins;
-    wire                pfu_ids_ferr;
-    wire [`RV_XLEN-1:0] pfu_ids_pc;
+    wire                     pfu_hvec_ready;
+    wire                     pfu_ids_dav;
+    wire      [`SOFID_RANGE] pfu_ids_sofid;
+    wire      [`RV_XLEN-1:0] pfu_ids_ins;
+    wire                     pfu_ids_ferr;
+    wire      [`RV_XLEN-1:0] pfu_ids_pc;
     // instruction decoder stage
-    wire                ids_pfu_ack;
-    wire                ids_exs_valid;
-    wire [`SOFID_RANGE] ids_exs_sofid;
-    wire                ids_exs_ins_uerr;
-    wire                ids_exs_ins_ferr;
-    wire                ids_exs_jump;
-    wire                ids_exs_trap_rtn;
-    wire          [1:0] ids_exs_trap_rtn_mode;
-    wire                ids_exs_cond;
-    wire  [`ZONE_RANGE] ids_exs_zone;
-    wire                ids_exs_link;
-    wire [`RV_XLEN-1:0] ids_exs_pc;
-    wire [`ALUOP_RANGE] ids_exs_alu_op;
-    wire [`RV_XLEN-1:0] ids_exs_operand_left;
-    wire [`RV_XLEN-1:0] ids_exs_operand_right;
-    wire [`RV_XLEN-1:0] ids_exs_cmp_right;
-    wire [`RV_XLEN-1:0] ids_exs_regs1_data;
-    wire [`RV_XLEN-1:0] ids_exs_regs2_data;
-    wire          [4:0] ids_exs_regd_addr;
-    wire          [2:0] ids_exs_funct3;
-    wire                ids_exs_csr_rd;
-    wire                ids_exs_csr_wr;
-    wire         [11:0] ids_exs_csr_addr;
-    wire [`RV_XLEN-1:0] ids_exs_csr_wr_data;
+    wire                     ids_pfu_ack;
+    wire                     ids_exs_valid;
+    wire      [`SOFID_RANGE] ids_exs_sofid;
+    wire [`RV_INSSIZE_RANGE] ids_exs_ins_size;
+    wire                     ids_exs_ins_uerr;
+    wire                     ids_exs_ins_ferr;
+    wire                     ids_exs_jump;
+    wire                     ids_exs_ecall;
+    wire                     ids_exs_trap_rtn;
+    wire               [1:0] ids_exs_trap_rtn_mode;
+    wire                     ids_exs_cond;
+    wire       [`ZONE_RANGE] ids_exs_zone;
+    wire                     ids_exs_link;
+    wire      [`RV_XLEN-1:0] ids_exs_pc;
+    wire      [`ALUOP_RANGE] ids_exs_alu_op;
+    wire      [`RV_XLEN-1:0] ids_exs_operand_left;
+    wire      [`RV_XLEN-1:0] ids_exs_operand_right;
+    wire      [`RV_XLEN-1:0] ids_exs_cmp_right;
+    wire      [`RV_XLEN-1:0] ids_exs_regs1_data;
+    wire      [`RV_XLEN-1:0] ids_exs_regs2_data;
+    wire               [4:0] ids_exs_regd_addr;
+    wire               [2:0] ids_exs_funct3;
+    wire                     ids_exs_csr_rd;
+    wire                     ids_exs_csr_wr;
+    wire              [11:0] ids_exs_csr_addr;
+    wire      [`RV_XLEN-1:0] ids_exs_csr_wr_data;
     // execution stage
-    wire          [1:0] exs_pfu_hpl;
-    wire                exs_ids_stall;
-    wire                exs_ids_regd_cncl_load;
-    wire                exs_ids_regd_wr;
-    wire          [4:0] exs_ids_regd_addr;
-    wire [`RV_XLEN-1:0] exs_ids_regd_data;
-    wire                exs_hvec_jump;
-    wire [`RV_XLEN-1:0] exs_hvec_jump_addr;
-    wire                exs_lsq_lq_wr;
-    wire                exs_lsq_sq_wr;
-    wire          [1:0] exs_lsq_hpl;
-    wire          [2:0] exs_lsq_funct3;
-    wire          [4:0] exs_lsq_regd_addr;
-    wire [`RV_XLEN-1:0] exs_lsq_regs2_data;
-    wire [`RV_XLEN-1:0] exs_lsq_addr;
-    // load/store queue interface
-    wire                lsq_ids_reg_wr;
-    wire          [4:0] lsq_ids_reg_addr;
-    wire [`RV_XLEN-1:0] lsq_ids_reg_data;
-    wire                lsq_exs_full;
+    wire               [1:0] exs_pfu_hpl;
+    wire                     exs_ids_stall;
+    wire                     exs_ids_regd_cncl_load;
+    wire                     exs_ids_regd_wr;
+    wire               [4:0] exs_ids_regd_addr;
+    wire      [`RV_XLEN-1:0] exs_ids_regd_data;
+    wire                     exs_hvec_jump;
+    wire      [`RV_XLEN-1:0] exs_hvec_jump_addr;
+    wire                     exs_lsq_lq_wr;
+    wire                     exs_lsq_sq_wr;
+    wire               [1:0] exs_lsq_hpl;
+    wire               [2:0] exs_lsq_funct3;
+    wire               [4:0] exs_lsq_regd_addr;
+    wire      [`RV_XLEN-1:0] exs_lsq_regs2_data;
+    wire      [`RV_XLEN-1:0] exs_lsq_addr;
+    // load/store queue
+    wire                     lsq_ids_reg_wr;
+    wire               [4:0] lsq_ids_reg_addr;
+    wire      [`RV_XLEN-1:0] lsq_ids_reg_data;
+    wire                     lsq_exs_full;
 
     //--------------------------------------------------------------
 
 
-    // hart vectoring and exception controller
-    //
+    //--------------------------------------------------------------
+    // hart vectoring sequencer
+    //--------------------------------------------------------------
     hvec i_hvec (
             // global
             .clk_i           (clk_i),
@@ -121,8 +124,9 @@ module merlin32i
         );
 
 
+    //--------------------------------------------------------------
     // prefetch unit
-    //
+    //--------------------------------------------------------------
     pfu
         #(
             .C_BUS_SZX      (5), // bus width base 2 exponent
@@ -158,8 +162,9 @@ module merlin32i
         );
 
 
+    //--------------------------------------------------------------
     // instruction decoder stage
-    //
+    //--------------------------------------------------------------
     id_stage i_id_stage (
             // global
             .clk_i                (clk_i),
@@ -176,9 +181,11 @@ module merlin32i
             .exs_valid_o          (ids_exs_valid),
             .exs_stall_i          (exs_ids_stall),
             .exs_sofid_o          (ids_exs_sofid),
+            .exs_ins_size_o       (ids_exs_ins_size),
             .exs_ins_uerr_o       (ids_exs_ins_uerr),
             .exs_ins_ferr_o       (ids_exs_ins_ferr),
             .exs_jump_o           (ids_exs_jump),
+            .exs_ecall_o          (ids_exs_ecall),
             .exs_trap_rtn_o       (ids_exs_trap_rtn),
             .exs_trap_rtn_mode_o  (ids_exs_trap_rtn_mode),
             .exs_cond_o           (ids_exs_cond),
@@ -209,8 +216,9 @@ module merlin32i
         );
 
 
+    //--------------------------------------------------------------
     // execution stage
-    //
+    //--------------------------------------------------------------
     ex_stage i_ex_stage (
             // global
             .clk_i                (clk_i),
@@ -222,9 +230,11 @@ module merlin32i
             .ids_valid_i          (ids_exs_valid),
             .ids_stall_o          (exs_ids_stall),
             .ids_sofid_i          (ids_exs_sofid),
+            .ids_ins_size_i       (ids_exs_ins_size),
             .ids_ins_uerr_i       (ids_exs_ins_uerr),
             .ids_ins_ferr_i       (ids_exs_ins_ferr),
             .ids_jump_i           (ids_exs_jump),
+            .ids_ecall_i          (ids_exs_ecall),
             .ids_trap_rtn_i       (ids_exs_trap_rtn),
             .ids_trap_rtn_mode_i  (ids_exs_trap_rtn_mode),
             .ids_cond_i           (ids_exs_cond),
@@ -263,8 +273,9 @@ module merlin32i
         );
 
 
+    //--------------------------------------------------------------
     // load/store queue
-    //
+    //--------------------------------------------------------------
     lsqueue
         #(
             .C_FIFO_DEPTH_X     (2)

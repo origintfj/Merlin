@@ -75,8 +75,9 @@ module pfu
 
     //--------------------------------------------------------------
 
+    //--------------------------------------------------------------
     // interface assignments
-    //
+    //--------------------------------------------------------------
     assign ireqhpl_o = exs_hpl_i;
     assign ireqaddr_o  = pc_q; // TODO
     assign irspready_o = irspvalid_i; // always ready
@@ -84,8 +85,9 @@ module pfu
     assign ids_dav_o = ~fifo_empty;
 
 
+    //--------------------------------------------------------------
     // bus interface fsm
-    //
+    //--------------------------------------------------------------
     always @ (*)
     begin
         ireqvalid_o      = 1'b0;
@@ -141,8 +143,9 @@ module pfu
     end
 
 
+    //--------------------------------------------------------------
     // fifo level counter
-    //
+    //--------------------------------------------------------------
     always @ (posedge clk_i or negedge resetb_i)
     begin
         if (~resetb_i) begin
@@ -170,8 +173,9 @@ module pfu
     end
 
 
+    //--------------------------------------------------------------
     // program counter
-    //
+    //--------------------------------------------------------------
     always @ (posedge clk_i or negedge resetb_i)
     begin
         if (~resetb_i) begin
@@ -192,8 +196,9 @@ module pfu
     end
 
 
+    //--------------------------------------------------------------
     // sofid register
-    //
+    //--------------------------------------------------------------
     always @ (posedge clk_i or negedge resetb_i)
     begin
         if (~resetb_i) begin
@@ -210,8 +215,9 @@ module pfu
     end
 
 
+    //--------------------------------------------------------------
     // fifo
-    //
+    //--------------------------------------------------------------
     assign fifo_din[   C_SOFID_LSB +: C_SOFID_SZ] = sofid_q; // TODO
     assign fifo_din[    C_FERR_LSB +: 1]          = irsprerr_i;
     assign fifo_din[ C_FIFO_PC_LSB +: C_BUS_SZ]   = request_addr_q;

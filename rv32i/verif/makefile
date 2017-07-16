@@ -21,17 +21,19 @@ endif
 all:
 
 clean:
-	rm *.out
-	rm *.hex
-	rm *.lxt
+	rm -f *.out
+	rm -f *.hex
+	rm -f *.lxt
 
 build_mem: # -ffreestanding -fPIC -fno-builtin
 	riscv32-unknown-elf-gcc -nostdinc -nostdlib -fPIC -e _entry -T link.ld $(CARGS) $(BOOT_ROM_FILE) -o test.out
 	riscv32-unknown-elf-objcopy -O verilog test.out mem.hex
+	#cat mem.hex
 	riscv32-unknown-elf-objdump -D test.out
-	cat mem.hex
 
-run: build_mem
+run: build_mem run_only
+
+run_only:
 	iverilog -o tb_core.out -g2012 $(FILE_LIST) tb/boot_rom.v tb/ssram.v tb/tb_core.v
 	vvp tb_core.out $(DUMP_LXT2)
 

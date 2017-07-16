@@ -19,20 +19,23 @@
 //--------------------------------------------------------------
 // Pipeline Bundles
 //--------------------------------------------------------------
+// instruction size bytes (there is an implied 0 LSB)
+`define RV_INSSIZE_SZ       2
+`define RV_INSSIZE_RANGE    1:0
 // frame id
-`define SOFID_SZ        2
-`define SOFID_RANGE     `SOFID_SZ-1:0
+`define SOFID_SZ            2
+`define SOFID_RANGE         `SOFID_SZ-1:0
 //
-`define SOFID_RUN       2'b00
-`define SOFID_JUMP      2'b01
+`define SOFID_RUN           2'b00
+`define SOFID_JUMP          2'b01
 // zones
-`define ZONE_SZ         2
-`define ZONE_RANGE      `ZONE_SZ-1:0
+`define ZONE_SZ             2
+`define ZONE_RANGE          `ZONE_SZ-1:0
 //
-`define ZONE_NONE       2'b00
-`define ZONE_REGFILE    2'b01
-`define ZONE_STOREQ     2'b10
-`define ZONE_LOADQ      2'b11
+`define ZONE_NONE           2'b00
+`define ZONE_REGFILE        2'b01
+`define ZONE_STOREQ         2'b10
+`define ZONE_LOADQ          2'b11
 
 //--------------------------------------------------------------
 // OPCODEs
@@ -79,6 +82,12 @@
 `define RV_MODE_SUPERVISOR                  2'b01
 `define RV_MODE_USER                        2'b00
 //
+`define RV_USTATUS_ACCESS_MASK              { 4'h0, { `RV_XLEN-32 {1'b0} }, 28'h0000011 }
+//
+`define RV_SSTATUS_ACCESS_MASK              { 4'h8, { `RV_XLEN-32 {1'b0} }, 28'h00de133 }
+`define RV_SEDELEG_LEGAL_MASK               16'h01ff
+//
+`define RV_MSTATUS_ACCESS_MASK              { 4'h8, { `RV_XLEN-32 {1'b0} }, 28'h07ff9bb }
 `define RV_MSTATUS_MPP_RANGE                12:11
 `define RV_MSTATUS_SPP_INDEX                8
 `define RV_MSTATUS_MPIE_INDEX               7
@@ -88,24 +97,34 @@
 `define RV_MSTATUS_SIE_INDEX                1
 `define RV_MSTATUS_UIE_INDEX                0
 //
-`define RV_MEDELEG_LEGAL_MASK               16'h0bff
-`define RV_MEPC_RANGE                       `RV_XLEN-1:2 // TODO :1 iff Ext. C is supported
-`define RV_MEPC_LOB                         2'b0 // Low Order Bits TODO 1'b1 iff Ext. C is supported
+`define RV_TVEC_BASE_RANGE                  `RV_XLEN-1:2
+`define RV_TVEC_BASE_LOB                    2'b0
+`define RV_TVEC_MODE_RANGE                  1:0
+`define RV_TVEC_MODE_DIRECT                 2'd0
+`define RV_TVEC_MODE_VECTORED               2'd1
 //
-`define EXCP_MCAUSE_INS_ADDR_MISALIGNED     { 1'b0, 27'b0, 4'd00 }
-`define EXCP_MCAUSE_INS_ACCESS_FAULT        { 1'b0, 27'b0, 4'd01 }
-`define EXCP_MCAUSE_ILLEGAL_INS             { 1'b0, 27'b0, 4'd02 }
-//`define EXCP_MCAUSE_BREAKPOINT              { 1'b0, 27'b0, 4'd03 }
-`define EXCP_MCAUSE_LOAD_ADDR_MISALIGNED    { 1'b0, 27'b0, 4'd04 }
-`define EXCP_MCAUSE_LOAD_ACCESS_FAULT       { 1'b0, 27'b0, 4'd05 }
-`define EXCP_MCAUSE_STORE_ADDR_MISALIGNED   { 1'b0, 27'b0, 4'd06 }
-`define EXCP_MCAUSE_STORE_ACCESS_FAULT      { 1'b0, 27'b0, 4'd07 }
-`define EXCP_MCAUSE_ECALL_FROM_UMODE        { 1'b0, 27'b0, 4'd08 }
-`define EXCP_MCAUSE_ECALL_FROM_SMODE        { 1'b0, 27'b0, 4'd09 }
-`define EXCP_MCAUSE_ECALL_FROM_MMODE        { 1'b0, 27'b0, 4'd11 }
-//`define EXCP_MCAUSE_INS_PAGE_FAULT          { 1'b0, 27'b0, 4'd12 }
-//`define EXCP_MCAUSE_LOAD_PAGE_FAULT         { 1'b0, 27'b0, 4'd13 }
-//`define EXCP_MCAUSE_STORE_PAGE_FAULT        { 1'b0, 27'b0, 4'd15 }
+`define RV_MEDELEG_LEGAL_MASK               16'h03ff
+`define RV_EDELEG_SZX                       4
+`define RV_EDELEG_RANGE                     15:0
+`define RV_EDELEG_HOB                       16'b0
+`define RV_EPC_RANGE                        `RV_XLEN-1:2 // TODO `RV_XLEN-1:1 iff Ext. C is supported
+`define RV_EPC_LOB                          2'b0 // Low Order Bits TODO 1'b1 iff Ext. C is supported
+//
+`define RV_CAUSE_RANGE                      `RV_XLEN-1:0
+`define EXCP_CAUSE_INS_ADDR_MISALIGNED      { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd00 }
+`define EXCP_CAUSE_INS_ACCESS_FAULT         { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd01 }
+`define EXCP_CAUSE_ILLEGAL_INS              { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd02 }
+//`define EXCP_CAUSE_BREAKPOINT               { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd03 }
+`define EXCP_CAUSE_LOAD_ADDR_MISALIGNED     { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd04 }
+`define EXCP_CAUSE_LOAD_ACCESS_FAULT        { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd05 }
+`define EXCP_CAUSE_STORE_ADDR_MISALIGNED    { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd06 }
+`define EXCP_CAUSE_STORE_ACCESS_FAULT       { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd07 }
+`define EXCP_CAUSE_ECALL_FROM_UMODE         { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd08 }
+`define EXCP_CAUSE_ECALL_FROM_SMODE         { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd09 }
+`define EXCP_CAUSE_ECALL_FROM_MMODE         { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd11 }
+//`define EXCP_CAUSE_INS_PAGE_FAULT           { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd12 }
+//`define EXCP_CAUSE_LOAD_PAGE_FAULT          { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd13 }
+//`define EXCP_CAUSE_STORE_PAGE_FAULT         { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd15 }
 
 //--------------------------------------------------------------
 

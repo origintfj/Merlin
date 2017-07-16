@@ -1,4 +1,4 @@
-// TODO add support for the 56-bit extention
+// TODO add support for the 16-bit extention
 
 `include "riscv_defs.v"
 
@@ -6,38 +6,40 @@ module decoder
     (
         // instruction decoder interface
             // ingress side
-        input  wire           [31:0] ins_i,
+        input  wire              [31:0] ins_i,
             // egress side
-        output reg                   ins_err_o,
-        output reg                   jump_o,
-        output reg                   trap_rtn_o,
-        output reg             [1:0] trap_rtn_mode_o,
-        output reg     [`ZONE_RANGE] zone_o,
-        output reg                   regd_tgt_o,
-        output wire            [4:0] regd_addr_o,
-        output reg                   regs1_rd_o,
-        output wire            [4:0] regs1_addr_o,
-        output reg                   regs2_rd_o,
-        output wire            [4:0] regs2_addr_o,
-        output reg    [`RV_XLEN-1:0] imm_o,
-        output reg                   link_o,
-        output reg                   sels1_pc_o,
-        output reg                   sel_csr_wr_data_imm_o,
-        output reg                   sels2_imm_o,
-        output reg                   selcmps2_imm_o,
-        output reg    [`ALUOP_RANGE] aluop_o,
-        output wire            [2:0] funct3_o,
-        output reg                   csr_rd_o,
-        output reg                   csr_wr_o,
-        output wire           [11:0] csr_addr_o,
-        output reg                   conditional_o
+        output wire [`RV_INSSIZE_RANGE] ins_size_o,
+        output reg                      ins_err_o,
+        output reg                      jump_o,
+        output reg                      ecall_o,
+        output reg                      trap_rtn_o,
+        output wire               [1:0] trap_rtn_mode_o,
+        output reg        [`ZONE_RANGE] zone_o,
+        output reg                      regd_tgt_o,
+        output wire               [4:0] regd_addr_o,
+        output reg                      regs1_rd_o,
+        output wire               [4:0] regs1_addr_o,
+        output reg                      regs2_rd_o,
+        output wire               [4:0] regs2_addr_o,
+        output reg       [`RV_XLEN-1:0] imm_o,
+        output reg                      link_o,
+        output reg                      sels1_pc_o,
+        output reg                      sel_csr_wr_data_imm_o,
+        output reg                      sels2_imm_o,
+        output reg                      selcmps2_imm_o,
+        output reg       [`ALUOP_RANGE] aluop_o,
+        output wire               [2:0] funct3_o,
+        output reg                      csr_rd_o,
+        output reg                      csr_wr_o,
+        output wire              [11:0] csr_addr_o,
+        output reg                      conditional_o
     );
 
     //--------------------------------------------------------------
 
     // global
     // instruction type decoder
-    parameter C_IMM_TYPE_UDEF     = 3'd0; // TODO
+    parameter C_IMM_TYPE_UDEF     = 3'd0; // This is really "don't care"
     parameter C_IMM_TYPE_R        = 3'd0;
     parameter C_IMM_TYPE_I        = 3'd1;
     parameter C_IMM_TYPE_I_ZIMM   = 3'd2;
@@ -58,7 +60,10 @@ module decoder
 
     //--------------------------------------------------------------
 
+    //--------------------------------------------------------------
     // global
+    //--------------------------------------------------------------
+    assign ins_size_o      = 2'b10;
     assign trap_rtn_mode_o = ins_i[29:28];
     assign regd_addr_o     = regd_addr;
     assign regs1_addr_o    = regs1_addr;
@@ -67,8 +72,9 @@ module decoder
     assign csr_addr_o      = ins_i[31:20];
 
 
+    //--------------------------------------------------------------
     // instruction type decode
-    //
+    //--------------------------------------------------------------
     assign opcode     = ins_i[ 6: 0];
     assign funct3     = ins_i[14:12];
     assign funct7     = ins_i[31:25];
@@ -79,12 +85,13 @@ module decoder
     begin
         ins_err_o             = 1'b0;
         jump_o                = 1'b0;
+        ecall_o               = 1'b0;
         trap_rtn_o            = 1'b0;
         zone_o                = `ZONE_NONE;
         regd_tgt_o            = 1'b0;
         regs1_rd_o            = 1'b0;
         regs2_rd_o            = 1'b0;
-        aluop_o               = `ALUOP_ADD; // NOTE don't actually care
+        aluop_o               = `ALUOP_ADD; // NOTE: don't actually care
         link_o                = 1'b0;
         sels1_pc_o            = 1'b0;
         sels2_imm_o           = 1'b0;
@@ -302,10 +309,10 @@ module decoder
                         if (funct7 == 7'b0001001) begin // TODO SFENCE.VMA
                             ins_err_o = 1'b1;
                         end else if (regs1_addr == 5'b0) begin
-                            if (ins_i[31:20] == 12'h000) begin // TODO ECALL
+                            if (ins_i[31:20] == 12'h000) begin // ECALL
+                                ecall_o = 1'b1;
                             end else if (ins_i[31:20] == 12'h001) begin // TODO EBREAK
                             end else if (ins_i[31:30] == 2'b0 && ins_i[27:20] == 8'h02) begin // TRAP RETURN
-                                jump_o     = 1'b1;
                                 trap_rtn_o = 1'b1;
                             end else if (ins_i[31:20] == 12'h105) begin // TODO WFI
                             end else begin
@@ -353,8 +360,9 @@ module decoder
     end
 
 
+    //--------------------------------------------------------------
     // field extraction
-    //
+    //--------------------------------------------------------------
     always @ (*)
     begin
         if (ins_i[31]) begin

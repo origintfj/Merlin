@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.75 (w)1999-2016 BSI
-[*] Fri Jul 07 02:23:17 2017
+[*] Tue Jul 11 03:26:40 2017
 [*]
 [dumpfile] "C:\Users\Tom\riscv\rv32i\verif\wave.lxt"
-[dumpfile_mtime] "Fri Jul 07 02:20:22 2017"
-[dumpfile_size] 34604
+[dumpfile_mtime] "Tue Jul 11 03:25:55 2017"
+[dumpfile_size] 1047547
 [savefile] "C:\Users\Tom\riscv\rv32i\verif\wave.gtkw"
 [timestart] 0
 [size] 2048 1089
 [pos] -1 -1
-*-10.000000 87353 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-18.000000 13620000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_core.
 [treeopen] tb_core.i_merlin32i.
 [treeopen] tb_core.i_merlin32i.i_ex_stage.
@@ -52,7 +52,7 @@ tb_core.i_merlin32i.i_lsqueue.dreqdata_o[31:0]
 @28
 tb_core.i_merlin32i.i_lsqueue.drspready_o[0]
 tb_core.i_merlin32i.i_lsqueue.drspvalid_i[0]
-@23
+@22
 tb_core.i_merlin32i.i_lsqueue.drspdata_i[31:0]
 @28
 tb_core.i_merlin32i.i_lsqueue.drsprerr_i[0]
@@ -142,7 +142,9 @@ tb_core.i_merlin32i.i_ex_stage.alu_data_out[31:0]
 @28
 tb_core.i_merlin32i.i_ex_stage.alu_cmp_out[0]
 tb_core.i_merlin32i.i_ex_stage.ids_jump_q[0]
+@29
 tb_core.i_merlin32i.i_ex_stage.sofid_run[0]
+@28
 tb_core.i_merlin32i.i_ex_stage.ex_valid[0]
 tb_core.i_merlin32i.i_ex_stage.ex_stage_en[0]
 tb_core.i_merlin32i.i_ex_stage.ex_valid[0]

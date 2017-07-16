@@ -16,15 +16,24 @@ module boot_rom
 
     //--------------------------------------------------------------
 
+    parameter               C_ROM_SZBX = 22;
+    parameter               C_ROM_SZB  = 2**C_ROM_SZBX;
     //
-    reg        gate;
+    reg                     gate;
     //
-    wire [9:0] reqaddr;
-    reg  [7:0] mem[0:2048];
+    reg               [7:0] mem[0:C_ROM_SZB-1];
+    wire   [C_ROM_SZBX-1:0] reqaddr;
+    //
 
     //--------------------------------------------------------------
 
-    initial $readmemh("mem.hex", mem);
+    initial
+    begin
+        $display("********************************************************");
+        $display("ROM Size = %0d Ki Bytes.", 2**(C_ROM_SZBX-10));
+        $display("********************************************************");
+        $readmemh("mem.hex", mem);
+    end
 
 
     //
@@ -47,7 +56,7 @@ module boot_rom
 
     //
     //
-    assign reqaddr = treqaddr[10:0];
+    assign reqaddr = treqaddr[C_ROM_SZBX-1:0];
     always @ (posedge clk or negedge resetb)
     begin
         if (~resetb) begin

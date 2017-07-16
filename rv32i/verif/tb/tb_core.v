@@ -30,6 +30,7 @@ module tb_core;
     //
     initial
     begin
+        $display("********************************************************");
         $dumpfile("wave.lxt");
         $dumpvars(0, tb_core);
 
