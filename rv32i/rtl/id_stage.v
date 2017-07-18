@@ -9,14 +9,14 @@ module id_stage
         // pfu interface
         input  wire                      pfu_dav_i,   // new fetch available
         output wire                      pfu_ack_o,   // ack this fetch
-        input  wire       [`SOFID_RANGE] pfu_sofid_i, // first fetch since vectoring
+        input  wire    [`RV_SOFID_RANGE] pfu_sofid_i, // first fetch since vectoring
         input  wire               [31:0] pfu_ins_i,   // instruction fetched
         input  wire                      pfu_ferr_i,  // this instruction fetch resulted in error
         input  wire               [31:0] pfu_pc_i,    // address of this instruction
         // ex stage interface
         output reg                       exs_valid_o,
         input  wire                      exs_stall_i,
-        output reg        [`SOFID_RANGE] exs_sofid_o,
+        output reg     [`RV_SOFID_RANGE] exs_sofid_o,
         output reg   [`RV_INSSIZE_RANGE] exs_ins_size_o,
         output reg                       exs_ins_uerr_o,
         output reg                       exs_ins_ferr_o,
@@ -25,10 +25,10 @@ module id_stage
         output reg                       exs_trap_rtn_o,
         output reg                 [1:0] exs_trap_rtn_mode_o,
         output reg                       exs_cond_o,
-        output reg         [`ZONE_RANGE] exs_zone_o,
+        output reg      [`RV_ZONE_RANGE] exs_zone_o,
         output reg                       exs_link_o,
         output wire       [`RV_XLEN-1:0] exs_pc_o,
-        output reg        [`ALUOP_RANGE] exs_alu_op_o,
+        output reg     [`RV_ALUOP_RANGE] exs_alu_op_o,
         output reg        [`RV_XLEN-1:0] exs_operand_left_o,
         output reg        [`RV_XLEN-1:0] exs_operand_right_o,
         output reg        [`RV_XLEN-1:0] exs_cmp_right_o,
@@ -62,7 +62,7 @@ module id_stage
     wire                     ecall_d;
     wire                     trap_rtn_d;
     wire               [1:0] trap_rtn_mode_d;
-    wire       [`ZONE_RANGE] zone_d;
+    wire    [`RV_ZONE_RANGE] zone_d;
     wire                     regd_tgt;
     wire               [4:0] regd_addr_d;
     wire                     regs1_rd;
@@ -75,7 +75,7 @@ module id_stage
     wire                     sel_csr_wr_data_imm_d;
     wire                     sels2_imm_d;
     wire                     selcmps2_imm_d;
-    wire      [`ALUOP_RANGE] alu_op_d;
+    wire   [`RV_ALUOP_RANGE] alu_op_d;
     wire               [2:0] funct3_d;
     wire                     csr_rd_d;
     wire                     csr_wr_d;
@@ -187,7 +187,7 @@ module id_stage
         if (~resetb_i) begin
             reg_loading_vector_q <= 31'b0;
         end else if (clk_en_i) begin
-            if (regd_addr_d != 5'b0 && pfu_ack_o && zone_d == `ZONE_LOADQ) begin
+            if (regd_addr_d != 5'b0 && pfu_ack_o && zone_d == `RV_ZONE_LOADQ) begin
                 reg_loading_vector_q[regd_addr_d] <= 1'b1;
             end
             if (exs_regd_addr_i != 5'b0 && exs_regd_cncl_load_i) begin

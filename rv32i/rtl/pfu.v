@@ -10,31 +10,31 @@ module pfu
     )
     (
         // global
-        input  wire                 clk_i,
-        input  wire                 clk_en_i,
-        input  wire                 resetb_i,
+        input  wire                   clk_i,
+        input  wire                   clk_en_i,
+        input  wire                   resetb_i,
         // instruction cache interface
-        input  wire                 ireqready_i,
-        output reg                  ireqvalid_o,
-        output wire           [1:0] ireqhpl_o, // HART priv. level // TODO
-        output wire  [C_BUS_SZ-1:0] ireqaddr_o, // TODO
-        output wire                 irspready_o,
-        input  wire                 irspvalid_i,
-        input  wire                 irsprerr_i,
-        input  wire  [C_BUS_SZ-1:0] irspdata_i,
+        input  wire                   ireqready_i,
+        output reg                    ireqvalid_o,
+        output wire             [1:0] ireqhpl_o, // HART priv. level // TODO
+        output wire    [C_BUS_SZ-1:0] ireqaddr_o, // TODO
+        output wire                   irspready_o,
+        input  wire                   irspvalid_i,
+        input  wire                   irsprerr_i,
+        input  wire    [C_BUS_SZ-1:0] irspdata_i,
         // decoder interface
-        output wire                 ids_dav_o,   // new fetch available
-        input  wire                 ids_ack_i,   // ack this fetch
-        output wire  [`SOFID_RANGE] ids_sofid_o, // first fetch since vectoring
-        output wire  [C_BUS_SZ-1:0] ids_ins_o,   // instruction fetched
-        output wire                 ids_ferr_o,  // this instruction fetch resulted in error
-        output wire  [C_BUS_SZ-1:0] ids_pc_o,    // address of this instruction
+        output wire                   ids_dav_o,   // new fetch available
+        input  wire                   ids_ack_i,   // ack this fetch
+        output wire [`RV_SOFID_RANGE] ids_sofid_o, // first fetch since vectoring
+        output wire    [C_BUS_SZ-1:0] ids_ins_o,   // instruction fetched
+        output wire                   ids_ferr_o,  // this instruction fetch resulted in error
+        output wire    [C_BUS_SZ-1:0] ids_pc_o,    // address of this instruction
         // vectoring and exception controller interface
-        output reg                  hvec_pc_ready_o,
-        input  wire                 hvec_pc_wr_i,
-        input  wire  [C_BUS_SZ-1:0] hvec_pc_din_i,
+        output reg                    hvec_pc_ready_o,
+        input  wire                   hvec_pc_wr_i,
+        input  wire    [C_BUS_SZ-1:0] hvec_pc_din_i,
         // pfu stage interface
-        input  wire           [1:0] exs_hpl_i
+        input  wire             [1:0] exs_hpl_i
     );
 
     //--------------------------------------------------------------
@@ -59,9 +59,9 @@ module pfu
     reg      [C_BUS_SZ-1:0] request_addr_q;
     // sofid register
     reg                     hvec_pc_wr_q;
-    reg      [`SOFID_RANGE] sofid_q;
+    reg   [`RV_SOFID_RANGE] sofid_q;
     // fifo
-    parameter C_SOFID_SZ     = `SOFID_SZ;
+    parameter C_SOFID_SZ     = `RV_SOFID_SZ;
     parameter C_FIFO_WIDTH   = C_SOFID_SZ + 1 + C_BUS_SZ + C_BUS_SZ;
     //
     parameter C_SOFID_LSB    = 1 + 2 * C_BUS_SZ;
@@ -202,14 +202,14 @@ module pfu
     always @ (posedge clk_i or negedge resetb_i)
     begin
         if (~resetb_i) begin
-            sofid_q <= `SOFID_RUN;
+            sofid_q <= `RV_SOFID_RUN;
             hvec_pc_wr_q <= 1'b0;
         end else if (clk_en_i) begin
             hvec_pc_wr_q <= hvec_pc_wr_i;
             if (hvec_pc_wr_q) begin
-                sofid_q <= `SOFID_JUMP;
+                sofid_q <= `RV_SOFID_JUMP;
             end else if (irspvalid_i) begin
-                sofid_q <= `SOFID_RUN;
+                sofid_q <= `RV_SOFID_RUN;
             end
         end
     end

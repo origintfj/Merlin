@@ -5,19 +5,19 @@
 module alu
     (
         //
-        input  wire                clk_i,
-        input  wire                clk_en_i,
-        input  wire                resetb_i,
+        input  wire                   clk_i,
+        input  wire                   clk_en_i,
+        input  wire                   resetb_i,
         //
-        input  wire [`RV_XLEN-1:0] op_left_i,
-        input  wire [`RV_XLEN-1:0] op_right_i,
-        output reg  [`RV_XLEN-1:0] op_result_o,
-        input  wire [`ALUOP_RANGE] op_opcode_i,
+        input  wire    [`RV_XLEN-1:0] op_left_i,
+        input  wire    [`RV_XLEN-1:0] op_right_i,
+        output reg     [`RV_XLEN-1:0] op_result_o,
+        input  wire [`RV_ALUOP_RANGE] op_opcode_i,
         //
-        input  wire [`RV_XLEN-1:0] cmp_left_i,
-        input  wire [`RV_XLEN-1:0] cmp_right_i,
-        output reg                 cmp_result_o,
-        input  wire          [2:0] cmp_opcode_i
+        input  wire    [`RV_XLEN-1:0] cmp_left_i,
+        input  wire    [`RV_XLEN-1:0] cmp_right_i,
+        output reg                    cmp_result_o,
+        input  wire             [2:0] cmp_opcode_i
     );
 
     //--------------------------------------------------------------
@@ -52,17 +52,17 @@ module alu
     begin
         op_result_mux_out = { `RV_XLEN {1'b0} }; // NOTE: don't actually care
         case (op_opcode_i)
-            `ALUOP_ADD  : op_result_mux_out = op_left_i + op_right_i;
-            `ALUOP_SUB  : op_result_mux_out = op_left_i - op_right_i;
-            `ALUOP_SLL  : op_result_mux_out = shift_left_array[`RV_XLEN_X];
-            `ALUOP_SLT  : op_result_mux_out = { { `RV_XLEN-1 {1'b0} }, cmp_lts };
-            `ALUOP_SLTU : op_result_mux_out = { { `RV_XLEN-1 {1'b0} }, cmp_ltu };
-            `ALUOP_XOR  : op_result_mux_out = op_left_i ^ op_right_i;
-            `ALUOP_SRL  : op_result_mux_out = shift_right_array[`RV_XLEN_X];
-            `ALUOP_SRA  : op_result_mux_out = shift_right_array[`RV_XLEN_X];
-            `ALUOP_OR   : op_result_mux_out = op_left_i | op_right_i;
-            `ALUOP_AND  : op_result_mux_out = op_left_i & op_right_i;
-            `ALUOP_MOV  : op_result_mux_out = op_right_i;
+            `RV_ALUOP_ADD  : op_result_mux_out = op_left_i + op_right_i;
+            `RV_ALUOP_SUB  : op_result_mux_out = op_left_i - op_right_i;
+            `RV_ALUOP_SLL  : op_result_mux_out = shift_left_array[`RV_XLEN_X];
+            `RV_ALUOP_SLT  : op_result_mux_out = { { `RV_XLEN-1 {1'b0} }, cmp_lts };
+            `RV_ALUOP_SLTU : op_result_mux_out = { { `RV_XLEN-1 {1'b0} }, cmp_ltu };
+            `RV_ALUOP_XOR  : op_result_mux_out = op_left_i ^ op_right_i;
+            `RV_ALUOP_SRL  : op_result_mux_out = shift_right_array[`RV_XLEN_X];
+            `RV_ALUOP_SRA  : op_result_mux_out = shift_right_array[`RV_XLEN_X];
+            `RV_ALUOP_OR   : op_result_mux_out = op_left_i | op_right_i;
+            `RV_ALUOP_AND  : op_result_mux_out = op_left_i & op_right_i;
+            `RV_ALUOP_MOV  : op_result_mux_out = op_right_i;
             default : begin
             end
         endcase
@@ -83,7 +83,7 @@ module alu
                 shift_left_array[genvar_i + 1][2**genvar_i - 1:   0] = { 2**genvar_i {1'b0} };
                 shift_left_array[genvar_i + 1][`RV_XLEN - 1:2**genvar_i] = shift_left_array[genvar_i][`RV_XLEN - 1 - 2**genvar_i:0];
                 // right shift
-                if (op_opcode_i == `ALUOP_SRA && op_left_i[`RV_XLEN-1] == 1'b1) begin
+                if (op_opcode_i == `RV_ALUOP_SRA && op_left_i[`RV_XLEN-1] == 1'b1) begin
                     shift_right_array[genvar_i + 1][`RV_XLEN - 1:`RV_XLEN - 2**genvar_i] = { 2**genvar_i {1'b1} };
                 end else begin
                     shift_right_array[genvar_i + 1][`RV_XLEN - 1:`RV_XLEN - 2**genvar_i] = { 2**genvar_i {1'b0} };
@@ -114,26 +114,26 @@ module alu
         if (clk_en_i) begin
             cmp_result_o <= 1'b0;
             case (cmp_opcode_i)
-                `ALUCOND_EQ  : begin
+                `RV_ALUCOND_EQ  : begin
                     if (cmp_left_i == cmp_right_i) begin
                         cmp_result_o <= 1'b1;
                     end
                 end
-                `ALUCOND_NE  : begin
+                `RV_ALUCOND_NE  : begin
                     if (cmp_left_i != cmp_right_i) begin
                         cmp_result_o <= 1'b1;
                     end
                 end
-                `ALUCOND_LT  : begin
+                `RV_ALUCOND_LT  : begin
                     cmp_result_o <= cmp_lts;
                 end
-                `ALUCOND_GE  : begin
+                `RV_ALUCOND_GE  : begin
                     cmp_result_o <= ~cmp_lts;
                 end
-                `ALUCOND_LTU : begin
+                `RV_ALUCOND_LTU : begin
                     cmp_result_o <= cmp_ltu;
                 end
-                `ALUCOND_GEU : begin
+                `RV_ALUCOND_GEU : begin
                     cmp_result_o <= ~cmp_ltu;
                 end
                 default : begin

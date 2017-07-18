@@ -23,57 +23,57 @@
 `define RV_INSSIZE_SZ       2
 `define RV_INSSIZE_RANGE    1:0
 // frame id
-`define SOFID_SZ            2
-`define SOFID_RANGE         `SOFID_SZ-1:0
+`define RV_SOFID_SZ         2
+`define RV_SOFID_RANGE      `RV_SOFID_SZ-1:0
 //
-`define SOFID_RUN           2'b00
-`define SOFID_JUMP          2'b01
+`define RV_SOFID_RUN        2'b00
+`define RV_SOFID_JUMP       2'b01
 // zones
-`define ZONE_SZ             2
-`define ZONE_RANGE          `ZONE_SZ-1:0
+`define RV_ZONE_SZ          2
+`define RV_ZONE_RANGE       `RV_ZONE_SZ-1:0
 //
-`define ZONE_NONE           2'b00
-`define ZONE_REGFILE        2'b01
-`define ZONE_STOREQ         2'b10
-`define ZONE_LOADQ          2'b11
+`define RV_ZONE_NONE        2'b00
+`define RV_ZONE_REGFILE     2'b01
+`define RV_ZONE_STOREQ      2'b10
+`define RV_ZONE_LOADQ       2'b11
 
 //--------------------------------------------------------------
 // OPCODEs
 //--------------------------------------------------------------
-`define MINOR_OPCODE_ADDSUB 3'b000
-`define MINOR_OPCODE_SLL    3'b001
-`define MINOR_OPCODE_SLT    3'b010
-`define MINOR_OPCODE_SLTU   3'b011
-`define MINOR_OPCODE_XOR    3'b100
-`define MINOR_OPCODE_SRLSRA 3'b101
-`define MINOR_OPCODE_OR     3'b110
-`define MINOR_OPCODE_AND    3'b111
+`define RV_MINOR_OPCODE_ADDSUB  3'b000
+`define RV_MINOR_OPCODE_SLL     3'b001
+`define RV_MINOR_OPCODE_SLT     3'b010
+`define RV_MINOR_OPCODE_SLTU    3'b011
+`define RV_MINOR_OPCODE_XOR     3'b100
+`define RV_MINOR_OPCODE_SRLSRA  3'b101
+`define RV_MINOR_OPCODE_OR      3'b110
+`define RV_MINOR_OPCODE_AND     3'b111
 //
-`define MINOR_OPCODE_PRIV   3'b000
+`define RV_MINOR_OPCODE_PRIV    3'b000
 //--------------------------------------------------------------
 // ALU Definitions
 //--------------------------------------------------------------
-`define ALUOP_SZ        4
-`define ALUOP_RANGE     `ALUOP_SZ-1:0
+`define RV_ALUOP_SZ         4
+`define RV_ALUOP_RANGE      `RV_ALUOP_SZ-1:0
 // alu opcodes - top bit is for uniquification
-`define ALUOP_ADD       { 1'b0, `MINOR_OPCODE_ADDSUB }
-`define ALUOP_SUB       { 1'b1, `MINOR_OPCODE_ADDSUB }
-`define ALUOP_SLL       { 1'b0, `MINOR_OPCODE_SLL    }
-`define ALUOP_SLT       { 1'b0, `MINOR_OPCODE_SLT    }
-`define ALUOP_SLTU      { 1'b0, `MINOR_OPCODE_SLTU   }
-`define ALUOP_XOR       { 1'b0, `MINOR_OPCODE_XOR    }
-`define ALUOP_SRL       { 1'b0, `MINOR_OPCODE_SRLSRA }
-`define ALUOP_SRA       { 1'b1, `MINOR_OPCODE_SRLSRA }
-`define ALUOP_OR        { 1'b0, `MINOR_OPCODE_OR     }
-`define ALUOP_AND       { 1'b0, `MINOR_OPCODE_AND    }
-`define ALUOP_MOV       { 1'b1, `MINOR_OPCODE_AND    } // pass right operand to output (e.g. LUI)
+`define RV_ALUOP_ADD        { 1'b0, `RV_MINOR_OPCODE_ADDSUB }
+`define RV_ALUOP_SUB        { 1'b1, `RV_MINOR_OPCODE_ADDSUB }
+`define RV_ALUOP_SLL        { 1'b0, `RV_MINOR_OPCODE_SLL    }
+`define RV_ALUOP_SLT        { 1'b0, `RV_MINOR_OPCODE_SLT    }
+`define RV_ALUOP_SLTU       { 1'b0, `RV_MINOR_OPCODE_SLTU   }
+`define RV_ALUOP_XOR        { 1'b0, `RV_MINOR_OPCODE_XOR    }
+`define RV_ALUOP_SRL        { 1'b0, `RV_MINOR_OPCODE_SRLSRA }
+`define RV_ALUOP_SRA        { 1'b1, `RV_MINOR_OPCODE_SRLSRA }
+`define RV_ALUOP_OR         { 1'b0, `RV_MINOR_OPCODE_OR     }
+`define RV_ALUOP_AND        { 1'b0, `RV_MINOR_OPCODE_AND    }
+`define RV_ALUOP_MOV        { 1'b1, `RV_MINOR_OPCODE_AND    } // pass right operand to output (e.g. LUI)
 // alu condition codes - used in conditional branching
-`define ALUCOND_EQ      3'b000
-`define ALUCOND_NE      3'b001
-`define ALUCOND_LT      3'b100
-`define ALUCOND_GE      3'b101
-`define ALUCOND_LTU     3'b110
-`define ALUCOND_GEU     3'b111
+`define RV_ALUCOND_EQ       3'b000
+`define RV_ALUCOND_NE       3'b001
+`define RV_ALUCOND_LT       3'b100
+`define RV_ALUCOND_GE       3'b101
+`define RV_ALUCOND_LTU      3'b110
+`define RV_ALUCOND_GEU      3'b111
 
 //--------------------------------------------------------------
 // CSR/Exception/Interrupt Definitions
@@ -110,21 +110,21 @@
 `define RV_EPC_RANGE                        `RV_XLEN-1:2 // TODO `RV_XLEN-1:1 iff Ext. C is supported
 `define RV_EPC_LOB                          2'b0 // Low Order Bits TODO 1'b1 iff Ext. C is supported
 //
-`define RV_CAUSE_RANGE                      `RV_XLEN-1:0
-`define EXCP_CAUSE_INS_ADDR_MISALIGNED      { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd00 }
-`define EXCP_CAUSE_INS_ACCESS_FAULT         { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd01 }
-`define EXCP_CAUSE_ILLEGAL_INS              { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd02 }
-//`define EXCP_CAUSE_BREAKPOINT               { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd03 }
-`define EXCP_CAUSE_LOAD_ADDR_MISALIGNED     { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd04 }
-`define EXCP_CAUSE_LOAD_ACCESS_FAULT        { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd05 }
-`define EXCP_CAUSE_STORE_ADDR_MISALIGNED    { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd06 }
-`define EXCP_CAUSE_STORE_ACCESS_FAULT       { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd07 }
-`define EXCP_CAUSE_ECALL_FROM_UMODE         { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd08 }
-`define EXCP_CAUSE_ECALL_FROM_SMODE         { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd09 }
-`define EXCP_CAUSE_ECALL_FROM_MMODE         { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd11 }
-//`define EXCP_CAUSE_INS_PAGE_FAULT           { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd12 }
-//`define EXCP_CAUSE_LOAD_PAGE_FAULT          { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd13 }
-//`define EXCP_CAUSE_STORE_PAGE_FAULT         { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd15 }
+`define RV_CAUSE_RANGE                          `RV_XLEN-1:0
+`define RV_EXCP_CAUSE_INS_ADDR_MISALIGNED       { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd00 }
+`define RV_EXCP_CAUSE_INS_ACCESS_FAULT          { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd01 }
+`define RV_EXCP_CAUSE_ILLEGAL_INS               { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd02 }
+//`define RV_EXCP_CAUSE_BREAKPOINT                { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd03 }
+`define RV_EXCP_CAUSE_LOAD_ADDR_MISALIGNED      { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd04 }
+`define RV_EXCP_CAUSE_LOAD_ACCESS_FAULT         { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd05 }
+`define RV_EXCP_CAUSE_STORE_ADDR_MISALIGNED     { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd06 }
+`define RV_EXCP_CAUSE_STORE_ACCESS_FAULT        { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd07 }
+`define RV_EXCP_CAUSE_ECALL_FROM_UMODE          { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd08 }
+`define RV_EXCP_CAUSE_ECALL_FROM_SMODE          { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd09 }
+`define RV_EXCP_CAUSE_ECALL_FROM_MMODE          { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd11 }
+//`define RV_EXCP_CAUSE_INS_PAGE_FAULT            { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd12 }
+//`define RV_EXCP_CAUSE_LOAD_PAGE_FAULT           { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd13 }
+//`define RV_EXCP_CAUSE_STORE_PAGE_FAULT          { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd15 }
 
 //--------------------------------------------------------------
 

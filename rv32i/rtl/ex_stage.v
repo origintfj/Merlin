@@ -16,7 +16,7 @@ module ex_stage
         // instruction decoder stage interface
         input  wire                     ids_valid_i,
         output wire                     ids_stall_o,
-        input  wire      [`SOFID_RANGE] ids_sofid_i,
+        input  wire   [`RV_SOFID_RANGE] ids_sofid_i,
         input  wire [`RV_INSSIZE_RANGE] ids_ins_size_i,
         input  wire                     ids_ins_uerr_i,
         input  wire                     ids_ins_ferr_i,
@@ -25,10 +25,10 @@ module ex_stage
         input  wire                     ids_trap_rtn_i,
         input  wire               [1:0] ids_trap_rtn_mode_i,
         input  wire                     ids_cond_i,
-        input  wire       [`ZONE_RANGE] ids_zone_i,
+        input  wire    [`RV_ZONE_RANGE] ids_zone_i,
         input  wire                     ids_link_i,
         input  wire      [`RV_XLEN-1:0] ids_pc_i,
-        input  wire      [`ALUOP_RANGE] ids_alu_op_i,
+        input  wire   [`RV_ALUOP_RANGE] ids_alu_op_i,
         input  wire      [`RV_XLEN-1:0] ids_operand_left_i,
         input  wire      [`RV_XLEN-1:0] ids_operand_right_i,
         input  wire      [`RV_XLEN-1:0] ids_cmp_right_i,
@@ -63,66 +63,66 @@ module ex_stage
 
     // interface assignments
     // hart vectoring logic
-    wire                jump;
+    wire                   jump;
     // execute commit signals
-    wire                csr_wr;
-    wire          [1:0] csr_wr_mode;
-    wire                csr_trap_rtn;
+    wire                   csr_wr;
+    wire             [1:0] csr_wr_mode;
+    wire                   csr_trap_rtn;
     // exception signaling logic
-    wire                jump_to_trap;
-    wire                excp_ecall;
-    wire                excp_ferr;
-    wire                excp_uerr;
-    wire                excp_maif;
-    reg                 excp_mala;
-    reg                 excp_masa;
-    reg                 excp_ilgl;
+    wire                   jump_to_trap;
+    wire                   excp_ecall;
+    wire                   excp_ferr;
+    wire                   excp_uerr;
+    wire                   excp_maif;
+    reg                    excp_mala;
+    reg                    excp_masa;
+    reg                    excp_ilgl;
     // exception/interrupt cause encoder
-    reg  [`RV_XLEN-1:0] excp_cause;
+    reg     [`RV_XLEN-1:0] excp_cause;
     // instruction qualification logic
-    wire                ex_valid;
-    wire                execute_commit;
-    reg  [`SOFID_RANGE] sofid_q;
-    reg                 sofid_run;
+    wire                   ex_valid;
+    wire                   execute_commit;
+    reg  [`RV_SOFID_RANGE] sofid_q;
+    reg                    sofid_run;
     // delay stage
-    reg                 ids_valid_q;
-    reg                 ids_ins_uerr_q;
-    reg                 ids_ins_ferr_q;
-    reg                 ids_jump_q;
-    reg                 ids_ecall_q;
-    reg                 ids_trap_rtn_q;
-    reg           [1:0] ids_trap_rtn_mode_q;
-    reg                 ids_cond_q;
-    reg                 lq_wr_q;
-    reg                 sq_wr_q;
-    reg                 regd_wr_q;
-    reg                 ids_csr_rd_q;
-    reg                 ids_csr_wr_q;
-    reg          [11:0] ids_csr_addr_q;
-    reg  [`RV_XLEN-1:0] ids_csr_wr_data_q;
-    reg                 link_q;
-    reg  [`RV_XLEN-1:0] pc_q;
-    reg  [`RV_XLEN-1:0] pc_inc_q;
-    reg  [`RV_XLEN-1:0] regs2_data_q;
-    reg           [4:0] regd_addr_q;
-    reg           [2:0] funct3_q;
+    reg                    ids_valid_q;
+    reg                    ids_ins_uerr_q;
+    reg                    ids_ins_ferr_q;
+    reg                    ids_jump_q;
+    reg                    ids_ecall_q;
+    reg                    ids_trap_rtn_q;
+    reg              [1:0] ids_trap_rtn_mode_q;
+    reg                    ids_cond_q;
+    reg                    lq_wr_q;
+    reg                    sq_wr_q;
+    reg                    regd_wr_q;
+    reg                    ids_csr_rd_q;
+    reg                    ids_csr_wr_q;
+    reg             [11:0] ids_csr_addr_q;
+    reg     [`RV_XLEN-1:0] ids_csr_wr_data_q;
+    reg                    link_q;
+    reg     [`RV_XLEN-1:0] pc_q;
+    reg     [`RV_XLEN-1:0] pc_inc_q;
+    reg     [`RV_XLEN-1:0] regs2_data_q;
+    reg              [4:0] regd_addr_q;
+    reg              [2:0] funct3_q;
     // ex stage stall controller
-    wire                ex_stage_en;
-    reg                 exs_stall;
+    wire                   ex_stage_en;
+    reg                    exs_stall;
     // regd data out mux
     // alu pcinc mux
-    reg  [`RV_XLEN-1:0] alu_pcinc_mux_out;
+    reg     [`RV_XLEN-1:0] alu_pcinc_mux_out;
     // alu
-    wire [`RV_XLEN-1:0] alu_data_out;
-    wire                alu_cmp_out;
+    wire    [`RV_XLEN-1:0] alu_data_out;
+    wire                   alu_cmp_out;
     // cs registers
-    wire [`RV_XLEN-1:0] csr_data_out;
-    wire [`RV_XLEN-1:0] csr_trap_entry_addr;
-    wire [`RV_XLEN-1:0] csr_trap_rtn_addr;
-    wire                csr_bad_addr;
-    wire                csr_readonly;
-    wire                csr_priv_too_low;
-    wire          [1:0] csr_mode;
+    wire    [`RV_XLEN-1:0] csr_data_out;
+    wire    [`RV_XLEN-1:0] csr_trap_entry_addr;
+    wire    [`RV_XLEN-1:0] csr_trap_rtn_addr;
+    wire                   csr_bad_addr;
+    wire                   csr_readonly;
+    wire                   csr_priv_too_low;
+    wire             [1:0] csr_mode;
 
     //--------------------------------------------------------------
 
@@ -234,22 +234,22 @@ module ex_stage
     begin
         // NOTE: IMPORTANT: This desision tree must be ordered correctly
         if (excp_ferr) begin
-            excp_cause = `EXCP_CAUSE_INS_ACCESS_FAULT;
+            excp_cause = `RV_EXCP_CAUSE_INS_ACCESS_FAULT;
         end else if (excp_uerr) begin
-            excp_cause = `EXCP_CAUSE_ILLEGAL_INS;
+            excp_cause = `RV_EXCP_CAUSE_ILLEGAL_INS;
         end else if (excp_ilgl) begin
-            excp_cause = `EXCP_CAUSE_ILLEGAL_INS;
+            excp_cause = `RV_EXCP_CAUSE_ILLEGAL_INS;
         end else if (excp_maif) begin
-            excp_cause = `EXCP_CAUSE_INS_ADDR_MISALIGNED;
+            excp_cause = `RV_EXCP_CAUSE_INS_ADDR_MISALIGNED;
         end else if (excp_mala) begin
-            excp_cause = `EXCP_CAUSE_LOAD_ADDR_MISALIGNED;
+            excp_cause = `RV_EXCP_CAUSE_LOAD_ADDR_MISALIGNED;
         end else if (excp_masa) begin
-            excp_cause = `EXCP_CAUSE_STORE_ADDR_MISALIGNED;
+            excp_cause = `RV_EXCP_CAUSE_STORE_ADDR_MISALIGNED;
         end else if (excp_ecall) begin // NOTE: this is noly the cause if the instruction hasn't generated any other exceptions
             case (csr_mode)
-                `RV_MODE_MACHINE    : excp_cause = `EXCP_CAUSE_ECALL_FROM_MMODE;
-                `RV_MODE_SUPERVISOR : excp_cause = `EXCP_CAUSE_ECALL_FROM_SMODE;
-                `RV_MODE_USER       : excp_cause = `EXCP_CAUSE_ECALL_FROM_UMODE;
+                `RV_MODE_MACHINE    : excp_cause = `RV_EXCP_CAUSE_ECALL_FROM_MMODE;
+                `RV_MODE_SUPERVISOR : excp_cause = `RV_EXCP_CAUSE_ECALL_FROM_SMODE;
+                `RV_MODE_USER       : excp_cause = `RV_EXCP_CAUSE_ECALL_FROM_UMODE;
                 default             : excp_cause = { `RV_XLEN {1'b0} }; // NOTE: don't actually care
             endcase
         end else begin
@@ -267,20 +267,20 @@ module ex_stage
     always @ (posedge clk_i or negedge resetb_i)
     begin
         if (~resetb_i) begin
-            sofid_q <= `SOFID_RUN;
+            sofid_q <= `RV_SOFID_RUN;
         end else if (clk_en_i) begin
             if (ex_stage_en) begin
                 if (jump) begin
-                    sofid_q <= `SOFID_JUMP;
+                    sofid_q <= `RV_SOFID_JUMP;
                 end else if (ids_valid_i && ids_sofid_i == sofid_q) begin
-                    sofid_q <= `SOFID_RUN;
+                    sofid_q <= `RV_SOFID_RUN;
                 end
             end
         end
     end
     always @ (*)
     begin
-        if (sofid_q == `SOFID_RUN) begin
+        if (sofid_q == `RV_SOFID_RUN) begin
             sofid_run = 1'b1;
         end else begin
             sofid_run = 1'b0;
@@ -310,9 +310,9 @@ module ex_stage
                 sq_wr_q   <= 1'b0;
                 regd_wr_q <= 1'b0;
                 case (ids_zone_i)
-                    `ZONE_LOADQ   : lq_wr_q   <= 1'b1;
-                    `ZONE_STOREQ  : sq_wr_q   <= 1'b1;
-                    `ZONE_REGFILE : regd_wr_q <= 1'b1;
+                    `RV_ZONE_LOADQ   : lq_wr_q   <= 1'b1;
+                    `RV_ZONE_STOREQ  : sq_wr_q   <= 1'b1;
+                    `RV_ZONE_REGFILE : regd_wr_q <= 1'b1;
                 endcase
                 //
                 ids_csr_rd_q      <= ids_csr_rd_i;

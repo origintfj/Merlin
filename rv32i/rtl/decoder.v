@@ -14,7 +14,7 @@ module decoder
         output reg                      ecall_o,
         output reg                      trap_rtn_o,
         output wire               [1:0] trap_rtn_mode_o,
-        output reg        [`ZONE_RANGE] zone_o,
+        output reg     [`RV_ZONE_RANGE] zone_o,
         output reg                      regd_tgt_o,
         output wire               [4:0] regd_addr_o,
         output reg                      regs1_rd_o,
@@ -27,7 +27,7 @@ module decoder
         output reg                      sel_csr_wr_data_imm_o,
         output reg                      sels2_imm_o,
         output reg                      selcmps2_imm_o,
-        output reg       [`ALUOP_RANGE] aluop_o,
+        output reg    [`RV_ALUOP_RANGE] aluop_o,
         output wire               [2:0] funct3_o,
         output reg                      csr_rd_o,
         output reg                      csr_wr_o,
@@ -87,11 +87,11 @@ module decoder
         jump_o                = 1'b0;
         ecall_o               = 1'b0;
         trap_rtn_o            = 1'b0;
-        zone_o                = `ZONE_NONE;
+        zone_o                = `RV_ZONE_NONE;
         regd_tgt_o            = 1'b0;
         regs1_rd_o            = 1'b0;
         regs2_rd_o            = 1'b0;
-        aluop_o               = `ALUOP_ADD; // NOTE: don't actually care
+        aluop_o               = `RV_ALUOP_ADD; // NOTE: don't actually care
         link_o                = 1'b0;
         sels1_pc_o            = 1'b0;
         sels2_imm_o           = 1'b0;
@@ -105,25 +105,25 @@ module decoder
         case (opcode)
             7'b0110111 : begin // lui
                 ins_type    = C_IMM_TYPE_U;
-                zone_o      = `ZONE_REGFILE;
+                zone_o      = `RV_ZONE_REGFILE;
                 regd_tgt_o  = 1'b1;
-                aluop_o     = `ALUOP_MOV;
+                aluop_o     = `RV_ALUOP_MOV;
                 sels2_imm_o = 1'b1;
             end
             7'b0010111 : begin // auipc
                 ins_type    = C_IMM_TYPE_U;
-                zone_o      = `ZONE_REGFILE;
+                zone_o      = `RV_ZONE_REGFILE;
                 regd_tgt_o  = 1'b1;
-                aluop_o     = `ALUOP_ADD;
+                aluop_o     = `RV_ALUOP_ADD;
                 sels1_pc_o  = 1'b1;
                 sels2_imm_o = 1'b1;
             end
             7'b1101111 : begin // jal
                 ins_type    = C_IMM_TYPE_UJ;
                 jump_o      = 1'b1;
-                zone_o      = `ZONE_REGFILE;
+                zone_o      = `RV_ZONE_REGFILE;
                 regd_tgt_o  = 1'b1;
-                aluop_o     = `ALUOP_ADD;
+                aluop_o     = `RV_ALUOP_ADD;
                 link_o      = 1'b1;
                 sels1_pc_o  = 1'b1;
                 sels2_imm_o = 1'b1;
@@ -131,10 +131,10 @@ module decoder
             7'b1100111 : begin // jalr
                 ins_type    = C_IMM_TYPE_I;
                 jump_o      = 1'b1;
-                zone_o      = `ZONE_REGFILE;
+                zone_o      = `RV_ZONE_REGFILE;
                 regd_tgt_o  = 1'b1;
                 regs1_rd_o  = 1'b1;
-                aluop_o     = `ALUOP_ADD;
+                aluop_o     = `RV_ALUOP_ADD;
                 link_o      = 1'b1;
                 sels2_imm_o = 1'b1;
                 if (funct3 != 3'b0) begin
@@ -146,7 +146,7 @@ module decoder
                 jump_o        = 1'b1;
                 regs1_rd_o    = 1'b1;
                 regs2_rd_o    = 1'b1;
-                aluop_o       = `ALUOP_ADD;
+                aluop_o       = `RV_ALUOP_ADD;
                 sels1_pc_o    = 1'b1;
                 sels2_imm_o   = 1'b1;
                 conditional_o = 1'b1;
@@ -161,10 +161,10 @@ module decoder
             end
             7'b0000011 : begin // load
                 ins_type    = C_IMM_TYPE_I;
-                zone_o      = `ZONE_LOADQ;
+                zone_o      = `RV_ZONE_LOADQ;
                 regd_tgt_o  = 1'b1;
                 regs1_rd_o  = 1'b1;
-                aluop_o     = `ALUOP_ADD;
+                aluop_o     = `RV_ALUOP_ADD;
                 sels2_imm_o = 1'b1;
                 if (funct3 != 3'b000 &&
                     funct3 != 3'b001 &&
@@ -178,8 +178,8 @@ module decoder
                 ins_type    = C_IMM_TYPE_S;
                 regs1_rd_o  = 1'b1;
                 regs2_rd_o  = 1'b1;
-                zone_o      = `ZONE_STOREQ;
-                aluop_o     = `ALUOP_ADD;
+                zone_o      = `RV_ZONE_STOREQ;
+                aluop_o     = `RV_ALUOP_ADD;
                 sels2_imm_o = 1'b1;
                 if (funct3 != 3'b000 &&
                     funct3 != 3'b001 &&
@@ -189,45 +189,45 @@ module decoder
             end
             7'b0010011 : begin // op-imm
                 ins_type    = C_IMM_TYPE_I;
-                zone_o      = `ZONE_REGFILE;
+                zone_o      = `RV_ZONE_REGFILE;
                 regd_tgt_o  = 1'b1;
                 regs1_rd_o  = 1'b1;
                 sels2_imm_o = 1'b1;
                 case (funct3)
-                    `MINOR_OPCODE_ADDSUB : begin
-                        aluop_o = `ALUOP_ADD;
+                    `RV_MINOR_OPCODE_ADDSUB : begin
+                        aluop_o = `RV_ALUOP_ADD;
                     end
-                    `MINOR_OPCODE_SLL : begin
-                        aluop_o = `ALUOP_SLL;
+                    `RV_MINOR_OPCODE_SLL : begin
+                        aluop_o = `RV_ALUOP_SLL;
                         if (funct7 != 7'b0000000) begin
                             ins_err_o = 1'b1;
                         end
                     end
-                    `MINOR_OPCODE_SLT : begin
-                        aluop_o        = `ALUOP_SLT;
+                    `RV_MINOR_OPCODE_SLT : begin
+                        aluop_o        = `RV_ALUOP_SLT;
                         selcmps2_imm_o = 1'b1;
                     end
-                    `MINOR_OPCODE_SLTU : begin
-                        aluop_o        = `ALUOP_SLTU;
+                    `RV_MINOR_OPCODE_SLTU : begin
+                        aluop_o        = `RV_ALUOP_SLTU;
                         selcmps2_imm_o = 1'b1;
                     end
-                    `MINOR_OPCODE_XOR : begin
-                        aluop_o = `ALUOP_XOR;
+                    `RV_MINOR_OPCODE_XOR : begin
+                        aluop_o = `RV_ALUOP_XOR;
                     end
-                    `MINOR_OPCODE_SRLSRA : begin
+                    `RV_MINOR_OPCODE_SRLSRA : begin
                         if (funct7 == 7'b0000000) begin
-                            aluop_o = `ALUOP_SRL;
+                            aluop_o = `RV_ALUOP_SRL;
                         end else if (funct7 == 7'b0100000) begin
-                            aluop_o = `ALUOP_SRA;
+                            aluop_o = `RV_ALUOP_SRA;
                         end else begin
                             ins_err_o = 1'b1;
                         end
                     end
-                    `MINOR_OPCODE_OR : begin
-                        aluop_o = `ALUOP_OR;
+                    `RV_MINOR_OPCODE_OR : begin
+                        aluop_o = `RV_ALUOP_OR;
                     end
-                    `MINOR_OPCODE_AND : begin
-                        aluop_o = `ALUOP_AND;
+                    `RV_MINOR_OPCODE_AND : begin
+                        aluop_o = `RV_ALUOP_AND;
                     end
                     default : begin
                         ins_err_o = 1'b1;
@@ -236,61 +236,61 @@ module decoder
             end
             7'b0110011 : begin // op
                 ins_type   = C_IMM_TYPE_R;
-                zone_o     = `ZONE_REGFILE;
+                zone_o     = `RV_ZONE_REGFILE;
                 regd_tgt_o = 1'b1;
                 regs1_rd_o = 1'b1;
                 regs2_rd_o = 1'b1;
                 case (funct3)
-                    `MINOR_OPCODE_ADDSUB : begin
+                    `RV_MINOR_OPCODE_ADDSUB : begin
                         if (funct7 == 7'b0000000) begin
-                            aluop_o = `ALUOP_ADD;
+                            aluop_o = `RV_ALUOP_ADD;
                         end else if (funct7 == 7'b0100000) begin
-                            aluop_o = `ALUOP_SUB;
+                            aluop_o = `RV_ALUOP_SUB;
                         end else begin
                             ins_err_o = 1'b1;
                         end
                     end
-                    `MINOR_OPCODE_SLL : begin
-                        aluop_o = `ALUOP_SLL;
+                    `RV_MINOR_OPCODE_SLL : begin
+                        aluop_o = `RV_ALUOP_SLL;
                         if (funct7 != 7'b0000000) begin
                             ins_err_o = 1'b1;
                         end
                     end
-                    `MINOR_OPCODE_SLT : begin
-                        aluop_o = `ALUOP_SLT;
+                    `RV_MINOR_OPCODE_SLT : begin
+                        aluop_o = `RV_ALUOP_SLT;
                         if (funct7 != 7'b0000000) begin
                             ins_err_o = 1'b1;
                         end
                     end
-                    `MINOR_OPCODE_SLTU : begin
-                        aluop_o = `ALUOP_SLTU;
+                    `RV_MINOR_OPCODE_SLTU : begin
+                        aluop_o = `RV_ALUOP_SLTU;
                         if (funct7 != 7'b0000000) begin
                             ins_err_o = 1'b1;
                         end
                     end
-                    `MINOR_OPCODE_XOR : begin
-                        aluop_o = `ALUOP_XOR;
+                    `RV_MINOR_OPCODE_XOR : begin
+                        aluop_o = `RV_ALUOP_XOR;
                         if (funct7 != 7'b0000000) begin
                             ins_err_o = 1'b1;
                         end
                     end
-                    `MINOR_OPCODE_SRLSRA : begin
+                    `RV_MINOR_OPCODE_SRLSRA : begin
                         if (funct7 == 7'b0000000) begin
-                            aluop_o = `ALUOP_SRL;
+                            aluop_o = `RV_ALUOP_SRL;
                         end else if (funct7 == 7'b0100000) begin
-                            aluop_o = `ALUOP_SRA;
+                            aluop_o = `RV_ALUOP_SRA;
                         end else begin
                             ins_err_o = 1'b1;
                         end
                     end
-                    `MINOR_OPCODE_OR : begin
-                        aluop_o = `ALUOP_OR;
+                    `RV_MINOR_OPCODE_OR : begin
+                        aluop_o = `RV_ALUOP_OR;
                         if (funct7 != 7'b0000000) begin
                             ins_err_o = 1'b1;
                         end
                     end
-                    `MINOR_OPCODE_AND : begin
-                        aluop_o = `ALUOP_AND;
+                    `RV_MINOR_OPCODE_AND : begin
+                        aluop_o = `RV_ALUOP_AND;
                         if (funct7 != 7'b0000000) begin
                             ins_err_o = 1'b1;
                         end
@@ -304,7 +304,7 @@ module decoder
                 ins_type = C_IMM_TYPE_MISC_MEM;
             end
             7'b1110011 : begin // system
-                if (funct3 == `MINOR_OPCODE_PRIV) begin
+                if (funct3 == `RV_MINOR_OPCODE_PRIV) begin
                     if (regd_addr == 5'b0) begin
                         if (funct7 == 7'b0001001) begin // TODO SFENCE.VMA
                             ins_err_o = 1'b1;
@@ -327,7 +327,7 @@ module decoder
                 end else if (funct3 == 3'b001 ||
                              funct3 == 3'b010 ||
                              funct3 == 3'b011) begin // CSR access with rs1
-                    zone_o     = `ZONE_REGFILE;
+                    zone_o     = `RV_ZONE_REGFILE;
                     regd_tgt_o = 1'b1;
                     regs1_rd_o = 1'b1;
                     if (regd_addr != 5'b0) begin
@@ -340,7 +340,7 @@ module decoder
                              funct3 == 3'b110 ||
                              funct3 == 3'b111) begin // CSR access with zimm
                     ins_type              = C_IMM_TYPE_I_ZIMM;
-                    zone_o                = `ZONE_REGFILE;
+                    zone_o                = `RV_ZONE_REGFILE;
                     regd_tgt_o            = 1'b1;
                     sel_csr_wr_data_imm_o = 1'b1;
                     if (regd_addr != 5'b0) begin
