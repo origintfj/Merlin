@@ -157,9 +157,9 @@ module pfu
             end else if (request_accepted & ~ids_ack_i) begin
 */
             if (request_accepted & ~ids_ack_i) begin
-                fifo_level_q <= fifo_level_q - 1;
+                fifo_level_q <= fifo_level_q - { { C_FIFO_DEPTH_X {1'b0} }, 1'b1 };
             end else if (~request_accepted & ids_ack_i) begin
-                fifo_level_q <= fifo_level_q + 1;
+                fifo_level_q <= fifo_level_q + { { C_FIFO_DEPTH_X {1'b0} }, 1'b1 };
             end
         end
     end

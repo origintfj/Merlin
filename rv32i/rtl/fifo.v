@@ -65,10 +65,10 @@ module fifo
                 wr_ptr_q <= { C_FIFO_DEPTH_X+1 {1'b0} };
             end else begin
                 if (rd_i) begin
-                    rd_ptr_q <= rd_ptr_q + 1;
+                    rd_ptr_q <= rd_ptr_q + { { C_FIFO_DEPTH_X {1'b0} }, 1'b1 };
                 end
                 if (wr_i) begin
-                    wr_ptr_q <= wr_ptr_q + 1;
+                    wr_ptr_q <= wr_ptr_q + { { C_FIFO_DEPTH_X {1'b0} }, 1'b1 };
                 end
             end
         end
