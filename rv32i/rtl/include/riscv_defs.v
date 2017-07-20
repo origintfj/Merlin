@@ -1,12 +1,21 @@
-// TODO clk_en should prob. gate all interface control signals, such as reqvalid
+`ifndef RV_RISCV_DEFS_
+`define RV_RISCV_DEFS_
 
-`ifndef RISCV_DEFS_
-`define RISCV_DEFS_
+//--------------------------------------------------------------
+// Core Configuration
+//--------------------------------------------------------------
+//`define RV_CONFIG_RV64 // TODO
+`define RV_CONFIG_EXT_C // TODO
 
 //--------------------------------------------------------------
 // Global Definitions
 //--------------------------------------------------------------
-`define RV_XLEN_X               5
+`ifdef RV_CONFIG_RV64
+    `define RV_XLEN_X   6 // 64-bit
+`else
+    `define RV_XLEN_X   5 // 32-bit
+`endif
+
 `define RV_XLEN                 (2**`RV_XLEN_X)
 //
 `define RV_RESET_VECTOR         { `RV_XLEN {1'b0} } // Set the reset vector here
@@ -111,6 +120,9 @@
 `define RV_EPC_LOB                          2'b0 // Low Order Bits TODO 1'b1 iff Ext. C is supported
 //
 `define RV_CAUSE_RANGE                          `RV_XLEN-1:0
+`define RV_EXCP_CAUSE_MACHINE_EXT_INTR          { 1'b1, { `RV_XLEN-5 {1'b0} }, 4'd11 }
+`define RV_EXCP_CAUSE_SUPERVISOR_EXT_INTR       { 1'b1, { `RV_XLEN-5 {1'b0} }, 4'd09 }
+`define RV_EXCP_CAUSE_USER_EXT_INTR             { 1'b1, { `RV_XLEN-5 {1'b0} }, 4'd08 }
 `define RV_EXCP_CAUSE_INS_ADDR_MISALIGNED       { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd00 }
 `define RV_EXCP_CAUSE_INS_ACCESS_FAULT          { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd01 }
 `define RV_EXCP_CAUSE_ILLEGAL_INS               { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd02 }

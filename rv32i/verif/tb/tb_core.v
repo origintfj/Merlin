@@ -8,6 +8,9 @@ module tb_core;
     reg         clk    = 1'b1;
     reg         resetb = 1'b0;
 
+    // hardware interrupt generator
+    reg         interrupt;
+
     wire        ireqready;
     wire        ireqvalid;
     wire [31:0] ireqaddr;
@@ -38,13 +41,10 @@ module tb_core;
         $display();
         $display();
 
-        #(1_000_000_000);
+        #(1_000_000);
 
         $display();
         $display();
-        //$display("*******************  SIMULATION END! *******************");
-        //$finish();
-
         $display("*******************   FAIL - TIMEOUT   *******************");
         $fatal();
     end
@@ -67,6 +67,15 @@ module tb_core;
     end
 
 
+    // hardware interrupt generator
+    initial
+    begin
+        interrupt = 1'b0;
+        #100_000;
+        interrupt = 1'b1;
+    end
+
+
     // merlin rv32i core
     //
     merlin32i
@@ -79,7 +88,7 @@ module tb_core;
             .clk_en_i            (1'b1),
             .resetb_i            (resetb),
             // hardware interrupt interface
-            .irqv_i              ({ C_IRQV_SZ {1'b0} }),
+            .interrupt_i         (interrupt),
             // instruction port
             .ireqready_i         (ireqready),
             .ireqvalid_o         (ireqvalid),

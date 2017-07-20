@@ -13,7 +13,7 @@ module merlin32i
         input  wire                  clk_en_i,
         input  wire                  resetb_i,
         // hardware interrupt interface
-        input  wire  [C_IRQV_SZ-1:0] irqv_i, // TODO
+        input  wire                  interrupt_i,
         // instruction port
         input  wire                  ireqready_i,
         output wire                  ireqvalid_o,
@@ -224,6 +224,8 @@ module merlin32i
             .clk_i                (clk_i),
             .clk_en_i             (clk_en_i),
             .resetb_i             (resetb_i),
+            // external interface
+            .interrupt_i          (interrupt_i),
             // pfu stage interface
             .pfu_hpl_o            (exs_pfu_hpl),
             // instruction decoder stage interface

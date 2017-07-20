@@ -36,8 +36,9 @@ module alu
     //--------------------------------------------------------------
 
 
+    //--------------------------------------------------------------
     // alu output register
-    //
+    //--------------------------------------------------------------
     always @ (posedge clk_i)
     begin
         if (clk_en_i) begin
@@ -46,8 +47,9 @@ module alu
     end
 
 
+    //--------------------------------------------------------------
     // operation result mux
-    //
+    //--------------------------------------------------------------
     always @ (*)
     begin
         op_result_mux_out = { `RV_XLEN {1'b0} }; // NOTE: don't actually care
@@ -69,8 +71,9 @@ module alu
     end
 
 
+    //--------------------------------------------------------------
     // shifter
-    //
+    //--------------------------------------------------------------
     generate
     for (genvar_i = 0; genvar_i < `RV_XLEN_X; genvar_i = genvar_i + 1) begin : shifter
         always @ (*)
@@ -100,8 +103,9 @@ module alu
     endgenerate
 
 
+    //--------------------------------------------------------------
     // alu comparitor
-    //
+    //--------------------------------------------------------------
     always @ (*) // TODO consider using one compariter here and switching the MSBs to do signed vs. unsigned
     begin
         cmp_lts = $signed(cmp_left_i) < $signed(cmp_right_i);

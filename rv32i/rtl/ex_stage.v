@@ -11,6 +11,8 @@ module ex_stage
         input  wire                     clk_i,
         input  wire                     clk_en_i,
         input  wire                     resetb_i,
+        // external interface
+        input  wire                     interrupt_i,
         // pfu stage interface
         output wire               [1:0] pfu_hpl_o,
         // instruction decoder stage interface
@@ -70,6 +72,7 @@ module ex_stage
     wire                   csr_trap_rtn;
     // exception signaling logic
     wire                   jump_to_trap;
+    wire                   intr_extn;
     wire                   excp_ecall;
     wire                   excp_ferr;
     wire                   excp_uerr;
@@ -115,13 +118,15 @@ module ex_stage
     // alu
     wire    [`RV_XLEN-1:0] alu_data_out;
     wire                   alu_cmp_out;
-    // cs registers
+    // cs register file and write data logic
+    reg     [`RV_XLEN-1:0] csr_wr_data;
     wire    [`RV_XLEN-1:0] csr_data_out;
-    wire    [`RV_XLEN-1:0] csr_trap_entry_addr;
-    wire    [`RV_XLEN-1:0] csr_trap_rtn_addr;
     wire                   csr_bad_addr;
     wire                   csr_readonly;
     wire                   csr_priv_too_low;
+    wire                   intr_ext_en;
+    wire    [`RV_XLEN-1:0] csr_trap_entry_addr;
+    wire    [`RV_XLEN-1:0] csr_trap_rtn_addr;
     wire             [1:0] csr_mode;
 
     //--------------------------------------------------------------
@@ -178,13 +183,16 @@ module ex_stage
     //--------------------------------------------------------------
     // exception signaling logic
     //--------------------------------------------------------------
-    assign jump_to_trap = excp_ecall |
+    assign jump_to_trap = intr_extn |
+                          excp_ecall |
                           excp_ferr |
                           excp_uerr |
                           excp_maif |
                           excp_mala |
                           excp_masa |
                           excp_ilgl;
+    //
+    assign intr_extn  = ex_valid & intr_ext_en & interrupt_i;
     //
     assign excp_ecall = ex_valid & ids_ecall_q;
     assign excp_ferr  = ex_valid & ids_ins_ferr_q;
@@ -233,7 +241,9 @@ module ex_stage
     always @ (*)
     begin
         // NOTE: IMPORTANT: This desision tree must be ordered correctly
-        if (excp_ferr) begin
+        if (intr_extn) begin
+            excp_cause = `RV_EXCP_CAUSE_MACHINE_EXT_INTR; // TODO: other modes
+        end else if (excp_ferr) begin
             excp_cause = `RV_EXCP_CAUSE_INS_ACCESS_FAULT;
         end else if (excp_uerr) begin
             excp_cause = `RV_EXCP_CAUSE_ILLEGAL_INS;
@@ -394,8 +404,20 @@ module ex_stage
 
 
     //--------------------------------------------------------------
-    // cs registers
+    // cs register file and write data logic
     //--------------------------------------------------------------
+    always @ (*)
+    begin
+        csr_wr_data = ids_csr_wr_data_q;
+        case (csr_wr_mode)
+            2'b01 : csr_wr_data = ids_csr_wr_data_q;
+            2'b10 : csr_wr_data = csr_data_out |  ids_csr_wr_data_q;
+            2'b11 : csr_wr_data = csr_data_out & ~ids_csr_wr_data_q;
+            default : begin
+            end
+        endcase;
+    end
+    //
     cs_registers i_cs_registers (
             //
             .clk_i             (clk_i),
@@ -403,19 +425,19 @@ module ex_stage
             .resetb_i          (resetb_i),
             //
             .exs_en_i          (ex_stage_en),
-            // read and exception query interface
+            // access request / error reporting interface
+            .access_i          (ids_csr_rd_i | ids_csr_wr_i),
             .addr_i            (ids_csr_addr_i),
             .bad_csr_addr_o    (csr_bad_addr),
             .readonly_csr_o    (csr_readonly),
             .priv_too_low_o    (csr_priv_too_low),
-            .rd_i              (ids_csr_rd_i),
             .rd_data_o         (csr_data_out),
             // write-back interface
             .wr_i              (csr_wr),
-            .wr_mode_i         (csr_wr_mode),
             .wr_addr_i         (ids_csr_addr_q),
-            .wr_data_i         (ids_csr_wr_data_q),
+            .wr_data_i         (csr_wr_data),
             // exception, interrupt, and hart vectoring interface
+            .intr_ext_en_o     (intr_ext_en),
             .jump_to_trap_i    (jump_to_trap),
             .excp_cause_i      (excp_cause),
             .excp_pc_i         (pc_q),

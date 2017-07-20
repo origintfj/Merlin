@@ -18,19 +18,19 @@ module cs_registers // TODO
         input  wire                resetb_i,
         // stage enable
         input  wire                exs_en_i,
-        // read / error reporting interface
+        // access request / error reporting interface
+        input  wire                access_i,
         input  wire         [11:0] addr_i,
         output reg                 bad_csr_addr_o,
         output reg                 readonly_csr_o,
         output reg                 priv_too_low_o,
-        input  wire                rd_i,
         output reg  [`RV_XLEN-1:0] rd_data_o,
         // write-back interface
         input  wire                wr_i, // already gated by the exceptions in the exception interface
-        input  wire          [1:0] wr_mode_i,
         input  wire         [11:0] wr_addr_i,
         input  wire [`RV_XLEN-1:0] wr_data_i,
         // exception, interrupt, and hart vectoring interface
+        output reg                 intr_ext_en_o,
         input  wire                jump_to_trap_i,
         input  wire [`RV_XLEN-1:0] excp_cause_i, // encoded exception/interrupt cause
         input  wire [`RV_XLEN-1:0] excp_pc_i,    // exception pc
@@ -59,7 +59,6 @@ module cs_registers // TODO
     reg                         rd_invalid_address;
     reg          [`RV_XLEN-1:0] rd_data;
     // write decode and registers
-    reg          [`RV_XLEN-1:0] wr_data;
     //
     reg                   [1:0] mode_q;
     //
@@ -90,6 +89,28 @@ module cs_registers // TODO
 
 
     //--------------------------------------------------------------
+    // interrupt enable logic
+    //--------------------------------------------------------------
+    always @ (*) // TODO this doesn't only depend on mstatus
+    begin
+        case (mode_q)
+            `RV_MODE_MACHINE : begin
+                intr_ext_en_o = mstatus_q[`RV_MSTATUS_MIE_INDEX];
+            end
+            `RV_MODE_SUPERVISOR : begin
+                intr_ext_en_o = mstatus_q[`RV_MSTATUS_SIE_INDEX];
+            end
+            `RV_MODE_USER : begin
+                intr_ext_en_o = mstatus_q[`RV_MSTATUS_UIE_INDEX];
+            end
+            default : begin
+                intr_ext_en_o = 1'b0;
+            end
+        endcase
+    end
+
+
+    //--------------------------------------------------------------
     // access restriction logic
     //--------------------------------------------------------------
     always @ (*)
@@ -110,7 +131,7 @@ module cs_registers // TODO
     always @ (posedge clk_i)
     begin
         if (clk_en_i) begin
-            if (exs_en_i) begin
+            if (exs_en_i & access_i) begin
                 bad_csr_addr_o  <= rd_invalid_address;
                 addr_typecode_q <= addr_i[11:10];
                 addr_privcode_q <= addr_i[9:8];
@@ -258,7 +279,7 @@ module cs_registers // TODO
     always @ (posedge clk_i)
     begin
         if (clk_en_i) begin
-            if (exs_en_i & rd_i) begin
+            if (exs_en_i & access_i) begin
                 rd_data_o <= rd_data;
             end
         end
@@ -268,17 +289,6 @@ module cs_registers // TODO
     //--------------------------------------------------------------
     // write decode and registers
     //--------------------------------------------------------------
-    always @ (*)
-    begin
-        wr_data = wr_data_i;
-        case (wr_mode_i)
-            2'b01 : wr_data = wr_data_i;
-            2'b10 : wr_data = rd_data |  wr_data_i;
-            2'b11 : wr_data = rd_data & ~wr_data_i;
-            default : begin
-            end
-        endcase;
-    end
     always @ (posedge clk_i or negedge resetb_i)
     begin
         if (~resetb_i) begin
@@ -353,25 +363,25 @@ module cs_registers // TODO
                 end else if (wr_i) begin
                     case (wr_addr_i)
                         // User CSRs
-                        12'h000 : mstatus_q  <= (wr_data & `RV_USTATUS_ACCESS_MASK) | (mstatus_q & ~`RV_USTATUS_ACCESS_MASK);
-                        12'h005 : utvec_q    <= wr_data & { { `RV_XLEN-2 {1'b1} }, 2'b01 }; // NOTE vec. mode >=2 reserved
-                        12'h040 : uscratch_q <= wr_data;
-                        12'h041 : uepc_q     <= wr_data[`RV_EPC_RANGE];
-                        12'h042 : ucause_q   <= wr_data; // WLRL
+                        12'h000 : mstatus_q  <= (wr_data_i & `RV_USTATUS_ACCESS_MASK) | (mstatus_q & ~`RV_USTATUS_ACCESS_MASK);
+                        12'h005 : utvec_q    <= wr_data_i & { { `RV_XLEN-2 {1'b1} }, 2'b01 }; // NOTE vec. mode >=2 reserved
+                        12'h040 : uscratch_q <= wr_data_i;
+                        12'h041 : uepc_q     <= wr_data_i[`RV_EPC_RANGE];
+                        12'h042 : ucause_q   <= wr_data_i; // WLRL
                         // Supervisor CSRs
-                        12'h100 : mstatus_q  <= (wr_data & `RV_SSTATUS_ACCESS_MASK) | (mstatus_q & ~`RV_SSTATUS_ACCESS_MASK);
-                        12'h102 : sedeleg_q  <= wr_data[`RV_EDELEG_RANGE] & `RV_SEDELEG_LEGAL_MASK;
-                        12'h105 : stvec_q    <= wr_data & { { `RV_XLEN-2 {1'b1} }, 2'b01 }; // NOTE vec. mode >=2 reserved
-                        12'h140 : sscratch_q <= wr_data;
-                        12'h141 : sepc_q     <= wr_data[`RV_EPC_RANGE];
-                        12'h142 : scause_q   <= wr_data; // WLRL
+                        12'h100 : mstatus_q  <= (wr_data_i & `RV_SSTATUS_ACCESS_MASK) | (mstatus_q & ~`RV_SSTATUS_ACCESS_MASK);
+                        12'h102 : sedeleg_q  <= wr_data_i[`RV_EDELEG_RANGE] & `RV_SEDELEG_LEGAL_MASK;
+                        12'h105 : stvec_q    <= wr_data_i & { { `RV_XLEN-2 {1'b1} }, 2'b01 }; // NOTE vec. mode >=2 reserved
+                        12'h140 : sscratch_q <= wr_data_i;
+                        12'h141 : sepc_q     <= wr_data_i[`RV_EPC_RANGE];
+                        12'h142 : scause_q   <= wr_data_i; // WLRL
                         // Machine CSRs
-                        12'h300 : mstatus_q  <= (wr_data & `RV_MSTATUS_ACCESS_MASK);
-                        12'h302 : medeleg_q  <= wr_data[`RV_EDELEG_RANGE] & `RV_MEDELEG_LEGAL_MASK;
-                        12'h305 : mtvec_q    <= wr_data & { { `RV_XLEN-2 {1'b1} }, 2'b01 }; // NOTE vec. mode >=2 reserved
-                        12'h340 : mscratch_q <= wr_data;
-                        12'h341 : mepc_q     <= wr_data[`RV_EPC_RANGE];
-                        12'h342 : mcause_q   <= wr_data; // WLRL
+                        12'h300 : mstatus_q  <= (wr_data_i & `RV_MSTATUS_ACCESS_MASK);
+                        12'h302 : medeleg_q  <= wr_data_i[`RV_EDELEG_RANGE] & `RV_MEDELEG_LEGAL_MASK;
+                        12'h305 : mtvec_q    <= wr_data_i & { { `RV_XLEN-2 {1'b1} }, 2'b01 }; // NOTE vec. mode >=2 reserved
+                        12'h340 : mscratch_q <= wr_data_i;
+                        12'h341 : mepc_q     <= wr_data_i[`RV_EPC_RANGE];
+                        12'h342 : mcause_q   <= wr_data_i; // WLRL
                         default : begin
                         end
                     endcase;
