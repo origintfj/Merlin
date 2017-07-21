@@ -9,10 +9,15 @@ module ex_stage
         input  wire                     clk_en_i,
         input  wire                     resetb_i,
         // external interface
-        input  wire               [1:0] irq_mode_i,
-        input  wire                     irq_extern_i,
-        input  wire                     irq_softw_i,
-        input  wire                     irq_timer_i,
+        input  wire                     irqm_extern_i,
+        input  wire                     irqm_softw_i,
+        input  wire                     irqm_timer_i,
+        input  wire                     irqs_extern_i,
+        input  wire                     irqs_softw_i,
+        input  wire                     irqs_timer_i,
+        input  wire                     irqu_extern_i,
+        input  wire                     irqu_softw_i,
+        input  wire                     irqu_timer_i,
         // pfu stage interface
         output wire               [1:0] pfu_hpl_o,
         // instruction decoder stage interface
@@ -72,10 +77,9 @@ module ex_stage
     wire             [1:0] csr_wr_mode;
     wire                   csr_trap_rtn;
     // exception signaling logic
+    wire            [11:0] csr_irqv;
     wire                   jump_to_trap;
-    wire                   intr_extern;
-    wire                   intr_softw;
-    wire                   intr_timer;
+    wire                   interrupt;
     wire                   excp_ecall;
     wire                   excp_ferr;
     wire                   excp_uerr;
@@ -130,9 +134,6 @@ module ex_stage
     wire                   csr_bad_addr;
     wire                   csr_readonly;
     wire                   csr_priv_too_low;
-    wire                   intr_extern_en;
-    wire                   intr_softw_en;
-    wire                   intr_timer_en;
     wire    [`RV_XLEN-1:0] csr_trap_entry_addr;
     wire    [`RV_XLEN-1:0] csr_trap_rtn_addr;
     wire             [1:0] csr_mode;
@@ -191,9 +192,7 @@ module ex_stage
     //--------------------------------------------------------------
     // exception signaling logic
     //--------------------------------------------------------------
-    assign jump_to_trap = intr_extern |
-                          intr_softw |
-                          intr_timer |
+    assign jump_to_trap = interrupt |
                           excp_ecall |
                           excp_ferr |
                           excp_uerr |
@@ -202,9 +201,7 @@ module ex_stage
                           excp_masa |
                           excp_ilgl;
     //
-    assign intr_extern = ex_valid & intr_extern_en  & irq_extern_i;
-    assign intr_softw  = ex_valid & intr_softw_en & irq_softw_i;
-    assign intr_timer  = ex_valid & intr_timer_en & irq_timer_i;
+    assign interrupt  = ex_valid & |csr_irqv;
     //
     assign excp_ecall = ex_valid & ids_ecall_q;
     assign excp_ferr  = ex_valid & ids_ins_ferr_q;
@@ -255,16 +252,52 @@ module ex_stage
      *   2) software interrupts
      *   3) timer interrupts
      *   4) synchronous traps
+     *
+     * Exception cause encoding:
+     *   0000 - miaf
+     *   0100 - mala
+     *   0110 - masa
+     *
+     *   0001 - ferr
+     *   0010 - ilgl
+     *
+     *   1000 - ecall(u)
+     *   1001 - ecall(s)
+     *   1011 - ecall(m)
      */
     always @ (*)
     begin
         // NOTE: IMPORTANT: This desision tree must be ordered correctly
-        if (intr_extern) begin
-            trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b10, irq_mode_i };
-        end else if (intr_softw) begin
-            trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b00, irq_mode_i };
-        end else if (intr_timer) begin
-            trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b01, irq_mode_i };
+        if (|(csr_irqv[11:8]) == 1'b1) begin // external interrupt
+            if (csr_irqv[11] == 1'b1) begin
+                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b10, 2'b11 };
+            end else if (csr_irqv[9] == 1'b1) begin
+                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b10, 2'b01 };
+            end else if (csr_irqv[8] == 1'b1) begin
+                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b10, 2'b00 };
+            end else begin
+                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b10, 2'b11 };
+            end
+        end else if (|(csr_irqv[3:0]) == 1'b1) begin // software interrupt
+            if (csr_irqv[7] == 1'b1) begin
+                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b00, 2'b11 };
+            end else if (csr_irqv[5] == 1'b1) begin
+                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b00, 2'b01 };
+            end else if (csr_irqv[4] == 1'b1) begin
+                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b00, 2'b00 };
+            end else begin
+                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b00, 2'b11 };
+            end
+        end else if (|(csr_irqv[7:4]) == 1'b1) begin // timer interrupt
+            if (csr_irqv[3] == 1'b1) begin
+                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b01, 2'b11 };
+            end else if (csr_irqv[1] == 1'b1) begin
+                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b01, 2'b01 };
+            end else if (csr_irqv[0] == 1'b1) begin
+                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b01, 2'b00 };
+            end else begin
+                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b01, 2'b11 };
+            end
         end else if (excp_ferr) begin
             trap_cause = `RV_EXCP_CAUSE_INS_ACCESS_FAULT;
         end else if (excp_uerr) begin
@@ -352,7 +385,7 @@ module ex_stage
                 ids_ecall_q         <= ids_ecall_i;
                 ids_trap_rtn_q      <= ids_trap_rtn_i;
                 ids_trap_rtn_mode_q <= ids_trap_rtn_mode_i;
-                ids_cond_q     <= ids_cond_i;
+                ids_cond_q          <= ids_cond_i;
                 // zone decode
                 lq_wr_q   <= 1'b0;
                 sq_wr_q   <= 1'b0;
@@ -475,9 +508,16 @@ module ex_stage
             .wr_addr_i         (ids_csr_addr_q),
             .wr_data_i         (csr_wr_data),
             // exception, interrupt, and hart vectoring interface
-            .intr_extern_en_o  (intr_extern_en),
-            .intr_softw_en_o   (intr_softw_en),
-            .intr_timer_en_o   (intr_timer_en),
+            .irqm_extern_i     (irqm_extern_i),
+            .irqm_softw_i      (irqm_softw_i),
+            .irqm_timer_i      (irqm_timer_i),
+            .irqs_extern_i     (irqs_extern_i),
+            .irqs_softw_i      (irqs_softw_i),
+            .irqs_timer_i      (irqs_timer_i),
+            .irqu_extern_i     (irqu_extern_i),
+            .irqu_softw_i      (irqu_softw_i),
+            .irqu_timer_i      (irqu_timer_i),
+            .irqv_o            (csr_irqv),
             .jump_to_trap_i    (jump_to_trap),
             .trap_cause_i      (trap_cause),
             .trap_value_i      (trap_value),

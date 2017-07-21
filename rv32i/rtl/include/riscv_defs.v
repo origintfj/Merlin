@@ -98,8 +98,8 @@
 //
 `define RV_SIDELEG_LEGAL_MASK               12'hbbb
 //
-`define RV_MSTATUS_ACCESS_MASK              { 4'h8, { `RV_XLEN-32 {1'b0} }, 28'h07ff9bb }
 `define RV_MSTATUS_MPP_RANGE                12:11
+`define RV_MSTATUS_ACCESS_MASK              { 4'h8, { `RV_XLEN-32 {1'b0} }, 28'h07ff9bb }
 `define RV_MSTATUS_SPP_INDEX                8
 `define RV_MSTATUS_MPIE_INDEX               7
 `define RV_MSTATUS_SPIE_INDEX               5
@@ -114,14 +114,20 @@
 `define RV_TVEC_MODE_DIRECT                 2'd0
 `define RV_TVEC_MODE_VECTORED               2'd1
 //
-`define RV_MEDELEG_LEGAL_MASK               16'h03ff
-`define RV_EDELEG_SZX                       4
 `define RV_EDELEG_RANGE                     15:0
-`define RV_EDELEG_HOB                       16'b0
+`define RV_EDELEG_HOB                       { `RV_XLEN-16 {1'b0} }
+`define RV_MEDELEG_LEGAL_MASK               { `RV_EDELEG_HOB, 16'h03ff }
+`define RV_EDELEG_SZX                       4
 //
-`define RV_MIDELEG_LEGAL_MASK               12'hbbb
 `define RV_IDELEG_RANGE                     11:0
-`define RV_IDELEG_HOB                       20'b0
+`define RV_IDELEG_HOB                       { `RV_XLEN-12 {1'b0} }
+`define RV_MIDELEG_LEGAL_MASK               { `RV_IDELEG_HOB, 12'hbbb }
+//
+`define RV_IEIP_RANGE                       11:0
+`define RV_IEIP_HOB                         { `RV_XLEN-12 {1'b0} }
+`define RV_UIE_LEGAL_MASK                   { `RV_IEIP_HOB, 12'h111 }
+`define RV_SIE_LEGAL_MASK                   { `RV_IEIP_HOB, 12'h333 }
+`define RV_MIE_LEGAL_MASK                   { `RV_IEIP_HOB, 12'hbbb }
 //
 `define RV_EPC_RANGE                        `RV_XLEN-1:2 // TODO `RV_XLEN-1:1 iff Ext. C is supported
 `define RV_EPC_LOB                          2'b0 // Low Order Bits TODO 1'b1 iff Ext. C is supported

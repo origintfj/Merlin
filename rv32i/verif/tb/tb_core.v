@@ -80,7 +80,6 @@ module tb_core;
     //
     merlin32i
         #(
-            .C_IRQV_SZ           (C_IRQV_SZ),
             .C_RESET_VECTOR      ('0)
         ) i_merlin32i (
             // global
@@ -88,10 +87,15 @@ module tb_core;
             .clk_en_i            (1'b1),
             .resetb_i            (resetb),
             // hardware interrupt interface
-            .irq_mode_i          (2'b11),
-            .irq_extern_i        (irq_extern),
-            .irq_softw_i         (1'b0),
-            .irq_timer_i         (1'b0),
+            .irqm_extern_i       (irq_extern),
+            .irqm_softw_i        (1'b0),
+            .irqm_timer_i        (1'b0),
+            .irqs_extern_i       (1'b0),
+            .irqs_softw_i        (1'b0),
+            .irqs_timer_i        (1'b0),
+            .irqu_extern_i       (1'b0),
+            .irqu_softw_i        (1'b0),
+            .irqu_timer_i        (1'b0),
             // instruction port
             .ireqready_i         (ireqready),
             .ireqvalid_o         (ireqvalid),
