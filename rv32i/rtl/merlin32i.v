@@ -13,7 +13,10 @@ module merlin32i
         input  wire                  clk_en_i,
         input  wire                  resetb_i,
         // hardware interrupt interface
-        input  wire                  interrupt_i,
+        input  wire            [1:0] irq_mode_i,
+        input  wire                  irq_extern_i,
+        input  wire                  irq_softw_i,
+        input  wire                  irq_timer_i,
         // instruction port
         input  wire                  ireqready_i,
         output wire                  ireqvalid_o,
@@ -225,7 +228,10 @@ module merlin32i
             .clk_en_i             (clk_en_i),
             .resetb_i             (resetb_i),
             // external interface
-            .interrupt_i          (interrupt_i),
+            .irq_mode_i           (irq_mode_i),
+            .irq_extern_i         (irq_extern_i),
+            .irq_softw_i          (irq_softw_i),
+            .irq_timer_i          (irq_timer_i),
             // pfu stage interface
             .pfu_hpl_o            (exs_pfu_hpl),
             // instruction decoder stage interface

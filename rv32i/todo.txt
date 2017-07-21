@@ -3,3 +3,6 @@
  - fix the pfu to flush when vectoring, and fix the test accordingly
  - investigate improving use of comparitor by sharing one for signed/unsigned and flipping MSB
  - change the funct3 refrences to MIN_OPCODEs
+ - clean up the cause/exception/interrupt logic
+ - do branches generate misaligned instruction fetch exceptions
+ - what are software interrupts

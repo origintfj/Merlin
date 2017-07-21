@@ -9,7 +9,7 @@ module tb_core;
     reg         resetb = 1'b0;
 
     // hardware interrupt generator
-    reg         interrupt;
+    reg         irq_extern;
 
     wire        ireqready;
     wire        ireqvalid;
@@ -70,9 +70,9 @@ module tb_core;
     // hardware interrupt generator
     initial
     begin
-        interrupt = 1'b0;
+        irq_extern = 1'b0;
         #100_000;
-        interrupt = 1'b1;
+        irq_extern = 1'b1;
     end
 
 
@@ -88,7 +88,10 @@ module tb_core;
             .clk_en_i            (1'b1),
             .resetb_i            (resetb),
             // hardware interrupt interface
-            .interrupt_i         (interrupt),
+            .irq_mode_i          (2'b11),
+            .irq_extern_i        (irq_extern),
+            .irq_softw_i         (1'b0),
+            .irq_timer_i         (1'b0),
             // instruction port
             .ireqready_i         (ireqready),
             .ireqvalid_o         (ireqvalid),

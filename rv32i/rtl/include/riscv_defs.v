@@ -96,6 +96,8 @@
 `define RV_SSTATUS_ACCESS_MASK              { 4'h8, { `RV_XLEN-32 {1'b0} }, 28'h00de133 }
 `define RV_SEDELEG_LEGAL_MASK               16'h01ff
 //
+`define RV_SIDELEG_LEGAL_MASK               12'hbbb
+//
 `define RV_MSTATUS_ACCESS_MASK              { 4'h8, { `RV_XLEN-32 {1'b0} }, 28'h07ff9bb }
 `define RV_MSTATUS_MPP_RANGE                12:11
 `define RV_MSTATUS_SPP_INDEX                8
@@ -116,13 +118,15 @@
 `define RV_EDELEG_SZX                       4
 `define RV_EDELEG_RANGE                     15:0
 `define RV_EDELEG_HOB                       16'b0
+//
+`define RV_MIDELEG_LEGAL_MASK               12'hbbb
+`define RV_IDELEG_RANGE                     11:0
+`define RV_IDELEG_HOB                       20'b0
+//
 `define RV_EPC_RANGE                        `RV_XLEN-1:2 // TODO `RV_XLEN-1:1 iff Ext. C is supported
 `define RV_EPC_LOB                          2'b0 // Low Order Bits TODO 1'b1 iff Ext. C is supported
 //
 `define RV_CAUSE_RANGE                          `RV_XLEN-1:0
-`define RV_EXCP_CAUSE_MACHINE_EXT_INTR          { 1'b1, { `RV_XLEN-5 {1'b0} }, 4'd11 }
-`define RV_EXCP_CAUSE_SUPERVISOR_EXT_INTR       { 1'b1, { `RV_XLEN-5 {1'b0} }, 4'd09 }
-`define RV_EXCP_CAUSE_USER_EXT_INTR             { 1'b1, { `RV_XLEN-5 {1'b0} }, 4'd08 }
 `define RV_EXCP_CAUSE_INS_ADDR_MISALIGNED       { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd00 }
 `define RV_EXCP_CAUSE_INS_ACCESS_FAULT          { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd01 }
 `define RV_EXCP_CAUSE_ILLEGAL_INS               { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd02 }

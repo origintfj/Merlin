@@ -30,9 +30,12 @@ module cs_registers // TODO
         input  wire         [11:0] wr_addr_i,
         input  wire [`RV_XLEN-1:0] wr_data_i,
         // exception, interrupt, and hart vectoring interface
-        output reg                 intr_ext_en_o,
+        output reg                 intr_extern_en_o,
+        output reg                 intr_softw_en_o, // TODO
+        output reg                 intr_timer_en_o, // TODO
         input  wire                jump_to_trap_i,
-        input  wire [`RV_XLEN-1:0] excp_cause_i, // encoded exception/interrupt cause
+        input  wire [`RV_XLEN-1:0] trap_cause_i, // encoded exception/interrupt cause
+        input  wire [`RV_XLEN-1:0] trap_value_i, // trap value
         input  wire [`RV_XLEN-1:0] excp_pc_i,    // exception pc
         input  wire                trap_rtn_i,
         input  wire          [1:0] trap_rtn_mode_i,
@@ -49,7 +52,7 @@ module cs_registers // TODO
     reg                   [1:0] addr_typecode_q;
     reg                   [1:0] addr_privcode_q;
     // trap delegation/target mode decoder
-    wire   [`RV_EDELEG_SZX-1:0] edeleg_index;
+    wire   [`RV_EDELEG_SZX-1:0] deleg_index;
     reg                   [1:0] target_mode;
     // target trap base address mux
     reg                         trap_mode_vectored;
@@ -66,19 +69,24 @@ module cs_registers // TODO
     reg          [`RV_XLEN-1:0] uscratch_q;
     reg         [`RV_EPC_RANGE] uepc_q;
     reg       [`RV_CAUSE_RANGE] ucause_q;
+    reg          [`RV_XLEN-1:0] utval_q;
     //
     reg      [`RV_EDELEG_RANGE] sedeleg_q;
+    reg      [`RV_IDELEG_RANGE] sideleg_q; // TODO
     reg          [`RV_XLEN-1:0] stvec_q;
     reg          [`RV_XLEN-1:0] sscratch_q;
     reg         [`RV_EPC_RANGE] sepc_q;
     reg       [`RV_CAUSE_RANGE] scause_q;
+    reg          [`RV_XLEN-1:0] stval_q;
     //
     reg          [`RV_XLEN-1:0] mstatus_q;
     reg      [`RV_EDELEG_RANGE] medeleg_q;
+    reg      [`RV_IDELEG_RANGE] mideleg_q; // TODO
     reg          [`RV_XLEN-1:0] mtvec_q;
     reg          [`RV_XLEN-1:0] mscratch_q;
     reg         [`RV_EPC_RANGE] mepc_q;
     reg       [`RV_CAUSE_RANGE] mcause_q;
+    reg          [`RV_XLEN-1:0] mtval_q;
 
     //--------------------------------------------------------------
 
@@ -95,16 +103,16 @@ module cs_registers // TODO
     begin
         case (mode_q)
             `RV_MODE_MACHINE : begin
-                intr_ext_en_o = mstatus_q[`RV_MSTATUS_MIE_INDEX];
+                intr_extern_en_o = mstatus_q[`RV_MSTATUS_MIE_INDEX];
             end
             `RV_MODE_SUPERVISOR : begin
-                intr_ext_en_o = mstatus_q[`RV_MSTATUS_SIE_INDEX];
+                intr_extern_en_o = mstatus_q[`RV_MSTATUS_SIE_INDEX];
             end
             `RV_MODE_USER : begin
-                intr_ext_en_o = mstatus_q[`RV_MSTATUS_UIE_INDEX];
+                intr_extern_en_o = mstatus_q[`RV_MSTATUS_UIE_INDEX];
             end
             default : begin
-                intr_ext_en_o = 1'b0;
+                intr_extern_en_o = 1'b0;
             end
         endcase
     end
@@ -143,27 +151,47 @@ module cs_registers // TODO
     //--------------------------------------------------------------
     // trap delegation/target mode decoder
     //--------------------------------------------------------------
-    assign edeleg_index = excp_cause_i[`RV_EDELEG_SZX-1:0];
+    assign deleg_index = trap_cause_i[`RV_EDELEG_SZX-1:0];
     //
     always @ (*)
     begin
         case (mode_q)
             `RV_MODE_SUPERVISOR : begin
-                if (medeleg_q[edeleg_index] == 1'b1) begin
-                    target_mode = `RV_MODE_SUPERVISOR;
-                end else begin
-                    target_mode = `RV_MODE_MACHINE;
+                if (trap_cause_i[`RV_XLEN-1] == 1'b1) begin // interrupt
+                    if (mideleg_q[deleg_index] == 1'b1) begin
+                        target_mode = `RV_MODE_SUPERVISOR;
+                    end else begin
+                        target_mode = `RV_MODE_MACHINE;
+                    end
+                end else begin // exception
+                    if (medeleg_q[deleg_index] == 1'b1) begin
+                        target_mode = `RV_MODE_SUPERVISOR;
+                    end else begin
+                        target_mode = `RV_MODE_MACHINE;
+                    end
                 end
             end
             `RV_MODE_USER : begin
-                if (medeleg_q[edeleg_index] == 1'b1) begin
-                    if (sedeleg_q[edeleg_index] == 1'b1) begin
-                        target_mode = `RV_MODE_USER;
+                if (trap_cause_i[`RV_XLEN-1] == 1'b1) begin // interrupt
+                    if (mideleg_q[deleg_index] == 1'b1) begin
+                        if (sideleg_q[deleg_index] == 1'b1) begin
+                            target_mode = `RV_MODE_USER;
+                        end else begin
+                            target_mode = `RV_MODE_SUPERVISOR;
+                        end
                     end else begin
-                        target_mode = `RV_MODE_SUPERVISOR;
+                        target_mode = `RV_MODE_MACHINE;
                     end
-                end else begin
-                    target_mode = `RV_MODE_MACHINE;
+                end else begin // exception
+                    if (medeleg_q[deleg_index] == 1'b1) begin
+                        if (sedeleg_q[deleg_index] == 1'b1) begin
+                            target_mode = `RV_MODE_USER;
+                        end else begin
+                            target_mode = `RV_MODE_SUPERVISOR;
+                        end
+                    end else begin
+                        target_mode = `RV_MODE_MACHINE;
+                    end
                 end
             end
             default : begin
@@ -203,8 +231,8 @@ module cs_registers // TODO
             end
         endcase
         //
-        if (excp_cause_i[`RV_XLEN-1] & trap_mode_vectored) begin
-            trap_entry_addr_o = { { trap_base_addr[`RV_XLEN-1:2] + excp_cause_i[`RV_XLEN-3:0] }, 2'b0 };
+        if (trap_cause_i[`RV_XLEN-1] & trap_mode_vectored) begin
+            trap_entry_addr_o = { { trap_base_addr[`RV_XLEN-1:2] + trap_cause_i[`RV_XLEN-3:0] }, 2'b0 };
         end else begin
             trap_entry_addr_o = trap_base_addr;
         end
@@ -240,32 +268,32 @@ module cs_registers // TODO
             12'h040 : rd_data = uscratch_q;
             12'h041 : rd_data = { uepc_q, `RV_EPC_LOB }; // uepc
             12'h042 : rd_data = ucause_q; // ucause
-            //12'h043 : rd_data = utval_q;
+            12'h043 : rd_data = utval_q;
             //12'h044 : rd_data = uip_q;
             // Supervisor CSRs
             12'h100 : rd_data = mstatus_q & `RV_SSTATUS_ACCESS_MASK; // Restricted view of mstatus
             12'h102 : rd_data = { `RV_EDELEG_HOB, sedeleg_q } & `RV_SEDELEG_LEGAL_MASK;
-            //12'h103 : rd_data = sideleg_q;
+            12'h103 : rd_data = { `RV_IDELEG_HOB, sideleg_q } & `RV_SIDELEG_LEGAL_MASK;
             //12'h104 : rd_data = sie_q;
             12'h105 : rd_data = stvec_q;
             //12'h106 : rd_data = scounteren_q;
             12'h140 : rd_data = sscratch_q;
             12'h141 : rd_data = { sepc_q, `RV_EPC_LOB }; // sepc
             12'h142 : rd_data = scause_q; // scause
-            //12'h143 : rd_data = stval_q;
+            12'h143 : rd_data = stval_q;
             //12'h144 : rd_data = sip_q;
             // Machine CSRs
             12'h300 : rd_data = mstatus_q & `RV_MSTATUS_ACCESS_MASK; // mstatus
             //12'h301 : rd_data = ; // misa
             12'h302 : rd_data = { `RV_EDELEG_HOB, medeleg_q } & `RV_MEDELEG_LEGAL_MASK;
-            //12'h303 : rd_data = ; // mideleg
+            12'h303 : rd_data = { `RV_IDELEG_HOB, mideleg_q } & `RV_MIDELEG_LEGAL_MASK; // mideleg
             //12'h304 : rd_data = ; // mie
             12'h305 : rd_data = mtvec_q; // mtvec
             //12'h306 : rd_data = ; // mcounteren
             12'h340 : rd_data = mscratch_q; // mscratch
             12'h341 : rd_data = { mepc_q, `RV_EPC_LOB }; // mepc
             12'h342 : rd_data = mcause_q; // mcause
-            //12'h343 : rd_data = ; // mtval
+            12'h343 : rd_data = mtval_q; // mtval
             //12'h344 : rd_data = ; // mip
             12'hf11 : rd_data = `RV_VENDOR_ID;
             12'hf12 : rd_data = `RV_ARCHITECTURE_ID;
@@ -324,20 +352,23 @@ module cs_registers // TODO
                             mstatus_q[`RV_MSTATUS_MPIE_INDEX] <= mstatus_q[`RV_MSTATUS_MIE_INDEX];
                             mstatus_q[`RV_MSTATUS_MIE_INDEX]  <= 1'b0;
                             mepc_q   <= excp_pc_i[`RV_EPC_RANGE];
-                            mcause_q <= excp_cause_i;
+                            mcause_q <= trap_cause_i;
+                            mtval_q  <= trap_value_i;
                         end
                         `RV_MODE_SUPERVISOR : begin
                             mstatus_q[`RV_MSTATUS_SPP_INDEX]  <= |mode_q; // 0 iff was user mode, 1 otherwise
                             mstatus_q[`RV_MSTATUS_SPIE_INDEX] <= mstatus_q[`RV_MSTATUS_SIE_INDEX];
                             mstatus_q[`RV_MSTATUS_SIE_INDEX]  <= 1'b0;
                             sepc_q   <= excp_pc_i[`RV_EPC_RANGE];
-                            scause_q <= excp_cause_i;
+                            scause_q <= trap_cause_i;
+                            stval_q  <= trap_value_i;
                         end
                         `RV_MODE_USER : begin
                             mstatus_q[`RV_MSTATUS_UPIE_INDEX] <= mstatus_q[`RV_MSTATUS_UIE_INDEX];
                             mstatus_q[`RV_MSTATUS_UIE_INDEX]  <= 1'b0;
                             uepc_q   <= excp_pc_i[`RV_EPC_RANGE];
-                            ucause_q <= excp_cause_i;
+                            ucause_q <= trap_cause_i;
+                            utval_q  <= trap_value_i;
                         end
                     endcase
                 end else if (trap_rtn_i) begin
@@ -368,20 +399,25 @@ module cs_registers // TODO
                         12'h040 : uscratch_q <= wr_data_i;
                         12'h041 : uepc_q     <= wr_data_i[`RV_EPC_RANGE];
                         12'h042 : ucause_q   <= wr_data_i; // WLRL
+                        12'h043 : utval_q    <= wr_data_i;
                         // Supervisor CSRs
                         12'h100 : mstatus_q  <= (wr_data_i & `RV_SSTATUS_ACCESS_MASK) | (mstatus_q & ~`RV_SSTATUS_ACCESS_MASK);
                         12'h102 : sedeleg_q  <= wr_data_i[`RV_EDELEG_RANGE] & `RV_SEDELEG_LEGAL_MASK;
+                        12'h103 : sideleg_q  <= wr_data_i[`RV_IDELEG_RANGE] & `RV_SIDELEG_LEGAL_MASK;
                         12'h105 : stvec_q    <= wr_data_i & { { `RV_XLEN-2 {1'b1} }, 2'b01 }; // NOTE vec. mode >=2 reserved
                         12'h140 : sscratch_q <= wr_data_i;
                         12'h141 : sepc_q     <= wr_data_i[`RV_EPC_RANGE];
                         12'h142 : scause_q   <= wr_data_i; // WLRL
+                        12'h143 : stval_q    <= wr_data_i;
                         // Machine CSRs
                         12'h300 : mstatus_q  <= (wr_data_i & `RV_MSTATUS_ACCESS_MASK);
                         12'h302 : medeleg_q  <= wr_data_i[`RV_EDELEG_RANGE] & `RV_MEDELEG_LEGAL_MASK;
+                        12'h303 : mideleg_q  <= wr_data_i[`RV_IDELEG_RANGE] & `RV_MIDELEG_LEGAL_MASK;
                         12'h305 : mtvec_q    <= wr_data_i & { { `RV_XLEN-2 {1'b1} }, 2'b01 }; // NOTE vec. mode >=2 reserved
                         12'h340 : mscratch_q <= wr_data_i;
                         12'h341 : mepc_q     <= wr_data_i[`RV_EPC_RANGE];
                         12'h342 : mcause_q   <= wr_data_i; // WLRL
+                        12'h343 : mtval_q    <= wr_data_i;
                         default : begin
                         end
                     endcase;

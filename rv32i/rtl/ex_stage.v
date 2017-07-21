@@ -1,8 +1,5 @@
 // TODO can branches also cause miss-aligned instruction fetch exceptions? or
 // only jumps
-//
-// TODO illegal instruction - xRET excuted in mode < x
-
 `include "riscv_defs.v"
 
 module ex_stage
@@ -12,10 +9,14 @@ module ex_stage
         input  wire                     clk_en_i,
         input  wire                     resetb_i,
         // external interface
-        input  wire                     interrupt_i,
+        input  wire               [1:0] irq_mode_i,
+        input  wire                     irq_extern_i,
+        input  wire                     irq_softw_i,
+        input  wire                     irq_timer_i,
         // pfu stage interface
         output wire               [1:0] pfu_hpl_o,
         // instruction decoder stage interface
+        input  wire      [`RV_XLEN-1:0] ids_ins_i,
         input  wire                     ids_valid_i,
         output wire                     ids_stall_o,
         input  wire   [`RV_SOFID_RANGE] ids_sofid_i,
@@ -72,7 +73,9 @@ module ex_stage
     wire                   csr_trap_rtn;
     // exception signaling logic
     wire                   jump_to_trap;
-    wire                   intr_extn;
+    wire                   intr_extern;
+    wire                   intr_softw;
+    wire                   intr_timer;
     wire                   excp_ecall;
     wire                   excp_ferr;
     wire                   excp_uerr;
@@ -81,13 +84,16 @@ module ex_stage
     reg                    excp_masa;
     reg                    excp_ilgl;
     // exception/interrupt cause encoder
-    reg     [`RV_XLEN-1:0] excp_cause;
+    reg     [`RV_XLEN-1:0] trap_cause;
+    // trap value encoder
+    reg     [`RV_XLEN-1:0] trap_value;
     // instruction qualification logic
     wire                   ex_valid;
     wire                   execute_commit;
     reg  [`RV_SOFID_RANGE] sofid_q;
     reg                    sofid_run;
     // delay stage
+    reg     [`RV_XLEN-1:0] ids_ins_q;
     reg                    ids_valid_q;
     reg                    ids_ins_uerr_q;
     reg                    ids_ins_ferr_q;
@@ -103,11 +109,11 @@ module ex_stage
     reg                    ids_csr_wr_q;
     reg             [11:0] ids_csr_addr_q;
     reg     [`RV_XLEN-1:0] ids_csr_wr_data_q;
-    reg                    link_q;
-    reg     [`RV_XLEN-1:0] pc_q;
+    reg                    ids_link_q;
+    reg     [`RV_XLEN-1:0] ids_pc_q;
     reg     [`RV_XLEN-1:0] pc_inc_q;
-    reg     [`RV_XLEN-1:0] regs2_data_q;
-    reg              [4:0] regd_addr_q;
+    reg     [`RV_XLEN-1:0] ids_regs2_data_q;
+    reg              [4:0] ids_regd_addr_q;
     reg              [2:0] funct3_q;
     // ex stage stall controller
     wire                   ex_stage_en;
@@ -124,7 +130,9 @@ module ex_stage
     wire                   csr_bad_addr;
     wire                   csr_readonly;
     wire                   csr_priv_too_low;
-    wire                   intr_ext_en;
+    wire                   intr_extern_en;
+    wire                   intr_softw_en;
+    wire                   intr_timer_en;
     wire    [`RV_XLEN-1:0] csr_trap_entry_addr;
     wire    [`RV_XLEN-1:0] csr_trap_rtn_addr;
     wire             [1:0] csr_mode;
@@ -137,12 +145,12 @@ module ex_stage
     assign pfu_hpl_o        = csr_mode;
     //
     assign ids_stall_o      = exs_stall;
-    assign ids_regd_addr_o  = regd_addr_q;
+    assign ids_regd_addr_o  = ids_regd_addr_q;
     //
     assign lsq_hpl_o        = csr_mode;
     assign lsq_funct3_o     = funct3_q;
-    assign lsq_regd_addr_o  = regd_addr_q;
-    assign lsq_regs2_data_o = regs2_data_q;
+    assign lsq_regd_addr_o  = ids_regd_addr_q;
+    assign lsq_regs2_data_o = ids_regs2_data_q;
     assign lsq_addr_o       = alu_data_out;
 
 
@@ -183,7 +191,9 @@ module ex_stage
     //--------------------------------------------------------------
     // exception signaling logic
     //--------------------------------------------------------------
-    assign jump_to_trap = intr_extn |
+    assign jump_to_trap = intr_extern |
+                          intr_softw |
+                          intr_timer |
                           excp_ecall |
                           excp_ferr |
                           excp_uerr |
@@ -192,7 +202,9 @@ module ex_stage
                           excp_masa |
                           excp_ilgl;
     //
-    assign intr_extn  = ex_valid & intr_ext_en & interrupt_i;
+    assign intr_extern = ex_valid & intr_extern_en  & irq_extern_i;
+    assign intr_softw  = ex_valid & intr_softw_en & irq_softw_i;
+    assign intr_timer  = ex_valid & intr_timer_en & irq_timer_i;
     //
     assign excp_ecall = ex_valid & ids_ecall_q;
     assign excp_ferr  = ex_valid & ids_ins_ferr_q;
@@ -234,36 +246,61 @@ module ex_stage
         end
     end
 
-
     //--------------------------------------------------------------
     // exception/interrupt cause encoder
     //--------------------------------------------------------------
+    /*
+     * Traps should be taken with the following priority:
+     *   1) external interrupts
+     *   2) software interrupts
+     *   3) timer interrupts
+     *   4) synchronous traps
+     */
     always @ (*)
     begin
         // NOTE: IMPORTANT: This desision tree must be ordered correctly
-        if (intr_extn) begin
-            excp_cause = `RV_EXCP_CAUSE_MACHINE_EXT_INTR; // TODO: other modes
+        if (intr_extern) begin
+            trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b10, irq_mode_i };
+        end else if (intr_softw) begin
+            trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b00, irq_mode_i };
+        end else if (intr_timer) begin
+            trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b01, irq_mode_i };
         end else if (excp_ferr) begin
-            excp_cause = `RV_EXCP_CAUSE_INS_ACCESS_FAULT;
+            trap_cause = `RV_EXCP_CAUSE_INS_ACCESS_FAULT;
         end else if (excp_uerr) begin
-            excp_cause = `RV_EXCP_CAUSE_ILLEGAL_INS;
+            trap_cause = `RV_EXCP_CAUSE_ILLEGAL_INS;
         end else if (excp_ilgl) begin
-            excp_cause = `RV_EXCP_CAUSE_ILLEGAL_INS;
+            trap_cause = `RV_EXCP_CAUSE_ILLEGAL_INS;
         end else if (excp_maif) begin
-            excp_cause = `RV_EXCP_CAUSE_INS_ADDR_MISALIGNED;
+            trap_cause = `RV_EXCP_CAUSE_INS_ADDR_MISALIGNED;
         end else if (excp_mala) begin
-            excp_cause = `RV_EXCP_CAUSE_LOAD_ADDR_MISALIGNED;
+            trap_cause = `RV_EXCP_CAUSE_LOAD_ADDR_MISALIGNED;
         end else if (excp_masa) begin
-            excp_cause = `RV_EXCP_CAUSE_STORE_ADDR_MISALIGNED;
+            trap_cause = `RV_EXCP_CAUSE_STORE_ADDR_MISALIGNED;
         end else if (excp_ecall) begin // NOTE: this is noly the cause if the instruction hasn't generated any other exceptions
             case (csr_mode)
-                `RV_MODE_MACHINE    : excp_cause = `RV_EXCP_CAUSE_ECALL_FROM_MMODE;
-                `RV_MODE_SUPERVISOR : excp_cause = `RV_EXCP_CAUSE_ECALL_FROM_SMODE;
-                `RV_MODE_USER       : excp_cause = `RV_EXCP_CAUSE_ECALL_FROM_UMODE;
-                default             : excp_cause = { `RV_XLEN {1'b0} }; // NOTE: don't actually care
+                `RV_MODE_MACHINE    : trap_cause = `RV_EXCP_CAUSE_ECALL_FROM_MMODE;
+                `RV_MODE_SUPERVISOR : trap_cause = `RV_EXCP_CAUSE_ECALL_FROM_SMODE;
+                `RV_MODE_USER       : trap_cause = `RV_EXCP_CAUSE_ECALL_FROM_UMODE;
+                default             : trap_cause = { `RV_XLEN {1'b0} }; // NOTE: don't actually care
             endcase
         end else begin
-            excp_cause = { `RV_XLEN {1'b0} }; // NOTE: don't actually care
+            trap_cause = { `RV_XLEN {1'b0} }; // NOTE: don't actually care
+        end
+    end
+
+
+    //--------------------------------------------------------------
+    // trap value encoder
+    //--------------------------------------------------------------
+    always @ (*)
+    begin
+        if (excp_maif | excp_mala | excp_masa) begin // TODO hardware breakpoint | page fault
+            trap_value = ids_pc_q;
+        end else if (excp_uerr | excp_ilgl) begin
+            trap_value = ids_ins_q;
+        end else begin
+            trap_value = { `RV_XLEN {1'b0} };
         end
     end
 
@@ -307,6 +344,7 @@ module ex_stage
             ids_valid_q <= 1'b0;
         end else if (clk_en_i) begin
             if (ex_stage_en) begin
+                ids_ins_q           <= ids_ins_i;
                 ids_valid_q         <= ids_valid_i;
                 ids_ins_uerr_q      <= ids_ins_uerr_i;
                 ids_ins_ferr_q      <= ids_ins_ferr_i;
@@ -329,11 +367,11 @@ module ex_stage
                 ids_csr_wr_q      <= ids_csr_wr_i;
                 ids_csr_addr_q    <= ids_csr_addr_i;
                 ids_csr_wr_data_q <= ids_csr_wr_data_i;
-                link_q            <= ids_link_i;
-                pc_q              <= ids_pc_i;
+                ids_link_q        <= ids_link_i;
+                ids_pc_q          <= ids_pc_i;
                 pc_inc_q          <= ids_pc_i + { { `RV_XLEN-`RV_INSSIZE_SZ-1 {1'b0} }, ids_ins_size_i, 1'b0 };
-                regs2_data_q      <= ids_regs2_data_i;
-                regd_addr_q       <= ids_regd_addr_i;
+                ids_regs2_data_q  <= ids_regs2_data_i;
+                ids_regd_addr_q   <= ids_regd_addr_i;
                 funct3_q          <= ids_funct3_i;
             end
         end
@@ -374,7 +412,7 @@ module ex_stage
     //--------------------------------------------------------------
     always @ (*)
     begin
-        if (link_q) begin
+        if (ids_link_q) begin
             alu_pcinc_mux_out = pc_inc_q;
         end else begin
             alu_pcinc_mux_out = alu_data_out;
@@ -437,10 +475,13 @@ module ex_stage
             .wr_addr_i         (ids_csr_addr_q),
             .wr_data_i         (csr_wr_data),
             // exception, interrupt, and hart vectoring interface
-            .intr_ext_en_o     (intr_ext_en),
+            .intr_extern_en_o  (intr_extern_en),
+            .intr_softw_en_o   (intr_softw_en),
+            .intr_timer_en_o   (intr_timer_en),
             .jump_to_trap_i    (jump_to_trap),
-            .excp_cause_i      (excp_cause),
-            .excp_pc_i         (pc_q),
+            .trap_cause_i      (trap_cause),
+            .trap_value_i      (trap_value),
+            .excp_pc_i         (ids_pc_q),
             .trap_rtn_i        (csr_trap_rtn),
             .trap_rtn_mode_i   (ids_trap_rtn_mode_q),
             .trap_entry_addr_o (csr_trap_entry_addr),

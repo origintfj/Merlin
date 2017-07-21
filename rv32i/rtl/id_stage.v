@@ -14,6 +14,7 @@ module id_stage
         input  wire                      pfu_ferr_i,  // this instruction fetch resulted in error
         input  wire               [31:0] pfu_pc_i,    // address of this instruction
         // ex stage interface
+        output reg        [`RV_XLEN-1:0] exs_ins_o,
         output reg                       exs_valid_o,
         input  wire                      exs_stall_i,
         output reg     [`RV_SOFID_RANGE] exs_sofid_o,
@@ -259,6 +260,7 @@ module id_stage
     begin
         if (clk_en_i) begin
             if (pfu_ack_o) begin
+                exs_ins_o             <= pfu_ins_i;
                 exs_sofid_o           <= pfu_sofid_i;
                 exs_jump_o            <= jump_d;
                 exs_ecall_o           <= ecall_d;
