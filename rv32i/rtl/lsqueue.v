@@ -18,6 +18,7 @@ module lsqueue
         output reg  [`RV_XLEN-1:0] lsq_reg_data_o,
         // execution stage interface
         output wire                exs_full_o,
+        output wire                exs_empty_o,
         input  wire                exs_lq_wr_i,
         input  wire                exs_sq_wr_i,
         input  wire          [1:0] exs_hpl_i,
@@ -63,6 +64,7 @@ module lsqueue
     // response control fifo
     parameter C_RSP_CTRL_FIFO_WIDTH = 5 + 3;
     wire                       [2:0] req_ctrl_fifo_rd_data_funct3;
+    wire                             rsp_ctrl_fifo_empty;
     wire                             rsp_ctrl_fifo_full;
     wire [C_RSP_CTRL_FIFO_WIDTH-1:0] req_ctrl_fifo_wr_data;
     wire [C_RSP_CTRL_FIFO_WIDTH-1:0] req_ctrl_fifo_rd_data;
@@ -81,6 +83,8 @@ module lsqueue
     assign request = dreqvalid_o & dreqready_i;
     //
     assign lsq_reg_wr_o = ~rsp_data_fifo_empty;
+    //
+    assign exs_empty_o = rsp_ctrl_fifo_empty & req_fifo_empty;
     //
     assign plic_int_laf_o     = drspready_o & drsprerr_i;
     assign plic_int_saf_o     = drspready_o & drspwerr_i;
@@ -166,7 +170,7 @@ module lsqueue
             .resetb_i       (resetb_i),
             // control and status
             .flush_i        (1'b0),
-            .empty_o        (),
+            .empty_o        (rsp_ctrl_fifo_empty),
             .full_o         (rsp_ctrl_fifo_full),
             // write port
             .wr_i           (request & ~req_fifo_rd_data_wr),

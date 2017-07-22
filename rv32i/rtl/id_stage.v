@@ -21,6 +21,7 @@ module id_stage
         output reg   [`RV_INSSIZE_RANGE] exs_ins_size_o,
         output reg                       exs_ins_uerr_o,
         output reg                       exs_ins_ferr_o,
+        output reg                       exs_fencei_o,
         output reg                       exs_jump_o,
         output reg                       exs_ecall_o,
         output reg                       exs_trap_rtn_o,
@@ -59,6 +60,7 @@ module id_stage
     // instruction decoder
     wire [`RV_INSSIZE_RANGE] ins_size_d;
     wire                     ins_uerr_d;
+    wire                     fencei_d;
     wire                     jump_d;
     wire                     ecall_d;
     wire                     trap_rtn_d;
@@ -136,6 +138,7 @@ module id_stage
                 // egress side
             .ins_size_o            (ins_size_d),
             .ins_err_o             (ins_uerr_d),
+            .fencei_o              (fencei_d),
             .jump_o                (jump_d),
             .ecall_o               (ecall_d),
             .trap_rtn_o            (trap_rtn_d),
@@ -262,6 +265,7 @@ module id_stage
             if (pfu_ack_o) begin
                 exs_ins_o             <= pfu_ins_i;
                 exs_sofid_o           <= pfu_sofid_i;
+                exs_fencei_o          <= fencei_d;
                 exs_jump_o            <= jump_d;
                 exs_ecall_o           <= ecall_d;
                 exs_trap_rtn_o        <= trap_rtn_d;

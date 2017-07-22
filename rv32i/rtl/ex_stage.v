@@ -28,6 +28,7 @@ module ex_stage
         input  wire [`RV_INSSIZE_RANGE] ids_ins_size_i,
         input  wire                     ids_ins_uerr_i,
         input  wire                     ids_ins_ferr_i,
+        input  wire                     ids_fencei_i,
         input  wire                     ids_jump_i,
         input  wire                     ids_ecall_i,
         input  wire                     ids_trap_rtn_i,
@@ -58,6 +59,7 @@ module ex_stage
         output reg       [`RV_XLEN-1:0] hvec_jump_addr_o,
         // load/store queue interface
         input  wire                     lsq_full_i,
+        input  wire                     lsq_empty_i,
         output wire                     lsq_lq_wr_o,
         output wire                     lsq_sq_wr_o,
         output wire               [1:0] lsq_hpl_o,
@@ -101,6 +103,7 @@ module ex_stage
     reg                    ids_valid_q;
     reg                    ids_ins_uerr_q;
     reg                    ids_ins_ferr_q;
+    reg                    ids_fencei_q;
     reg                    ids_jump_q;
     reg                    ids_ecall_q;
     reg                    ids_trap_rtn_q;
@@ -166,6 +169,8 @@ module ex_stage
             hvec_jump_addr_o = csr_trap_entry_addr;
         end else if (ids_trap_rtn_q) begin
             hvec_jump_addr_o = csr_trap_rtn_addr;
+        end else if (ids_fencei_q) begin
+            hvec_jump_addr_o = pc_inc_q;
         end else begin
             hvec_jump_addr_o = alu_data_out;
         end
@@ -381,6 +386,7 @@ module ex_stage
                 ids_valid_q         <= ids_valid_i;
                 ids_ins_uerr_q      <= ids_ins_uerr_i;
                 ids_ins_ferr_q      <= ids_ins_ferr_i;
+                ids_fencei_q        <= ids_fencei_i;
                 ids_jump_q          <= ids_jump_i;
                 ids_ecall_q         <= ids_ecall_i;
                 ids_trap_rtn_q      <= ids_trap_rtn_i;
@@ -420,7 +426,8 @@ module ex_stage
     begin
         exs_stall = 1'b0;
         if (execute_commit) begin
-            if (lsq_full_i & (lq_wr_q | sq_wr_q)) begin
+            if ( (lsq_full_i & (lq_wr_q | sq_wr_q)) |
+                 (lsq_empty_i & ids_fencei_q) ) begin
                 exs_stall = 1'b1;
             end
         end

@@ -10,6 +10,7 @@ module decoder
             // egress side
         output wire [`RV_INSSIZE_RANGE] ins_size_o,
         output reg                      ins_err_o,
+        output reg                      fencei_o,
         output reg                      jump_o,
         output reg                      ecall_o,
         output reg                      trap_rtn_o,
@@ -84,6 +85,7 @@ module decoder
     always @ (*)
     begin
         ins_err_o             = 1'b0;
+        fencei_o              = 1'b0;
         jump_o                = 1'b0;
         ecall_o               = 1'b0;
         trap_rtn_o            = 1'b0;
@@ -300,8 +302,12 @@ module decoder
                     end
                 endcase
             end
-            7'b0001111 : begin // misc-mem TODO
+            7'b0001111 : begin // misc-mem
                 ins_type = C_IMM_TYPE_MISC_MEM;
+                // NOTE: any fence is treated as a fence.i
+                if (funct3 == 3'b001) begin // fence.i
+                    fencei_o = 1'b1;
+                end
             end
             7'b1110011 : begin // system
                 if (funct3 == `RV_MINOR_OPCODE_PRIV) begin

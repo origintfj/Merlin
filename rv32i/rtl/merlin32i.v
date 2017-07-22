@@ -66,6 +66,7 @@ module merlin32i
     wire [`RV_INSSIZE_RANGE] ids_exs_ins_size;
     wire                     ids_exs_ins_uerr;
     wire                     ids_exs_ins_ferr;
+    wire                     ids_exs_fencei;
     wire                     ids_exs_jump;
     wire                     ids_exs_ecall;
     wire                     ids_exs_trap_rtn;
@@ -107,6 +108,7 @@ module merlin32i
     wire               [4:0] lsq_ids_reg_addr;
     wire      [`RV_XLEN-1:0] lsq_ids_reg_data;
     wire                     lsq_exs_full;
+    wire                     lsq_exs_empty;
 
     //--------------------------------------------------------------
 
@@ -191,6 +193,7 @@ module merlin32i
             .exs_ins_size_o       (ids_exs_ins_size),
             .exs_ins_uerr_o       (ids_exs_ins_uerr),
             .exs_ins_ferr_o       (ids_exs_ins_ferr),
+            .exs_fencei_o         (ids_exs_fencei),
             .exs_jump_o           (ids_exs_jump),
             .exs_ecall_o          (ids_exs_ecall),
             .exs_trap_rtn_o       (ids_exs_trap_rtn),
@@ -250,6 +253,7 @@ module merlin32i
             .ids_ins_size_i       (ids_exs_ins_size),
             .ids_ins_uerr_i       (ids_exs_ins_uerr),
             .ids_ins_ferr_i       (ids_exs_ins_ferr),
+            .ids_fencei_i         (ids_exs_fencei),
             .ids_jump_i           (ids_exs_jump),
             .ids_ecall_i          (ids_exs_ecall),
             .ids_trap_rtn_i       (ids_exs_trap_rtn),
@@ -280,6 +284,7 @@ module merlin32i
             .hvec_jump_addr_o     (exs_hvec_jump_addr),
             // load/store queue interface
             .lsq_full_i           (lsq_exs_full),
+            .lsq_empty_i          (lsq_exs_empty),
             .lsq_lq_wr_o          (exs_lsq_lq_wr),
             .lsq_sq_wr_o          (exs_lsq_sq_wr),
             .lsq_hpl_o            (exs_lsq_hpl),
@@ -307,6 +312,7 @@ module merlin32i
             .lsq_reg_data_o     (lsq_ids_reg_data),
             // execution stage interface
             .exs_full_o         (lsq_exs_full),
+            .exs_empty_o        (lsq_exs_empty),
             .exs_lq_wr_i        (exs_lsq_lq_wr),
             .exs_sq_wr_i        (exs_lsq_sq_wr),
             .exs_hpl_i          (exs_lsq_hpl),
