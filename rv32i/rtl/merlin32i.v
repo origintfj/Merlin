@@ -4,7 +4,6 @@
 
 module merlin32i
     #(
-        parameter C_IRQV_SZ           = 32,
         parameter C_RESET_VECTOR      = 32'h0
     )
     (
