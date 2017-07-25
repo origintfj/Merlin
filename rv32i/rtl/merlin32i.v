@@ -61,6 +61,7 @@ module merlin32i
     wire      [`RV_XLEN-1:0] pfu_ids_pc;
     // instruction decoder stage
     wire                     ids_pfu_ack;
+    wire      [`RV_XLEN-1:0] ids_exs_ins;
     wire                     ids_exs_valid;
     wire   [`RV_SOFID_RANGE] ids_exs_sofid;
     wire [`RV_INSSIZE_RANGE] ids_exs_ins_size;
@@ -187,6 +188,7 @@ module merlin32i
             .pfu_ferr_i           (pfu_ids_ferr),  // this instruction fetch resulted in error
             .pfu_pc_i             (pfu_ids_pc),    // address of this instruction
             // ex stage interface
+            .exs_ins_o            (ids_exs_ins),
             .exs_valid_o          (ids_exs_valid),
             .exs_stall_i          (exs_ids_stall),
             .exs_sofid_o          (ids_exs_sofid),
@@ -247,6 +249,7 @@ module merlin32i
             // pfu stage interface
             .pfu_hpl_o            (exs_pfu_hpl),
             // instruction decoder stage interface
+            .ids_ins_i            (ids_exs_ins),
             .ids_valid_i          (ids_exs_valid),
             .ids_stall_o          (exs_ids_stall),
             .ids_sofid_i          (ids_exs_sofid),

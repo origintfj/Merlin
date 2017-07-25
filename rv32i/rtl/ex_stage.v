@@ -79,9 +79,6 @@ module ex_stage
     wire             [1:0] csr_wr_mode;
     wire                   csr_trap_rtn;
     // exception signaling logic
-    wire            [11:0] csr_irqv;
-    wire                   jump_to_trap;
-    wire                   interrupt;
     wire                   excp_ecall;
     wire                   excp_ferr;
     wire                   excp_uerr;
@@ -89,10 +86,6 @@ module ex_stage
     reg                    excp_mala;
     reg                    excp_masa;
     reg                    excp_ilgl;
-    // exception/interrupt cause encoder
-    reg     [`RV_XLEN-1:0] trap_cause;
-    // trap value encoder
-    reg     [`RV_XLEN-1:0] trap_value;
     // instruction qualification logic
     wire                   ex_valid;
     wire                   execute_commit;
@@ -137,6 +130,7 @@ module ex_stage
     wire                   csr_bad_addr;
     wire                   csr_readonly;
     wire                   csr_priv_too_low;
+    wire                   csr_jump_to_trap;
     wire    [`RV_XLEN-1:0] csr_trap_entry_addr;
     wire    [`RV_XLEN-1:0] csr_trap_rtn_addr;
     wire             [1:0] csr_mode;
@@ -161,11 +155,11 @@ module ex_stage
     //--------------------------------------------------------------
     // hart vectoring logic
     //--------------------------------------------------------------
-    assign jump = (execute_commit & (ids_jump_q | ids_trap_rtn_q)) | jump_to_trap;
+    assign jump = (execute_commit & (ids_jump_q | ids_trap_rtn_q | ids_fencei_q)) | csr_jump_to_trap;
     //
     always @ (*)
     begin
-        if (jump_to_trap) begin
+        if (csr_jump_to_trap) begin
             hvec_jump_addr_o = csr_trap_entry_addr;
         end else if (ids_trap_rtn_q) begin
             hvec_jump_addr_o = csr_trap_rtn_addr;
@@ -191,154 +185,44 @@ module ex_stage
     assign csr_wr       = execute_commit & ids_csr_wr_q;
     assign csr_wr_mode  = funct3_q[1:0];
     assign csr_trap_rtn = execute_commit & ids_trap_rtn_q;
-    //
 
 
     //--------------------------------------------------------------
     // exception signaling logic
     //--------------------------------------------------------------
-    assign jump_to_trap = interrupt |
-                          excp_ecall |
-                          excp_ferr |
-                          excp_uerr |
-                          excp_maif |
-                          excp_mala |
-                          excp_masa |
-                          excp_ilgl;
-    //
-    assign interrupt  = ex_valid & |csr_irqv;
-    //
-    assign excp_ecall = ex_valid & ids_ecall_q;
-    assign excp_ferr  = ex_valid & ids_ins_ferr_q;
-    assign excp_uerr  = ex_valid & ids_ins_uerr_q;
-    assign excp_maif  = ex_valid & ids_jump_q & (|(alu_data_out[1:0])); // TODO this will change for compressed instructions
+    assign excp_ecall = ids_ecall_q;
+    assign excp_ferr  = ids_ins_ferr_q;
+    assign excp_uerr  = ids_ins_uerr_q;
+    assign excp_maif  = ids_jump_q & (|(alu_data_out[1:0])); // TODO this will change for compressed instructions
     //
     always @ (*)
     begin
         excp_mala = 1'b0;
         excp_masa = 1'b0;
-        if (ex_valid) begin
-            if (funct3_q == 3'b001 && alu_data_out[0] != 1'b0) begin
-                excp_mala = lq_wr_q;
-                excp_masa = sq_wr_q;
-            end else if (funct3_q == 3'b010 && alu_data_out[1:0] != 2'b00) begin
-                excp_mala = lq_wr_q;
-                excp_masa = sq_wr_q;
-            end
+        if (funct3_q == 3'b001 && alu_data_out[0] != 1'b0) begin
+            excp_mala = lq_wr_q;
+            excp_masa = sq_wr_q;
+        end else if (funct3_q == 3'b010 && alu_data_out[1:0] != 2'b00) begin
+            excp_mala = lq_wr_q;
+            excp_masa = sq_wr_q;
         end
     end
     //
     always @ (*)
     begin
         excp_ilgl = 1'b0;
-        if (ex_valid) begin
-            if (ids_csr_rd_q) begin
-                excp_ilgl = csr_bad_addr | csr_priv_too_low;
-            end
-            //
-            if (ids_csr_wr_q) begin
-                excp_ilgl = csr_bad_addr | csr_priv_too_low | csr_readonly;
-            end
-            //
-            if (ids_trap_rtn_q) begin
-                if (ids_trap_rtn_mode_q > csr_mode) begin // if xRET && x > priv_mode
-                    excp_ilgl = 1'b1;
-                end
-            end
+        if (ids_csr_rd_q) begin
+            excp_ilgl = csr_bad_addr | csr_priv_too_low;
         end
-    end
-
-    //--------------------------------------------------------------
-    // exception/interrupt cause encoder
-    //--------------------------------------------------------------
-    /*
-     * Traps should be taken with the following priority:
-     *   1) external interrupts
-     *   2) software interrupts
-     *   3) timer interrupts
-     *   4) synchronous traps
-     *
-     * Exception cause encoding:
-     *   0000 - miaf
-     *   0100 - mala
-     *   0110 - masa
-     *
-     *   0001 - ferr
-     *   0010 - ilgl
-     *
-     *   1000 - ecall(u)
-     *   1001 - ecall(s)
-     *   1011 - ecall(m)
-     */
-    always @ (*)
-    begin
-        // NOTE: IMPORTANT: This desision tree must be ordered correctly
-        if (|(csr_irqv[11:8]) == 1'b1) begin // external interrupt
-            if (csr_irqv[11] == 1'b1) begin
-                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b10, 2'b11 };
-            end else if (csr_irqv[9] == 1'b1) begin
-                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b10, 2'b01 };
-            end else if (csr_irqv[8] == 1'b1) begin
-                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b10, 2'b00 };
-            end else begin
-                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b10, 2'b11 };
-            end
-        end else if (|(csr_irqv[3:0]) == 1'b1) begin // software interrupt
-            if (csr_irqv[7] == 1'b1) begin
-                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b00, 2'b11 };
-            end else if (csr_irqv[5] == 1'b1) begin
-                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b00, 2'b01 };
-            end else if (csr_irqv[4] == 1'b1) begin
-                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b00, 2'b00 };
-            end else begin
-                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b00, 2'b11 };
-            end
-        end else if (|(csr_irqv[7:4]) == 1'b1) begin // timer interrupt
-            if (csr_irqv[3] == 1'b1) begin
-                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b01, 2'b11 };
-            end else if (csr_irqv[1] == 1'b1) begin
-                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b01, 2'b01 };
-            end else if (csr_irqv[0] == 1'b1) begin
-                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b01, 2'b00 };
-            end else begin
-                trap_cause = { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b01, 2'b11 };
-            end
-        end else if (excp_ferr) begin
-            trap_cause = `RV_EXCP_CAUSE_INS_ACCESS_FAULT;
-        end else if (excp_uerr) begin
-            trap_cause = `RV_EXCP_CAUSE_ILLEGAL_INS;
-        end else if (excp_ilgl) begin
-            trap_cause = `RV_EXCP_CAUSE_ILLEGAL_INS;
-        end else if (excp_maif) begin
-            trap_cause = `RV_EXCP_CAUSE_INS_ADDR_MISALIGNED;
-        end else if (excp_mala) begin
-            trap_cause = `RV_EXCP_CAUSE_LOAD_ADDR_MISALIGNED;
-        end else if (excp_masa) begin
-            trap_cause = `RV_EXCP_CAUSE_STORE_ADDR_MISALIGNED;
-        end else if (excp_ecall) begin // NOTE: this is noly the cause if the instruction hasn't generated any other exceptions
-            case (csr_mode)
-                `RV_MODE_MACHINE    : trap_cause = `RV_EXCP_CAUSE_ECALL_FROM_MMODE;
-                `RV_MODE_SUPERVISOR : trap_cause = `RV_EXCP_CAUSE_ECALL_FROM_SMODE;
-                `RV_MODE_USER       : trap_cause = `RV_EXCP_CAUSE_ECALL_FROM_UMODE;
-                default             : trap_cause = { `RV_XLEN {1'b0} }; // NOTE: don't actually care
-            endcase
-        end else begin
-            trap_cause = { `RV_XLEN {1'b0} }; // NOTE: don't actually care
+        //
+        if (ids_csr_wr_q) begin
+            excp_ilgl = csr_bad_addr | csr_priv_too_low | csr_readonly;
         end
-    end
-
-
-    //--------------------------------------------------------------
-    // trap value encoder
-    //--------------------------------------------------------------
-    always @ (*)
-    begin
-        if (excp_maif | excp_mala | excp_masa) begin // TODO hardware breakpoint | page fault
-            trap_value = ids_pc_q;
-        end else if (excp_uerr | excp_ilgl) begin
-            trap_value = ids_ins_q;
-        end else begin
-            trap_value = { `RV_XLEN {1'b0} };
+        //
+        if (ids_trap_rtn_q) begin
+            if (ids_trap_rtn_mode_q > csr_mode) begin // if xRET && x > priv_mode
+                excp_ilgl = 1'b1;
+            end
         end
     end
 
@@ -346,8 +230,8 @@ module ex_stage
     //--------------------------------------------------------------
     // instruction qualification logic
     //--------------------------------------------------------------
-    assign ex_valid       = ids_valid_q & sofid_run & (alu_cmp_out | ~ids_cond_q);
-    assign execute_commit = ex_valid & ~jump_to_trap;
+    assign ex_valid       = ids_valid_q & sofid_run;
+    assign execute_commit = ex_valid & (alu_cmp_out | ~ids_cond_q) & ~csr_jump_to_trap;
     //
     always @ (posedge clk_i or negedge resetb_i)
     begin
@@ -515,6 +399,7 @@ module ex_stage
             .wr_addr_i         (ids_csr_addr_q),
             .wr_data_i         (csr_wr_data),
             // exception, interrupt, and hart vectoring interface
+            .ex_valid_i        (ex_valid),
             .irqm_extern_i     (irqm_extern_i),
             .irqm_softw_i      (irqm_softw_i),
             .irqm_timer_i      (irqm_timer_i),
@@ -524,14 +409,20 @@ module ex_stage
             .irqu_extern_i     (irqu_extern_i),
             .irqu_softw_i      (irqu_softw_i),
             .irqu_timer_i      (irqu_timer_i),
-            .irqv_o            (csr_irqv),
-            .jump_to_trap_i    (jump_to_trap),
-            .trap_cause_i      (trap_cause),
-            .trap_value_i      (trap_value),
+            .excp_ferr_i       (excp_ferr),
+            .excp_uerr_i       (excp_uerr),
+            .excp_maif_i       (excp_maif),
+            .excp_mala_i       (excp_mala),
+            .excp_masa_i       (excp_masa),
+            .excp_ilgl_i       (excp_ilgl),
+            .excp_ecall_i      (excp_ecall),
             .excp_pc_i         (ids_pc_q),
+            .excp_ins_i        (ids_ins_q),
+            //
+            .jump_to_trap_o    (csr_jump_to_trap),
+            .trap_entry_addr_o (csr_trap_entry_addr),
             .trap_rtn_i        (csr_trap_rtn),
             .trap_rtn_mode_i   (ids_trap_rtn_mode_q),
-            .trap_entry_addr_o (csr_trap_entry_addr),
             .trap_rtn_addr_o   (csr_trap_rtn_addr),
             // static i/o
             .mode_o            (csr_mode)
