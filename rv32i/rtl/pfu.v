@@ -16,8 +16,8 @@ module pfu
         // instruction cache interface
         input  wire                   ireqready_i,
         output reg                    ireqvalid_o,
-        output wire             [1:0] ireqhpl_o, // HART priv. level // TODO
-        output wire    [C_BUS_SZ-1:0] ireqaddr_o, // TODO
+        output wire             [1:0] ireqhpl_o,
+        output wire    [C_BUS_SZ-1:0] ireqaddr_o, // TODO - consider bypassing the pc on a jump
         output wire                   irspready_o,
         input  wire                   irspvalid_i,
         input  wire                   irsprerr_i,
@@ -78,8 +78,8 @@ module pfu
     //--------------------------------------------------------------
     // interface assignments
     //--------------------------------------------------------------
-    assign ireqhpl_o = exs_hpl_i;
-    assign ireqaddr_o  = pc_q; // TODO
+    assign ireqhpl_o   = exs_hpl_i;
+    assign ireqaddr_o  = pc_q;
     assign irspready_o = irspvalid_i; // always ready
     //
     assign ids_dav_o = ~fifo_empty;
@@ -184,7 +184,7 @@ module pfu
             if (hvec_pc_wr_i) begin
                 pc_q <= hvec_pc_din_i;
             end else if (request_accepted) begin
-                pc_q <= pc_q + 4; // TODO make this generic
+                pc_q <= pc_q + 4;
             end
         end
     end

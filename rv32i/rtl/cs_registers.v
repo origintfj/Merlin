@@ -1,4 +1,5 @@
-// TODO - implement the remaining CSRs including the ie registers
+// TODO - implement the remaining CSRs
+
 /* ==== CRS Field Specifications ====
  * WIRI:
  * WPRI:

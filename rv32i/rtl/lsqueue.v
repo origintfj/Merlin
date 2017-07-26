@@ -257,4 +257,3 @@ module lsqueue
         endcase
     end
 endmodule
-
