@@ -1,3 +1,11 @@
+/*
+ * Author         : Tom Stanway-Mayers
+ * Description    : Top Level
+ * Version:       :
+ * License        : Apache License Version 2.0, January 2004
+ * License URL    : http://www.apache.org/licenses/
+ */
+
 // TODO - generalise interface data widths
 
 `include "riscv_defs.v"

@@ -1,3 +1,11 @@
+/*
+ * Author         : Tom Stanway-Mayers
+ * Description    : Load/Store Queue
+ * Version:       :
+ * License        : Apache License Version 2.0, January 2004
+ * License URL    : http://www.apache.org/licenses/
+ */
+
 // NOTE: RV_XLEN must be in { 32, 64 } TODO - enforce
 // TODO generalise the 'response data formatter'
 //

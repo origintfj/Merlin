@@ -1,3 +1,11 @@
+/*
+ * Author         : Tom Stanway-Mayers
+ * Description    : Execute Stage
+ * Version:       :
+ * License        : Apache License Version 2.0, January 2004
+ * License URL    : http://www.apache.org/licenses/
+ */
+
 // TODO can branches also cause miss-aligned instruction fetch exceptions? or
 // only jumps
 `include "riscv_defs.v"
