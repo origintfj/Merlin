@@ -1,3 +1,11 @@
+/*
+ * Author         : Tom Stanway-Mayers
+ * Description    : Core Defines
+ * Version:       :
+ * License        : Apache License Version 2.0, January 2004
+ * License URL    : http://www.apache.org/licenses/
+ */
+
 `ifndef RV_RISCV_DEFS_
 `define RV_RISCV_DEFS_
 
