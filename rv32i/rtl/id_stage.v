@@ -139,6 +139,7 @@ module id_stage
             .ins_size_o            (ins_size_d),
             .ins_err_o             (ins_uerr_d),
             .fencei_o              (fencei_d),
+            .wfi_o                 (), // TODO
             .jump_o                (jump_d),
             .ecall_o               (ecall_d),
             .trap_rtn_o            (trap_rtn_d),

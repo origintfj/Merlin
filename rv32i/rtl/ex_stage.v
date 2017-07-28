@@ -310,8 +310,8 @@ module ex_stage
     begin
         exs_stall = 1'b0;
         if (execute_commit) begin
-            if ( (lsq_full_i & (lq_wr_q | sq_wr_q)) |
-                 (lsq_empty_i & ids_fencei_q) ) begin
+            if ( ( lsq_full_i & (lq_wr_q | sq_wr_q)) |
+                 (~lsq_empty_i & ids_fencei_q) ) begin
                 exs_stall = 1'b1;
             end
         end

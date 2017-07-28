@@ -34,7 +34,7 @@ module lsqueue
         input  wire                dreqready_i,
         output wire                dreqvalid_o,
         output wire          [1:0] dreqsize_o,
-        output wire                dreqdvalid_o,
+        output wire                dreqwrite_o,
         output wire          [1:0] dreqhpl_o,
         output wire [`RV_XLEN-1:0] dreqaddr_o,
         output wire [`RV_XLEN-1:0] dreqdata_o,
@@ -62,7 +62,8 @@ module lsqueue
     wire                       [1:0] req_fifo_rd_data_hpl;
     wire                             req_fifo_rd_data_wr;
     // response control fifo
-    parameter C_RSP_CTRL_FIFO_WIDTH = 5 + 3;
+    parameter C_RSP_CTRL_FIFO_WIDTH = `RV_XLEN_X-3 + 5 + 3;
+    wire            [`RV_XLEN_X-4:0] req_ctrl_fifo_rd_data_alignment;
     wire                       [2:0] req_ctrl_fifo_rd_data_funct3;
     wire                             rsp_ctrl_fifo_empty;
     wire                             rsp_ctrl_fifo_full;
@@ -74,6 +75,7 @@ module lsqueue
     wire              [`RV_XLEN-1:0] rsp_data_fifo_wr_data;
     wire              [`RV_XLEN-1:0] rsp_data_fifo_rd_data;
     // response data formatter
+    reg               [`RV_XLEN-1:0] rsp_data_justified;
 
     //--------------------------------------------------------------
 
@@ -92,7 +94,7 @@ module lsqueue
     //
     assign dreqvalid_o  = ~req_fifo_empty & ~rsp_ctrl_fifo_full;
     assign dreqsize_o   =  req_fifo_rd_data_funct3[1:0];
-    assign dreqdvalid_o =  req_fifo_rd_data_wr;
+    assign dreqwrite_o  =  req_fifo_rd_data_wr;
     assign dreqhpl_o    =  req_fifo_rd_data_hpl;
     assign dreqaddr_o   =  req_fifo_rd_data_addr;
     assign dreqdata_o   =  req_fifo_rd_data_data;
@@ -154,10 +156,11 @@ module lsqueue
     //--------------------------------------------------------------
     // response control fifo
     //--------------------------------------------------------------
-    assign req_ctrl_fifo_wr_data        = { req_fifo_rd_data_regd, req_fifo_rd_data_funct3 };
+    assign req_ctrl_fifo_wr_data = { req_fifo_rd_data_addr[`RV_XLEN_X-3:0], req_fifo_rd_data_regd, req_fifo_rd_data_funct3 };
     //
-    assign lsq_reg_addr_o               = req_ctrl_fifo_rd_data[3 +: 5];
-    assign req_ctrl_fifo_rd_data_funct3 = req_ctrl_fifo_rd_data[0 +: 3];
+    assign req_ctrl_fifo_rd_data_alignment = req_ctrl_fifo_rd_data[8 +: `RV_XLEN_X-3];
+    assign lsq_reg_addr_o                  = req_ctrl_fifo_rd_data[3 +: 5];
+    assign req_ctrl_fifo_rd_data_funct3    = req_ctrl_fifo_rd_data[0 +: 3];
     //
     fifo
         #(
@@ -254,6 +257,16 @@ module lsqueue
             default : begin
                 lsq_reg_data_o = rsp_data_fifo_rd_data;
             end
+        endcase
+    end
+    //
+    always @ (*)
+    begin
+        case (req_ctrl_fifo_rd_data_alignment)
+            2'b01   : rsp_data_justified = {  8'b0, rsp_data_fifo_rd_data[`RV_XLEN-1: 8] };
+            2'b10   : rsp_data_justified = { 16'b0, rsp_data_fifo_rd_data[`RV_XLEN-1:16] };
+            2'b11   : rsp_data_justified = { 24'b0, rsp_data_fifo_rd_data[`RV_XLEN-1:24] };
+            default : rsp_data_justified = rsp_data_fifo_rd_data;
         endcase
     end
 endmodule

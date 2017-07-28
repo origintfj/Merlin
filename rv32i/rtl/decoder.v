@@ -11,6 +11,7 @@ module decoder
         output wire [`RV_INSSIZE_RANGE] ins_size_o,
         output reg                      ins_err_o,
         output reg                      fencei_o,
+        output reg                      wfi_o,
         output reg                      jump_o,
         output reg                      ecall_o,
         output reg                      trap_rtn_o,
@@ -56,7 +57,7 @@ module decoder
     wire [4:0] regd_addr;
     wire [4:0] regs1_addr;
     reg  [2:0] ins_type;
-    // field extraction
+    // immediate generation
     reg [`RV_XLEN-1:0] sign_imm;
 
     //--------------------------------------------------------------
@@ -86,6 +87,7 @@ module decoder
     begin
         ins_err_o             = 1'b0;
         fencei_o              = 1'b0;
+        wfi_o                 = 1'b0;
         jump_o                = 1'b0;
         ecall_o               = 1'b0;
         trap_rtn_o            = 1'b0;
@@ -320,7 +322,8 @@ module decoder
                             end else if (ins_i[31:20] == 12'h001) begin // TODO EBREAK
                             end else if (ins_i[31:30] == 2'b0 && ins_i[27:20] == 8'h02) begin // TRAP RETURN
                                 trap_rtn_o = 1'b1;
-                            end else if (ins_i[31:20] == 12'h105) begin // TODO WFI
+                            end else if (ins_i[31:20] == 12'h105) begin
+                                wfi_o = 1'b1;
                             end else begin
                                 ins_err_o = 1'b1;
                             end
@@ -367,7 +370,7 @@ module decoder
 
 
     //--------------------------------------------------------------
-    // field extraction
+    // immediate generation
     //--------------------------------------------------------------
     always @ (*)
     begin

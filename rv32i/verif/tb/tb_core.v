@@ -79,10 +79,11 @@ module tb_core;
             intr_counter_q <= 12'b0;
             intr_extern    <= 1'b0;
         end else begin
-            if ((dreqvalid & dreqvalid == 1'b1) && (dreqaddr == 32'b0)) begin
+            if ((dreqvalid & dreqvalid == 1'b1) && (dreqaddr == 32'h00000004)) begin
+                // for some reason using addr 0 causes the compiler to insert an ebreak
                 intr_counter_q <= 12'b0;
                 intr_extern    <= 1'b0;
-            end else if (intr_counter_q == { 12 {1'b1} }) begin
+            end else if (intr_counter_q == 1024) begin//{ 12 {1'b1} }) begin
                 intr_extern <= 1'b1;
             end else begin
                 intr_counter_q <= intr_counter_q + 1;
@@ -124,7 +125,7 @@ module tb_core;
             .dreqready_i         (dreqready),
             .dreqvalid_o         (dreqvalid),
             .dreqsize_o          (),
-            .dreqdvalid_o        (dreqdvalid),
+            .dreqwrite_o         (dreqdvalid),
             .dreqhpl_o           (),
             .dreqaddr_o          (dreqaddr),
             .dreqdata_o          (dreqdata),

@@ -24,6 +24,10 @@ ifdef GATES
 	FILE_LIST := osu035_stdcells.v merlin32i.rtlnopwr.v
 endif
 
+test:
+	TSEED=$$(date +%s | sha256sum | head -c 8)
+	echo $(TSEED)
+
 usage:
 	@echo "make clean run [options...]"
 	@echo ""
