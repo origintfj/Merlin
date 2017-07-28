@@ -156,7 +156,7 @@ module lsqueue
     //--------------------------------------------------------------
     // response control fifo
     //--------------------------------------------------------------
-    assign req_ctrl_fifo_wr_data = { req_fifo_rd_data_addr[`RV_XLEN_X-3:0], req_fifo_rd_data_regd, req_fifo_rd_data_funct3 };
+    assign req_ctrl_fifo_wr_data = { req_fifo_rd_data_addr[`RV_XLEN_X-4:0], req_fifo_rd_data_regd, req_fifo_rd_data_funct3 };
     //
     assign req_ctrl_fifo_rd_data_alignment = req_ctrl_fifo_rd_data[8 +: `RV_XLEN_X-3];
     assign lsq_reg_addr_o                  = req_ctrl_fifo_rd_data[3 +: 5];
@@ -218,44 +218,44 @@ module lsqueue
     begin
         case (req_ctrl_fifo_rd_data_funct3)
             3'b000 : begin // LB
-                if (rsp_data_fifo_rd_data[7]) begin
-                    lsq_reg_data_o = { { `RV_XLEN-8 {1'b1} }, rsp_data_fifo_rd_data[7:0] };
+                if (rsp_data_justified[7]) begin
+                    lsq_reg_data_o = { { `RV_XLEN-8 {1'b1} }, rsp_data_justified[7:0] };
                 end else begin
-                    lsq_reg_data_o = { { `RV_XLEN-8 {1'b0} }, rsp_data_fifo_rd_data[7:0] };
+                    lsq_reg_data_o = { { `RV_XLEN-8 {1'b0} }, rsp_data_justified[7:0] };
                 end
             end
             3'b001 : begin // LH
-                if (rsp_data_fifo_rd_data[15]) begin
-                    lsq_reg_data_o = { { `RV_XLEN-16 {1'b1} }, rsp_data_fifo_rd_data[15:0] };
+                if (rsp_data_justified[15]) begin
+                    lsq_reg_data_o = { { `RV_XLEN-16 {1'b1} }, rsp_data_justified[15:0] };
                 end else begin
-                    lsq_reg_data_o = { { `RV_XLEN-16 {1'b0} }, rsp_data_fifo_rd_data[15:0] };
+                    lsq_reg_data_o = { { `RV_XLEN-16 {1'b0} }, rsp_data_justified[15:0] };
                 end
             end
 /*
             3'b010 : begin // LW
-                if (rsp_data_fifo_rd_data[31]) begin
-                    lsq_reg_data_o = { { `RV_XLEN-32 {1'b1} }, rsp_data_fifo_rd_data[31:0] };
+                if (rsp_data_justified[31]) begin
+                    lsq_reg_data_o = { { `RV_XLEN-32 {1'b1} }, rsp_data_justified[31:0] };
                 end else begin
-                    lsq_reg_data_o = { { `RV_XLEN-32 {1'b0} }, rsp_data_fifo_rd_data[31:0] };
+                    lsq_reg_data_o = { { `RV_XLEN-32 {1'b0} }, rsp_data_justified[31:0] };
                 end
             end
             3'b011 : begin // LD
-                lsq_reg_data_o = rsp_data_fifo_rd_data;
+                lsq_reg_data_o = rsp_data_justified;
             end
 */
             3'b100 : begin // LBU
-                lsq_reg_data_o = { { `RV_XLEN-8 {1'b0} }, rsp_data_fifo_rd_data[7:0] };
+                lsq_reg_data_o = { { `RV_XLEN-8 {1'b0} }, rsp_data_justified[7:0] };
             end
             3'b101 : begin // LHU
-                lsq_reg_data_o = { { `RV_XLEN-16 {1'b0} }, rsp_data_fifo_rd_data[15:0] };
+                lsq_reg_data_o = { { `RV_XLEN-16 {1'b0} }, rsp_data_justified[15:0] };
             end
 /*
             3'b110 : begin // LWU
-                lsq_reg_data_o = { { `RV_XLEN-32 {1'b0} }, rsp_data_fifo_rd_data[31:0] };
+                lsq_reg_data_o = { { `RV_XLEN-32 {1'b0} }, rsp_data_justified[31:0] };
             end
 */
             default : begin
-                lsq_reg_data_o = rsp_data_fifo_rd_data;
+                lsq_reg_data_o = rsp_data_justified;
             end
         endcase
     end
