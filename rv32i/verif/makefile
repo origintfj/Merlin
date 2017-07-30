@@ -3,7 +3,9 @@ BOOT_ROM_FILE := programs/hello_world.c
 
 CARGS := -O0
 
-FILE_LIST := -I../rtl/include ../rtl/fifo.v ../rtl/pfu.v ../rtl/decoder.v ../rtl/regfile_integer.v ../rtl/id_stage.v ../rtl/alu.v ../rtl/cs_registers.v ../rtl/ex_stage.v ../rtl/hvec.v ../rtl/lsqueue.v ../rtl/merlin32i.v
+FILE_LIST := -I../rtl/include ../rtl/fifo.v ../rtl/pfu.v ../rtl/decoder.v ../rtl/regfile_integer.v ../rtl/id_stage.v ../rtl/alu.v ../rtl/cs_registers.v ../rtl/ex_stage.v ../rtl/lsqueue.v ../rtl/merlin32i.v
+
+SARGS := -DRV_ASSERTS_ON
 
 # optional alternate boot rom
 ifdef TESTNAME
@@ -11,9 +13,7 @@ ifdef TESTNAME
 endif
 
 ifdef TIMEOUT
-	SARGS := -Ptb_core.C_TIMEOUT=$(TIMEOUT)
-else
-	SARGS :=
+	SARGS += -Ptb_core.C_TIMEOUT=$(TIMEOUT)
 endif
 
 ifdef DUMP

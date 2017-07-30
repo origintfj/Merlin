@@ -20,7 +20,7 @@ module pfu
         input  wire                   resetb_i,
         // instruction cache interface
         input  wire                   ireqready_i,
-        output reg                    ireqvalid_o,
+        output wire                   ireqvalid_o,
         output wire             [1:0] ireqhpl_o,
         output wire    [`RV_XLEN-1:0] ireqaddr_o, // TODO - consider bypassing the pc on a jump
         output wire                   irspready_o,
@@ -32,13 +32,12 @@ module pfu
         input  wire                   ids_ack_i,      // ack this fetch
         input  wire             [1:0] ids_ack_size_i, // size of this ack TODO
         output wire [`RV_SOFID_RANGE] ids_sofid_o,    // first fetch since vectoring
-        output wire    [`RV_XLEN-1:0] ids_ins_o,      // instruction fetched
+        output wire            [31:0] ids_ins_o,      // instruction fetched
         output wire                   ids_ferr_o,     // this instruction fetch resulted in error
         output wire    [`RV_XLEN-1:0] ids_pc_o,       // address of this instruction
-        // vectoring and exception controller interface
-        output reg                    hvec_pc_ready_o,
-        input  wire                   hvec_pc_wr_i,
-        input  wire    [`RV_XLEN-1:0] hvec_pc_din_i,
+        // ex stage vectoring interface
+        input  wire                   exs_pc_wr_i,
+        input  wire    [`RV_XLEN-1:0] exs_pc_din_i,
         // pfu stage interface
         input  wire             [1:0] exs_hpl_i
     );
@@ -46,25 +45,19 @@ module pfu
     //--------------------------------------------------------------
 
     // interface assignments
-    // bus interface fsm
-    parameter C_STATE_SZ       = 2;
-    //
-    parameter C_STATE_IDLE     = 2'b00;
-    parameter C_STATE_REQ_WAIT = 2'b01;
-    parameter C_STATE_RSP_WAIT = 2'b10;
-    //
-    reg    [C_STATE_SZ-1:0] c_state;
-    reg    [C_STATE_SZ-1:0] n_state;
-    //
-    reg                     request_accepted;
+    // ibus debt
+    reg                     ibus_debt;
+    wire                    request;
+    wire                    response;
     // fifo level counter
     reg  [C_FIFO_DEPTH_X:0] fifo_level_q;
     reg                     fifo_accepting;
     // program counter
     reg      [`RV_XLEN-1:0] pc_q;
     reg      [`RV_XLEN-1:0] request_addr_q;
+    // vectoring flag register
+    reg                     vectoring_q;
     // sofid register
-    reg                     hvec_pc_wr_q;
     reg   [`RV_SOFID_RANGE] sofid_q;
     // fifo
     parameter C_SOFID_SZ     = `RV_SOFID_SZ;
@@ -78,6 +71,7 @@ module pfu
     wire                    fifo_empty;
     wire [C_FIFO_WIDTH-1:0] fifo_din;
     wire [C_FIFO_WIDTH-1:0] fifo_dout;
+    wire     [`RV_XLEN-1:0] fifo_dout_data;
 
     //--------------------------------------------------------------
 
@@ -85,66 +79,30 @@ module pfu
     // interface assignments
     //--------------------------------------------------------------
     assign ireqhpl_o   = exs_hpl_i;
-    assign ireqaddr_o  = pc_q;
-    assign irspready_o = irspvalid_i; // always ready
+    assign ireqvalid_o = fifo_accepting & ~exs_pc_wr_i & (~ibus_debt | response);
+    assign ireqaddr_o  = { pc_q[`RV_XLEN-1:`RV_XLEN_X-3], { `RV_XLEN_X-3 {1'b0} } };
+    assign irspready_o = 1'b1; //irspvalid_i; // always ready
     //
     assign ids_dav_o = ~fifo_empty;
+    assign ids_ins_o =  fifo_dout_data[31:0];
 
 
     //--------------------------------------------------------------
-    // bus interface fsm
+    // ibus debt
     //--------------------------------------------------------------
-    always @ (*)
-    begin
-        ireqvalid_o      = 1'b0;
-        //
-        hvec_pc_ready_o  = 1'b0;
-        //
-        request_accepted = 1'b0;
-        //
-        n_state = c_state;
-        case (c_state)
-            C_STATE_IDLE : begin
-                if (fifo_accepting) begin
-                    ireqvalid_o = 1'b1;
-                    if (ireqready_i) begin
-                        request_accepted = 1'b1;
-                        n_state          = C_STATE_RSP_WAIT;
-                    end else begin
-                        n_state = C_STATE_REQ_WAIT;
-                    end
-                end
-            end
-            C_STATE_REQ_WAIT : begin
-                ireqvalid_o = 1'b1;
-                if (ireqready_i) begin // TODO assert cannot get a rsp in this state
-                    request_accepted = 1'b1;
-                    n_state          = C_STATE_RSP_WAIT;
-                end
-            end
-            C_STATE_RSP_WAIT : begin
-                if (irspvalid_i) begin
-                    if (fifo_accepting) begin
-                        hvec_pc_ready_o = 1'b1;
-                        ireqvalid_o     = 1'b1;
-                        if (ireqready_i) begin
-                            request_accepted = 1'b1;
-                        end else begin
-                            n_state = C_STATE_REQ_WAIT;
-                        end
-                    end else begin
-                        n_state = C_STATE_IDLE;
-                    end
-                end
-            end
-        endcase
-    end
+    assign request  = ireqvalid_o & ireqready_i;
+    assign response = irspvalid_i & irspready_o;
+    //
     always @ (posedge clk_i or negedge resetb_i)
     begin
         if (~resetb_i) begin
-            c_state <= C_STATE_IDLE;
+            ibus_debt <= 1'b0;
         end else if (clk_en_i) begin
-            c_state <= n_state;
+            if (request & ~response) begin
+                ibus_debt <= 1'b1;
+            end else if (~request & response) begin
+                ibus_debt <= 1'b0;
+            end
         end
     end
 
@@ -157,14 +115,14 @@ module pfu
         if (~resetb_i) begin
             fifo_level_q <= { 1'b1, { C_FIFO_DEPTH_X {1'b0} } };
         end else if (clk_en_i) begin
-/*
-            if (hvec_pc_wr_i) begin
+//*
+            if (exs_pc_wr_i) begin
                 fifo_level_q <= { 1'b1, { C_FIFO_DEPTH_X {1'b0} } };
-            end else if (request_accepted & ~ids_ack_i) begin
-*/
-            if (request_accepted & ~ids_ack_i) begin
+            end else
+/**/
+            if (request & ~ids_ack_i) begin
                 fifo_level_q <= fifo_level_q - { { C_FIFO_DEPTH_X {1'b0} }, 1'b1 };
-            end else if (~request_accepted & ids_ack_i) begin
+            end else if (~request & ids_ack_i) begin
                 fifo_level_q <= fifo_level_q + { { C_FIFO_DEPTH_X {1'b0} }, 1'b1 };
             end
         end
@@ -187,17 +145,34 @@ module pfu
         if (~resetb_i) begin
             pc_q <= C_RESET_VECTOR;
         end else if (clk_en_i) begin
-            if (hvec_pc_wr_i) begin
-                pc_q <= hvec_pc_din_i;
-            end else if (request_accepted) begin
-                pc_q <= pc_q + 4;
+            if (exs_pc_wr_i) begin
+                pc_q <= exs_pc_din_i;
+            end else if (request) begin
+                pc_q <= pc_q + { { `RV_XLEN-(`RV_XLEN_X-2) {1'b0} }, 1'b1, { `RV_XLEN_X-3 {1'b0} } };
             end
         end
     end
     always @ (posedge clk_i)
     begin
-        if (request_accepted) begin
+        if (request) begin
             request_addr_q <= pc_q;
+        end
+    end
+
+
+    //--------------------------------------------------------------
+    // vectoring flag register
+    //--------------------------------------------------------------
+    always @ (posedge clk_i or negedge resetb_i)
+    begin
+        if (~resetb_i) begin
+            vectoring_q <= 1'b0;
+        end else if (clk_en_i) begin
+            if (exs_pc_wr_i) begin
+                vectoring_q <= 1'b1;
+            end else if (request) begin
+                vectoring_q <= 1'b0;
+            end
         end
     end
 
@@ -209,12 +184,10 @@ module pfu
     begin
         if (~resetb_i) begin
             sofid_q <= `RV_SOFID_RUN;
-            hvec_pc_wr_q <= 1'b0;
         end else if (clk_en_i) begin
-            hvec_pc_wr_q <= hvec_pc_wr_i;
-            if (hvec_pc_wr_q) begin
+            if (vectoring_q & request) begin
                 sofid_q <= `RV_SOFID_JUMP;
-            end else if (irspvalid_i) begin
+            end else if (response) begin
                 sofid_q <= `RV_SOFID_RUN;
             end
         end
@@ -229,10 +202,10 @@ module pfu
     assign fifo_din[ C_FIFO_PC_LSB +: `RV_XLEN]   = request_addr_q;
     assign fifo_din[C_FIFO_INS_LSB +: `RV_XLEN]   = irspdata_i;
     //
-    assign ids_sofid_o = fifo_dout[   C_SOFID_LSB +: C_SOFID_SZ];
-    assign ids_ferr_o  = fifo_dout[    C_FERR_LSB +: 1];
-    assign ids_pc_o    = fifo_dout[ C_FIFO_PC_LSB +: `RV_XLEN];
-    assign ids_ins_o   = fifo_dout[C_FIFO_INS_LSB +: `RV_XLEN];
+    assign ids_sofid_o    = fifo_dout[   C_SOFID_LSB +: C_SOFID_SZ];
+    assign ids_ferr_o     = fifo_dout[    C_FERR_LSB +: 1];
+    assign ids_pc_o       = fifo_dout[ C_FIFO_PC_LSB +: `RV_XLEN];
+    assign fifo_dout_data = fifo_dout[C_FIFO_INS_LSB +: `RV_XLEN];
     //
     fifo
         #(
@@ -244,11 +217,11 @@ module pfu
             .clk_en_i       (clk_en_i),
             .resetb_i       (resetb_i),
             // control and status
-            .flush_i        (1'b0),//hvec_pc_wr_i),
+            .flush_i        (exs_pc_wr_i | vectoring_q),
             .empty_o        (fifo_empty),
             .full_o         (),
             // write port
-            .wr_i           (irspvalid_i),// & ~hvec_pc_wr_i),
+            .wr_i           (response),
             .din_i          (fifo_din),
             // read port
             .rd_i           (ids_ack_i),

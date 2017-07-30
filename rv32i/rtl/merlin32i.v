@@ -33,11 +33,11 @@ module merlin32i
         input  wire                  ireqready_i,
         output wire                  ireqvalid_o,
         output wire            [1:0] ireqhpl_o,
-        output wire           [31:0] ireqaddr_o,
+        output wire   [`RV_XLEN-1:0] ireqaddr_o,
         output wire                  irspready_o,
         input  wire                  irspvalid_i,
         input  wire                  irsprerr_i,
-        input  wire           [31:0] irspdata_i,
+        input  wire   [`RV_XLEN-1:0] irspdata_i,
         // data port
         input  wire                  dreqready_i,
         output wire                  dreqvalid_o,
@@ -57,11 +57,7 @@ module merlin32i
 
     //--------------------------------------------------------------
 
-    // hart vectoring sequencer
-    wire                     hvec_pfu_pc_wr;
-    wire      [`RV_XLEN-1:0] hvec_pfu_pc;
     // prefetch unit
-    wire                     pfu_hvec_ready;
     wire                     pfu_ids_dav;
     wire   [`RV_SOFID_RANGE] pfu_ids_sofid;
     wire              [31:0] pfu_ids_ins;
@@ -99,13 +95,13 @@ module merlin32i
     wire      [`RV_XLEN-1:0] ids_exs_csr_wr_data;
     // execution stage
     wire               [1:0] exs_pfu_hpl;
+    wire                     exs_pfu_jump;
+    wire      [`RV_XLEN-1:0] exs_pfu_jump_addr;
     wire                     exs_ids_stall;
     wire                     exs_ids_regd_cncl_load;
     wire                     exs_ids_regd_wr;
     wire               [4:0] exs_ids_regd_addr;
     wire      [`RV_XLEN-1:0] exs_ids_regd_data;
-    wire                     exs_hvec_jump;
-    wire      [`RV_XLEN-1:0] exs_hvec_jump_addr;
     wire                     exs_lsq_lq_wr;
     wire                     exs_lsq_sq_wr;
     wire               [1:0] exs_lsq_hpl;
@@ -121,26 +117,6 @@ module merlin32i
     wire                     lsq_exs_empty;
 
     //--------------------------------------------------------------
-
-
-    //--------------------------------------------------------------
-    // hart vectoring sequencer
-    //--------------------------------------------------------------
-    hvec i_hvec (
-            // global
-            .clk_i           (clk_i),
-            .clk_en_i        (clk_en_i),
-            .resetb_i        (resetb_i),
-            // external interrupt interface
-            // pfu interface
-            .pfu_pc_ready_i  (pfu_hvec_ready),
-            .pfu_pc_wr_o     (hvec_pfu_pc_wr),
-            .pfu_pc_o        (hvec_pfu_pc),
-            // ex stage interface
-            .exs_jump_i      (exs_hvec_jump),
-            .exs_jump_addr_i (exs_hvec_jump_addr)
-            // lsq interface
-        );
 
 
     //--------------------------------------------------------------
@@ -173,9 +149,8 @@ module merlin32i
             .ids_ferr_o      (pfu_ids_ferr),     // this instruction fetch resulted in error
             .ids_pc_o        (pfu_ids_pc),       // address of this instruction
             // vectoring and exception controller interface
-            .hvec_pc_ready_o (pfu_hvec_ready),
-            .hvec_pc_wr_i    (hvec_pfu_pc_wr),
-            .hvec_pc_din_i   (hvec_pfu_pc),
+            .exs_pc_wr_i     (exs_pfu_jump),
+            .exs_pc_din_i    (exs_pfu_jump_addr),
             // pfu stage interface
             .exs_hpl_i       (exs_pfu_hpl)
         );
@@ -258,6 +233,9 @@ module merlin32i
             .irqu_timer_i         (irqu_timer_i),
             // pfu stage interface
             .pfu_hpl_o            (exs_pfu_hpl),
+                // hart vectoring interface
+            .pfu_jump_o           (exs_pfu_jump),
+            .pfu_jump_addr_o      (exs_pfu_jump_addr),
             // instruction decoder stage interface
             .ids_ins_i            (ids_exs_ins),
             .ids_valid_i          (ids_exs_valid),
@@ -292,9 +270,6 @@ module merlin32i
             .ids_regd_wr_o        (exs_ids_regd_wr),
             .ids_regd_addr_o      (exs_ids_regd_addr),
             .ids_regd_data_o      (exs_ids_regd_data),
-            // hart vectoring interface
-            .hvec_jump_o          (exs_hvec_jump),
-            .hvec_jump_addr_o     (exs_hvec_jump_addr),
             // load/store queue interface
             .lsq_full_i           (lsq_exs_full),
             .lsq_empty_i          (lsq_exs_empty),

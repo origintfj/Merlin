@@ -28,6 +28,9 @@ module ex_stage
         input  wire                     irqu_timer_i,
         // pfu stage interface
         output wire               [1:0] pfu_hpl_o,
+            // hart vectoring interface
+        output wire                     pfu_jump_o,
+        output reg       [`RV_XLEN-1:0] pfu_jump_addr_o,
         // instruction decoder stage interface
         input  wire      [`RV_XLEN-1:0] ids_ins_i,
         input  wire                     ids_valid_i,
@@ -62,9 +65,6 @@ module ex_stage
         output wire                     ids_regd_wr_o,
         output wire               [4:0] ids_regd_addr_o,
         output reg       [`RV_XLEN-1:0] ids_regd_data_o,
-        // hart vectoring interface
-        output wire                     hvec_jump_o,
-        output reg       [`RV_XLEN-1:0] hvec_jump_addr_o,
         // load/store queue interface
         input  wire                     lsq_full_i,
         input  wire                     lsq_empty_i,
@@ -168,13 +168,13 @@ module ex_stage
     always @ (*)
     begin
         if (csr_jump_to_trap) begin
-            hvec_jump_addr_o = csr_trap_entry_addr;
+            pfu_jump_addr_o = csr_trap_entry_addr;
         end else if (ids_trap_rtn_q) begin
-            hvec_jump_addr_o = csr_trap_rtn_addr;
+            pfu_jump_addr_o = csr_trap_rtn_addr;
         end else if (ids_fencei_q) begin
-            hvec_jump_addr_o = pc_inc_q;
+            pfu_jump_addr_o = pc_inc_q;
         end else begin
-            hvec_jump_addr_o = alu_data_out;
+            pfu_jump_addr_o = alu_data_out;
         end
     end
 
@@ -182,7 +182,7 @@ module ex_stage
     //--------------------------------------------------------------
     // execute commit signals
     //--------------------------------------------------------------
-    assign hvec_jump_o = ex_stage_en & jump;
+    assign pfu_jump_o = ex_stage_en & jump;
     //
     assign ids_regd_cncl_load_o = ex_stage_en & ~execute_commit & ids_valid_q & lq_wr_q;
     assign ids_regd_wr_o        = ex_stage_en &  execute_commit & regd_wr_q;

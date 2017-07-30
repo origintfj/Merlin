@@ -9,7 +9,7 @@
 `ifndef RV_RISCV_DEFS_
 `define RV_RISCV_DEFS_
 
-`define RV_ASSERTS_ON
+//`define RV_ASSERTS_ON
 
 //--------------------------------------------------------------
 // Core Configuration
