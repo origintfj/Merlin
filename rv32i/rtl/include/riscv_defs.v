@@ -9,6 +9,8 @@
 `ifndef RV_RISCV_DEFS_
 `define RV_RISCV_DEFS_
 
+`define RV_ASSERTS_ON
+
 //--------------------------------------------------------------
 // Core Configuration
 //--------------------------------------------------------------
@@ -36,9 +38,6 @@
 //--------------------------------------------------------------
 // Pipeline Bundles
 //--------------------------------------------------------------
-// instruction size bytes (there is an implied 0 LSB)
-`define RV_INSSIZE_SZ       2
-`define RV_INSSIZE_RANGE    1:0
 // frame id
 `define RV_SOFID_SZ         2
 `define RV_SOFID_RANGE      `RV_SOFID_SZ-1:0
@@ -180,6 +179,13 @@
 `define RV_CSR_UIP_RD_MASK                          12'h111
 
 //--------------------------------------------------------------
+
+`ifdef RV_ASSERTS_ON
+    `timescale 1ns / 10ps
+    `define RV_ASSERT(assertion, message)   if (!(assertion)) begin $write("[%0t] ", $time()); $display(message); $fatal(); end
+`else
+    `define RV_ASSERT(assertion, message)
+`endif
 
 `endif
 

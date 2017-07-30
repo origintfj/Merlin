@@ -16,7 +16,7 @@ module decoder
             // ingress side
         input  wire              [31:0] ins_i,
             // egress side
-        output wire [`RV_INSSIZE_RANGE] ins_size_o,
+        output wire               [1:0] ins_size_o,
         output reg                      ins_err_o,
         output reg                      fencei_o,
         output reg                      wfi_o,

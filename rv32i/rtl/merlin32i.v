@@ -64,15 +64,16 @@ module merlin32i
     wire                     pfu_hvec_ready;
     wire                     pfu_ids_dav;
     wire   [`RV_SOFID_RANGE] pfu_ids_sofid;
-    wire      [`RV_XLEN-1:0] pfu_ids_ins;
+    wire              [31:0] pfu_ids_ins;
     wire                     pfu_ids_ferr;
     wire      [`RV_XLEN-1:0] pfu_ids_pc;
     // instruction decoder stage
     wire                     ids_pfu_ack;
+    wire               [1:0] ids_pfu_ack_size;
     wire      [`RV_XLEN-1:0] ids_exs_ins;
     wire                     ids_exs_valid;
     wire   [`RV_SOFID_RANGE] ids_exs_sofid;
-    wire [`RV_INSSIZE_RANGE] ids_exs_ins_size;
+    wire               [1:0] ids_exs_ins_size;
     wire                     ids_exs_ins_uerr;
     wire                     ids_exs_ins_ferr;
     wire                     ids_exs_fencei;
@@ -147,7 +148,6 @@ module merlin32i
     //--------------------------------------------------------------
     pfu
         #(
-            .C_BUS_SZX      (5), // bus width base 2 exponent
             .C_FIFO_DEPTH_X (2), // pfu fifo depth base 2 exponent
             .C_RESET_VECTOR (32'h00000000)
         ) i_pfu (
@@ -165,12 +165,13 @@ module merlin32i
             .irsprerr_i      (irsprerr_i),
             .irspdata_i      (irspdata_i),
             // decoder interface
-            .ids_dav_o       (pfu_ids_dav),   // new fetch available
-            .ids_ack_i       (ids_pfu_ack),   // ack this fetch
-            .ids_sofid_o     (pfu_ids_sofid), // first fetch since vectoring
-            .ids_ins_o       (pfu_ids_ins),   // instruction fetched
-            .ids_ferr_o      (pfu_ids_ferr),  // this instruction fetch resulted in error
-            .ids_pc_o        (pfu_ids_pc),    // address of this instruction
+            .ids_dav_o       (pfu_ids_dav),      // new fetch available
+            .ids_ack_i       (ids_pfu_ack),      // ack this fetch
+            .ids_ack_size_i  (ids_pfu_ack_size), // ack this fetch
+            .ids_sofid_o     (pfu_ids_sofid),    // first fetch since vectoring
+            .ids_ins_o       (pfu_ids_ins),      // instruction fetched
+            .ids_ferr_o      (pfu_ids_ferr),     // this instruction fetch resulted in error
+            .ids_pc_o        (pfu_ids_pc),       // address of this instruction
             // vectoring and exception controller interface
             .hvec_pc_ready_o (pfu_hvec_ready),
             .hvec_pc_wr_i    (hvec_pfu_pc_wr),
@@ -189,12 +190,13 @@ module merlin32i
             .clk_en_i             (clk_en_i),
             .resetb_i             (resetb_i),
             // pfu interface
-            .pfu_dav_i            (pfu_ids_dav),   // new fetch available
-            .pfu_ack_o            (ids_pfu_ack),   // ack this fetch
-            .pfu_sofid_i          (pfu_ids_sofid), // first fetch since vectoring
-            .pfu_ins_i            (pfu_ids_ins),   // instruction fetched
-            .pfu_ferr_i           (pfu_ids_ferr),  // this instruction fetch resulted in error
-            .pfu_pc_i             (pfu_ids_pc),    // address of this instruction
+            .pfu_dav_i            (pfu_ids_dav),      // new fetch available
+            .pfu_ack_o            (ids_pfu_ack),      // ack this fetch
+            .pfu_ack_size_o       (ids_pfu_ack_size), // ack size
+            .pfu_sofid_i          (pfu_ids_sofid),    // first fetch since vectoring
+            .pfu_ins_i            (pfu_ids_ins),      // instruction fetched
+            .pfu_ferr_i           (pfu_ids_ferr),     // this instruction fetch resulted in error
+            .pfu_pc_i             (pfu_ids_pc),       // address of this instruction
             // ex stage interface
             .exs_ins_o            (ids_exs_ins),
             .exs_valid_o          (ids_exs_valid),

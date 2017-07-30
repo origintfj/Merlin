@@ -33,7 +33,7 @@ module ex_stage
         input  wire                     ids_valid_i,
         output wire                     ids_stall_o,
         input  wire   [`RV_SOFID_RANGE] ids_sofid_i,
-        input  wire [`RV_INSSIZE_RANGE] ids_ins_size_i,
+        input  wire               [1:0] ids_ins_size_i,
         input  wire                     ids_ins_uerr_i,
         input  wire                     ids_ins_ferr_i,
         input  wire                     ids_fencei_i,
@@ -300,7 +300,7 @@ module ex_stage
                 ids_csr_wr_data_q <= ids_csr_wr_data_i;
                 ids_link_q        <= ids_link_i;
                 ids_pc_q          <= ids_pc_i;
-                pc_inc_q          <= ids_pc_i + { { `RV_XLEN-`RV_INSSIZE_SZ-1 {1'b0} }, ids_ins_size_i, 1'b0 };
+                pc_inc_q          <= ids_pc_i + { { `RV_XLEN-3 {1'b0} }, ids_ins_size_i, 1'b0 };
                 ids_regs2_data_q  <= ids_regs2_data_i;
                 ids_regd_addr_q   <= ids_regd_addr_i;
                 funct3_q          <= ids_funct3_i;

@@ -10,11 +10,8 @@
 
 module pfu
     #(
-        parameter C_BUS_SZX      = 1, // bus width base 2 exponent
         parameter C_FIFO_DEPTH_X = 2, // depth >= read latency + 2
-        parameter C_RESET_VECTOR = { 2**C_BUS_SZX {1'b0} },
-        //
-        parameter C_BUS_SZ = 2**C_BUS_SZX
+        parameter C_RESET_VECTOR = { `RV_XLEN {1'b0} }
     )
     (
         // global
@@ -25,22 +22,23 @@ module pfu
         input  wire                   ireqready_i,
         output reg                    ireqvalid_o,
         output wire             [1:0] ireqhpl_o,
-        output wire    [C_BUS_SZ-1:0] ireqaddr_o, // TODO - consider bypassing the pc on a jump
+        output wire    [`RV_XLEN-1:0] ireqaddr_o, // TODO - consider bypassing the pc on a jump
         output wire                   irspready_o,
         input  wire                   irspvalid_i,
         input  wire                   irsprerr_i,
-        input  wire    [C_BUS_SZ-1:0] irspdata_i,
+        input  wire    [`RV_XLEN-1:0] irspdata_i,
         // decoder interface
-        output wire                   ids_dav_o,   // new fetch available
-        input  wire                   ids_ack_i,   // ack this fetch
-        output wire [`RV_SOFID_RANGE] ids_sofid_o, // first fetch since vectoring
-        output wire    [C_BUS_SZ-1:0] ids_ins_o,   // instruction fetched
-        output wire                   ids_ferr_o,  // this instruction fetch resulted in error
-        output wire    [C_BUS_SZ-1:0] ids_pc_o,    // address of this instruction
+        output wire                   ids_dav_o,      // new fetch available
+        input  wire                   ids_ack_i,      // ack this fetch
+        input  wire             [1:0] ids_ack_size_i, // size of this ack TODO
+        output wire [`RV_SOFID_RANGE] ids_sofid_o,    // first fetch since vectoring
+        output wire    [`RV_XLEN-1:0] ids_ins_o,      // instruction fetched
+        output wire                   ids_ferr_o,     // this instruction fetch resulted in error
+        output wire    [`RV_XLEN-1:0] ids_pc_o,       // address of this instruction
         // vectoring and exception controller interface
         output reg                    hvec_pc_ready_o,
         input  wire                   hvec_pc_wr_i,
-        input  wire    [C_BUS_SZ-1:0] hvec_pc_din_i,
+        input  wire    [`RV_XLEN-1:0] hvec_pc_din_i,
         // pfu stage interface
         input  wire             [1:0] exs_hpl_i
     );
@@ -63,18 +61,18 @@ module pfu
     reg  [C_FIFO_DEPTH_X:0] fifo_level_q;
     reg                     fifo_accepting;
     // program counter
-    reg      [C_BUS_SZ-1:0] pc_q;
-    reg      [C_BUS_SZ-1:0] request_addr_q;
+    reg      [`RV_XLEN-1:0] pc_q;
+    reg      [`RV_XLEN-1:0] request_addr_q;
     // sofid register
     reg                     hvec_pc_wr_q;
     reg   [`RV_SOFID_RANGE] sofid_q;
     // fifo
     parameter C_SOFID_SZ     = `RV_SOFID_SZ;
-    parameter C_FIFO_WIDTH   = C_SOFID_SZ + 1 + C_BUS_SZ + C_BUS_SZ;
+    parameter C_FIFO_WIDTH   = C_SOFID_SZ + 1 + `RV_XLEN + `RV_XLEN;
     //
-    parameter C_SOFID_LSB    = 1 + 2 * C_BUS_SZ;
-    parameter C_FERR_LSB     =     2 * C_BUS_SZ;
-    parameter C_FIFO_PC_LSB  =         C_BUS_SZ;
+    parameter C_SOFID_LSB    = 1 + 2 * `RV_XLEN;
+    parameter C_FERR_LSB     =     2 * `RV_XLEN;
+    parameter C_FIFO_PC_LSB  =         `RV_XLEN;
     parameter C_FIFO_INS_LSB =                0;
     //
     wire                    fifo_empty;
@@ -228,13 +226,13 @@ module pfu
     //--------------------------------------------------------------
     assign fifo_din[   C_SOFID_LSB +: C_SOFID_SZ] = sofid_q; // TODO
     assign fifo_din[    C_FERR_LSB +: 1]          = irsprerr_i;
-    assign fifo_din[ C_FIFO_PC_LSB +: C_BUS_SZ]   = request_addr_q;
-    assign fifo_din[C_FIFO_INS_LSB +: C_BUS_SZ]   = irspdata_i;
+    assign fifo_din[ C_FIFO_PC_LSB +: `RV_XLEN]   = request_addr_q;
+    assign fifo_din[C_FIFO_INS_LSB +: `RV_XLEN]   = irspdata_i;
     //
     assign ids_sofid_o = fifo_dout[   C_SOFID_LSB +: C_SOFID_SZ];
     assign ids_ferr_o  = fifo_dout[    C_FERR_LSB +: 1];
-    assign ids_pc_o    = fifo_dout[ C_FIFO_PC_LSB +: C_BUS_SZ];
-    assign ids_ins_o   = fifo_dout[C_FIFO_INS_LSB +: C_BUS_SZ];
+    assign ids_pc_o    = fifo_dout[ C_FIFO_PC_LSB +: `RV_XLEN];
+    assign ids_ins_o   = fifo_dout[C_FIFO_INS_LSB +: `RV_XLEN];
     //
     fifo
         #(

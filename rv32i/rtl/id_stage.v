@@ -17,16 +17,17 @@ module id_stage
         // pfu interface
         input  wire                      pfu_dav_i,   // new fetch available
         output wire                      pfu_ack_o,   // ack this fetch
+        output wire                [1:0] pfu_ack_size_o, // ack size
         input  wire    [`RV_SOFID_RANGE] pfu_sofid_i, // first fetch since vectoring
         input  wire               [31:0] pfu_ins_i,   // instruction fetched
         input  wire                      pfu_ferr_i,  // this instruction fetch resulted in error
-        input  wire               [31:0] pfu_pc_i,    // address of this instruction
+        input  wire       [`RV_XLEN-1:0] pfu_pc_i,    // address of this instruction
         // ex stage interface
         output reg        [`RV_XLEN-1:0] exs_ins_o,
         output reg                       exs_valid_o,
         input  wire                      exs_stall_i,
         output reg     [`RV_SOFID_RANGE] exs_sofid_o,
-        output reg   [`RV_INSSIZE_RANGE] exs_ins_size_o,
+        output reg                 [1:0] exs_ins_size_o,
         output reg                       exs_ins_uerr_o,
         output reg                       exs_ins_ferr_o,
         output reg                       exs_fencei_o,
@@ -66,7 +67,6 @@ module id_stage
     // interface assignments
     // id stage qualifier logic
     // instruction decoder
-    wire [`RV_INSSIZE_RANGE] ins_size_d;
     wire                     ins_uerr_d;
     wire                     fencei_d;
     wire                     jump_d;
@@ -144,7 +144,7 @@ module id_stage
                 // ingress side
             .ins_i                 (pfu_ins_i),
                 // egress side
-            .ins_size_o            (ins_size_d),
+            .ins_size_o            (pfu_ack_size_o),
             .ins_err_o             (ins_uerr_d),
             .fencei_o              (fencei_d),
             .wfi_o                 (), // TODO
@@ -272,7 +272,7 @@ module id_stage
     begin
         if (clk_en_i) begin
             if (pfu_ack_o) begin
-                exs_ins_o             <= pfu_ins_i;
+                exs_ins_o             <= { { `RV_XLEN-32 {1'b0} }, pfu_ins_i };
                 exs_sofid_o           <= pfu_sofid_i;
                 exs_fencei_o          <= fencei_d;
                 exs_jump_o            <= jump_d;
@@ -280,7 +280,7 @@ module id_stage
                 exs_trap_rtn_o        <= trap_rtn_d;
                 exs_trap_rtn_mode_o   <= trap_rtn_mode_d;
                 pc_q                  <= pfu_pc_i;
-                exs_ins_size_o        <= ins_size_d;
+                exs_ins_size_o        <= pfu_ack_size_o;
                 exs_ins_uerr_o        <= ins_uerr_d;
                 exs_ins_ferr_o        <= pfu_ferr_i;
                 exs_zone_o            <= zone_d;
