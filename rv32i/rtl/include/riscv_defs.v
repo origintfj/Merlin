@@ -182,7 +182,7 @@
 
 `ifdef RV_ASSERTS_ON
     `timescale 1ns / 10ps
-    `define RV_ASSERT(assertion, message)   if (!(assertion)) begin $write("[%0t] ", $time()); $display(message); $fatal(); end
+    `define RV_ASSERT(assertion, message)   if (!(assertion)) begin $write("[ASSERTION ERROR @ %0t in %m] ", $time()); $display(message); $fatal(); end
 `else
     `define RV_ASSERT(assertion, message)
 `endif
