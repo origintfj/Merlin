@@ -9,7 +9,8 @@ module tb_core;
     reg         resetb = 1'b0;
 
     // hardware interrupt generator
-    reg         irq_extern;
+    reg  [11:0] intr_counter_q;
+    reg         intr_extern;
 
     wire        ireqready;
     wire        ireqvalid;
@@ -29,6 +30,8 @@ module tb_core;
     wire [31:0] drspdata;
     //--------------------------------------------------------------
 
+    parameter C_TIMEOUT = 0;
+
     // general setup
     //
     initial
@@ -41,12 +44,14 @@ module tb_core;
         $display();
         $display();
 
-        #(1_000_000);
-
-        $display();
-        $display();
-        $display("*******************   FAIL - TIMEOUT   *******************");
-        $fatal();
+        if (C_TIMEOUT) begin
+            #(C_TIMEOUT*1000);
+            $display();
+            $display();
+            $display("*******************   FAIL - TIMEOUT   *******************");
+            $display("Time = %0tus.", $time/100000);
+            $fatal();
+        end
     end
 
 
@@ -68,11 +73,22 @@ module tb_core;
 
 
     // hardware interrupt generator
-    initial
+    always @ (posedge clk or negedge resetb)
     begin
-        irq_extern = 1'b0;
-        #100_000;
-        irq_extern = 1'b1;
+        if (~resetb) begin
+            intr_counter_q <= 12'b0;
+            intr_extern    <= 1'b0;
+        end else begin
+            if ((dreqvalid & dreqvalid == 1'b1) && (dreqaddr == 32'h00000004)) begin
+                // for some reason using addr 0 causes the compiler to insert an ebreak
+                intr_counter_q <= 12'b0;
+                intr_extern    <= 1'b0;
+            end else if (intr_counter_q == 1024) begin//{ 12 {1'b1} }) begin
+                intr_extern <= 1'b1;
+            end else begin
+                intr_counter_q <= intr_counter_q + 1;
+            end
+        end
     end
 
 
@@ -80,7 +96,6 @@ module tb_core;
     //
     merlin32i
         #(
-            .C_IRQV_SZ           (C_IRQV_SZ),
             .C_RESET_VECTOR      ('0)
         ) i_merlin32i (
             // global
@@ -88,10 +103,15 @@ module tb_core;
             .clk_en_i            (1'b1),
             .resetb_i            (resetb),
             // hardware interrupt interface
-            .irq_mode_i          (2'b11),
-            .irq_extern_i        (irq_extern),
-            .irq_softw_i         (1'b0),
-            .irq_timer_i         (1'b0),
+            .irqm_extern_i       (intr_extern),
+            .irqm_softw_i        (1'b0),
+            .irqm_timer_i        (1'b0),
+            .irqs_extern_i       (1'b0),
+            .irqs_softw_i        (1'b0),
+            .irqs_timer_i        (1'b0),
+            .irqu_extern_i       (1'b0),
+            .irqu_softw_i        (1'b0),
+            .irqu_timer_i        (1'b0),
             // instruction port
             .ireqready_i         (ireqready),
             .ireqvalid_o         (ireqvalid),
@@ -105,7 +125,7 @@ module tb_core;
             .dreqready_i         (dreqready),
             .dreqvalid_o         (dreqvalid),
             .dreqsize_o          (),
-            .dreqdvalid_o        (dreqdvalid),
+            .dreqwrite_o         (dreqdvalid),
             .dreqhpl_o           (),
             .dreqaddr_o          (dreqaddr),
             .dreqdata_o          (dreqdata),

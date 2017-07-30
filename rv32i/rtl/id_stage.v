@@ -1,3 +1,11 @@
+/*
+ * Author         : Tom Stanway-Mayers
+ * Description    : Instruction Decoder Stage
+ * Version:       :
+ * License        : Apache License Version 2.0, January 2004
+ * License URL    : http://www.apache.org/licenses/
+ */
+
 `include "riscv_defs.v"
 
 module id_stage
@@ -9,18 +17,20 @@ module id_stage
         // pfu interface
         input  wire                      pfu_dav_i,   // new fetch available
         output wire                      pfu_ack_o,   // ack this fetch
+        output wire                [1:0] pfu_ack_size_o, // ack size
         input  wire    [`RV_SOFID_RANGE] pfu_sofid_i, // first fetch since vectoring
         input  wire               [31:0] pfu_ins_i,   // instruction fetched
         input  wire                      pfu_ferr_i,  // this instruction fetch resulted in error
-        input  wire               [31:0] pfu_pc_i,    // address of this instruction
+        input  wire       [`RV_XLEN-1:0] pfu_pc_i,    // address of this instruction
         // ex stage interface
         output reg        [`RV_XLEN-1:0] exs_ins_o,
         output reg                       exs_valid_o,
         input  wire                      exs_stall_i,
         output reg     [`RV_SOFID_RANGE] exs_sofid_o,
-        output reg   [`RV_INSSIZE_RANGE] exs_ins_size_o,
+        output reg                 [1:0] exs_ins_size_o,
         output reg                       exs_ins_uerr_o,
         output reg                       exs_ins_ferr_o,
+        output reg                       exs_fencei_o,
         output reg                       exs_jump_o,
         output reg                       exs_ecall_o,
         output reg                       exs_trap_rtn_o,
@@ -57,8 +67,8 @@ module id_stage
     // interface assignments
     // id stage qualifier logic
     // instruction decoder
-    wire [`RV_INSSIZE_RANGE] ins_size_d;
     wire                     ins_uerr_d;
+    wire                     fencei_d;
     wire                     jump_d;
     wire                     ecall_d;
     wire                     trap_rtn_d;
@@ -134,8 +144,10 @@ module id_stage
                 // ingress side
             .ins_i                 (pfu_ins_i),
                 // egress side
-            .ins_size_o            (ins_size_d),
+            .ins_size_o            (pfu_ack_size_o),
             .ins_err_o             (ins_uerr_d),
+            .fencei_o              (fencei_d),
+            .wfi_o                 (), // TODO
             .jump_o                (jump_d),
             .ecall_o               (ecall_d),
             .trap_rtn_o            (trap_rtn_d),
@@ -189,12 +201,15 @@ module id_stage
             reg_loading_vector_q <= 31'b0;
         end else if (clk_en_i) begin
             if (regd_addr_d != 5'b0 && pfu_ack_o && zone_d == `RV_ZONE_LOADQ) begin
+                `RV_ASSERT(reg_loading_vector_q[regd_addr_d] == 1'b0, "Register marked as pending load when already pending.");
                 reg_loading_vector_q[regd_addr_d] <= 1'b1;
             end
             if (exs_regd_addr_i != 5'b0 && exs_regd_cncl_load_i) begin
+                `RV_ASSERT(reg_loading_vector_q[exs_regd_addr_i] == 1'b1, "Load canceled when not pending.");
                 reg_loading_vector_q[exs_regd_addr_i] <= 1'b0;
             end
             if (lsq_reg_addr_i != 5'b0 && lsq_reg_wr_i) begin
+                `RV_ASSERT(reg_loading_vector_q[lsq_reg_addr_i] == 1'b1, "Load written when not pending.");
                 reg_loading_vector_q[lsq_reg_addr_i] <= 1'b0;
             end
         end
@@ -260,14 +275,15 @@ module id_stage
     begin
         if (clk_en_i) begin
             if (pfu_ack_o) begin
-                exs_ins_o             <= pfu_ins_i;
+                exs_ins_o             <= { { `RV_XLEN-32 {1'b0} }, pfu_ins_i };
                 exs_sofid_o           <= pfu_sofid_i;
+                exs_fencei_o          <= fencei_d;
                 exs_jump_o            <= jump_d;
                 exs_ecall_o           <= ecall_d;
                 exs_trap_rtn_o        <= trap_rtn_d;
                 exs_trap_rtn_mode_o   <= trap_rtn_mode_d;
                 pc_q                  <= pfu_pc_i;
-                exs_ins_size_o        <= ins_size_d;
+                exs_ins_size_o        <= pfu_ack_size_o;
                 exs_ins_uerr_o        <= ins_uerr_d;
                 exs_ins_ferr_o        <= pfu_ferr_i;
                 exs_zone_o            <= zone_d;
@@ -379,6 +395,19 @@ module id_stage
             exs_csr_wr_data_o = imm_q;
         end else begin
             exs_csr_wr_data_o = fwd_mux_regs1_data;
+        end
+    end
+
+
+    //--------------------------------------------------------------
+    // assersions
+    //--------------------------------------------------------------
+    always @ (posedge clk_i)
+    begin
+        if (clk_en_i) begin
+            // register file access assertions
+            `RV_ASSERT(!(pfu_ack_o & regs1_rd == 1'b1 && reg_loading_vector_q[regs1_addr]), "Register read when pending a load.");
+            `RV_ASSERT(!(pfu_ack_o & regs2_rd == 1'b1 && reg_loading_vector_q[regs2_addr]), "Register read when pending a load.");
         end
     end
 endmodule

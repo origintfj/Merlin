@@ -1,3 +1,11 @@
+/*
+ * Author         : Tom Stanway-Mayers
+ * Description    : ALU
+ * Version:       :
+ * License        : Apache License Version 2.0, January 2004
+ * License URL    : http://www.apache.org/licenses/
+ */
+
 // TODO - investigate using func7 and func3 instead of aluop
 
 `include "riscv_defs.v"

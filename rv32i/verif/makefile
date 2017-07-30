@@ -10,6 +10,12 @@ ifdef TESTNAME
 	BOOT_ROM_FILE := programs/$(TESTNAME).c
 endif
 
+ifdef TIMEOUT
+	SARGS := -Ptb_core.C_TIMEOUT=$(TIMEOUT)
+else
+	SARGS :=
+endif
+
 ifdef DUMP
 	DUMP_LXT2 := -lxt2
 endif
@@ -17,6 +23,19 @@ endif
 ifdef GATES
 	FILE_LIST := osu035_stdcells.v merlin32i.rtlnopwr.v
 endif
+
+test:
+	TSEED=$$(date +%s | sha256sum | head -c 8)
+	echo $(TSEED)
+
+usage:
+	@echo "make clean run [options...]"
+	@echo ""
+	@echo "OPTIONS:"
+	@echo "    Timeout after x us                 : TIMEOUT=x"
+	@echo "    Run program ./programs/some_test.c : TESTNAME=some_test"
+	@echo "    Dump waveform                      : DUMP=1"
+	@echo "    Use gate-level netlist             : GATES=1"
 
 all:
 
@@ -34,7 +53,7 @@ build_mem: # -ffreestanding -fPIC -fno-builtin
 run: build_mem run_only
 
 run_only:
-	iverilog -o tb_core.out -g2012 $(FILE_LIST) tb/boot_rom.v tb/ssram.v tb/tb_core.v
+	iverilog $(SARGS) -o tb_core.out -g2012 $(FILE_LIST) tb/boot_rom.v tb/ssram.v tb/tb_core.v
 	vvp tb_core.out $(DUMP_LXT2)
 
 synth:

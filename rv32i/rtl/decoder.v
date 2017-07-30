@@ -1,3 +1,11 @@
+/*
+ * Author         : Tom Stanway-Mayers
+ * Description    : RV32I Instruction Decoder
+ * Version:       :
+ * License        : Apache License Version 2.0, January 2004
+ * License URL    : http://www.apache.org/licenses/
+ */
+
 // TODO add support for the 16-bit extention
 
 `include "riscv_defs.v"
@@ -8,8 +16,10 @@ module decoder
             // ingress side
         input  wire              [31:0] ins_i,
             // egress side
-        output wire [`RV_INSSIZE_RANGE] ins_size_o,
+        output wire               [1:0] ins_size_o,
         output reg                      ins_err_o,
+        output reg                      fencei_o,
+        output reg                      wfi_o,
         output reg                      jump_o,
         output reg                      ecall_o,
         output reg                      trap_rtn_o,
@@ -55,7 +65,7 @@ module decoder
     wire [4:0] regd_addr;
     wire [4:0] regs1_addr;
     reg  [2:0] ins_type;
-    // field extraction
+    // immediate generation
     reg [`RV_XLEN-1:0] sign_imm;
 
     //--------------------------------------------------------------
@@ -84,6 +94,8 @@ module decoder
     always @ (*)
     begin
         ins_err_o             = 1'b0;
+        fencei_o              = 1'b0;
+        wfi_o                 = 1'b0;
         jump_o                = 1'b0;
         ecall_o               = 1'b0;
         trap_rtn_o            = 1'b0;
@@ -300,8 +312,12 @@ module decoder
                     end
                 endcase
             end
-            7'b0001111 : begin // misc-mem TODO
+            7'b0001111 : begin // misc-mem
                 ins_type = C_IMM_TYPE_MISC_MEM;
+                // NOTE: any fence is treated as a fence.i
+                if (funct3 == 3'b001) begin // fence.i
+                    fencei_o = 1'b1;
+                end
             end
             7'b1110011 : begin // system
                 if (funct3 == `RV_MINOR_OPCODE_PRIV) begin
@@ -314,7 +330,8 @@ module decoder
                             end else if (ins_i[31:20] == 12'h001) begin // TODO EBREAK
                             end else if (ins_i[31:30] == 2'b0 && ins_i[27:20] == 8'h02) begin // TRAP RETURN
                                 trap_rtn_o = 1'b1;
-                            end else if (ins_i[31:20] == 12'h105) begin // TODO WFI
+                            end else if (ins_i[31:20] == 12'h105) begin
+                                wfi_o = 1'b1;
                             end else begin
                                 ins_err_o = 1'b1;
                             end
@@ -361,7 +378,7 @@ module decoder
 
 
     //--------------------------------------------------------------
-    // field extraction
+    // immediate generation
     //--------------------------------------------------------------
     always @ (*)
     begin

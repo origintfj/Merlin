@@ -1,11 +1,18 @@
+/*
+ * Author         : Tom Stanway-Mayers
+ * Description    : Top Level
+ * Version:       :
+ * License        : Apache License Version 2.0, January 2004
+ * License URL    : http://www.apache.org/licenses/
+ */
+
 // TODO - generalise interface data widths
 
 `include "riscv_defs.v"
 
 module merlin32i
     #(
-        parameter C_IRQV_SZ           = 32,
-        parameter C_RESET_VECTOR      = 32'h0
+        parameter C_RESET_VECTOR = 32'h0
     )
     (
         // global
@@ -13,10 +20,15 @@ module merlin32i
         input  wire                  clk_en_i,
         input  wire                  resetb_i,
         // hardware interrupt interface
-        input  wire            [1:0] irq_mode_i,
-        input  wire                  irq_extern_i,
-        input  wire                  irq_softw_i,
-        input  wire                  irq_timer_i,
+        input  wire                  irqm_extern_i,
+        input  wire                  irqm_softw_i,
+        input  wire                  irqm_timer_i,
+        input  wire                  irqs_extern_i,
+        input  wire                  irqs_softw_i,
+        input  wire                  irqs_timer_i,
+        input  wire                  irqu_extern_i,
+        input  wire                  irqu_softw_i,
+        input  wire                  irqu_timer_i,
         // instruction port
         input  wire                  ireqready_i,
         output wire                  ireqvalid_o,
@@ -30,7 +42,7 @@ module merlin32i
         input  wire                  dreqready_i,
         output wire                  dreqvalid_o,
         output wire            [1:0] dreqsize_o,
-        output wire                  dreqdvalid_o,
+        output wire                  dreqwrite_o,
         output wire            [1:0] dreqhpl_o,
         output wire           [31:0] dreqaddr_o,
         output wire           [31:0] dreqdata_o,
@@ -52,16 +64,19 @@ module merlin32i
     wire                     pfu_hvec_ready;
     wire                     pfu_ids_dav;
     wire   [`RV_SOFID_RANGE] pfu_ids_sofid;
-    wire      [`RV_XLEN-1:0] pfu_ids_ins;
+    wire              [31:0] pfu_ids_ins;
     wire                     pfu_ids_ferr;
     wire      [`RV_XLEN-1:0] pfu_ids_pc;
     // instruction decoder stage
     wire                     ids_pfu_ack;
+    wire               [1:0] ids_pfu_ack_size;
+    wire      [`RV_XLEN-1:0] ids_exs_ins;
     wire                     ids_exs_valid;
     wire   [`RV_SOFID_RANGE] ids_exs_sofid;
-    wire [`RV_INSSIZE_RANGE] ids_exs_ins_size;
+    wire               [1:0] ids_exs_ins_size;
     wire                     ids_exs_ins_uerr;
     wire                     ids_exs_ins_ferr;
+    wire                     ids_exs_fencei;
     wire                     ids_exs_jump;
     wire                     ids_exs_ecall;
     wire                     ids_exs_trap_rtn;
@@ -103,6 +118,7 @@ module merlin32i
     wire               [4:0] lsq_ids_reg_addr;
     wire      [`RV_XLEN-1:0] lsq_ids_reg_data;
     wire                     lsq_exs_full;
+    wire                     lsq_exs_empty;
 
     //--------------------------------------------------------------
 
@@ -132,7 +148,6 @@ module merlin32i
     //--------------------------------------------------------------
     pfu
         #(
-            .C_BUS_SZX      (5), // bus width base 2 exponent
             .C_FIFO_DEPTH_X (2), // pfu fifo depth base 2 exponent
             .C_RESET_VECTOR (32'h00000000)
         ) i_pfu (
@@ -150,12 +165,13 @@ module merlin32i
             .irsprerr_i      (irsprerr_i),
             .irspdata_i      (irspdata_i),
             // decoder interface
-            .ids_dav_o       (pfu_ids_dav),   // new fetch available
-            .ids_ack_i       (ids_pfu_ack),   // ack this fetch
-            .ids_sofid_o     (pfu_ids_sofid), // first fetch since vectoring
-            .ids_ins_o       (pfu_ids_ins),   // instruction fetched
-            .ids_ferr_o      (pfu_ids_ferr),  // this instruction fetch resulted in error
-            .ids_pc_o        (pfu_ids_pc),    // address of this instruction
+            .ids_dav_o       (pfu_ids_dav),      // new fetch available
+            .ids_ack_i       (ids_pfu_ack),      // ack this fetch
+            .ids_ack_size_i  (ids_pfu_ack_size), // ack this fetch
+            .ids_sofid_o     (pfu_ids_sofid),    // first fetch since vectoring
+            .ids_ins_o       (pfu_ids_ins),      // instruction fetched
+            .ids_ferr_o      (pfu_ids_ferr),     // this instruction fetch resulted in error
+            .ids_pc_o        (pfu_ids_pc),       // address of this instruction
             // vectoring and exception controller interface
             .hvec_pc_ready_o (pfu_hvec_ready),
             .hvec_pc_wr_i    (hvec_pfu_pc_wr),
@@ -174,19 +190,22 @@ module merlin32i
             .clk_en_i             (clk_en_i),
             .resetb_i             (resetb_i),
             // pfu interface
-            .pfu_dav_i            (pfu_ids_dav),   // new fetch available
-            .pfu_ack_o            (ids_pfu_ack),   // ack this fetch
-            .pfu_sofid_i          (pfu_ids_sofid), // first fetch since vectoring
-            .pfu_ins_i            (pfu_ids_ins),   // instruction fetched
-            .pfu_ferr_i           (pfu_ids_ferr),  // this instruction fetch resulted in error
-            .pfu_pc_i             (pfu_ids_pc),    // address of this instruction
+            .pfu_dav_i            (pfu_ids_dav),      // new fetch available
+            .pfu_ack_o            (ids_pfu_ack),      // ack this fetch
+            .pfu_ack_size_o       (ids_pfu_ack_size), // ack size
+            .pfu_sofid_i          (pfu_ids_sofid),    // first fetch since vectoring
+            .pfu_ins_i            (pfu_ids_ins),      // instruction fetched
+            .pfu_ferr_i           (pfu_ids_ferr),     // this instruction fetch resulted in error
+            .pfu_pc_i             (pfu_ids_pc),       // address of this instruction
             // ex stage interface
+            .exs_ins_o            (ids_exs_ins),
             .exs_valid_o          (ids_exs_valid),
             .exs_stall_i          (exs_ids_stall),
             .exs_sofid_o          (ids_exs_sofid),
             .exs_ins_size_o       (ids_exs_ins_size),
             .exs_ins_uerr_o       (ids_exs_ins_uerr),
             .exs_ins_ferr_o       (ids_exs_ins_ferr),
+            .exs_fencei_o         (ids_exs_fencei),
             .exs_jump_o           (ids_exs_jump),
             .exs_ecall_o          (ids_exs_ecall),
             .exs_trap_rtn_o       (ids_exs_trap_rtn),
@@ -228,19 +247,26 @@ module merlin32i
             .clk_en_i             (clk_en_i),
             .resetb_i             (resetb_i),
             // external interface
-            .irq_mode_i           (irq_mode_i),
-            .irq_extern_i         (irq_extern_i),
-            .irq_softw_i          (irq_softw_i),
-            .irq_timer_i          (irq_timer_i),
+            .irqm_extern_i        (irqm_extern_i),
+            .irqm_softw_i         (irqm_softw_i),
+            .irqm_timer_i         (irqm_timer_i),
+            .irqs_extern_i        (irqs_extern_i),
+            .irqs_softw_i         (irqs_softw_i),
+            .irqs_timer_i         (irqs_timer_i),
+            .irqu_extern_i        (irqu_extern_i),
+            .irqu_softw_i         (irqu_softw_i),
+            .irqu_timer_i         (irqu_timer_i),
             // pfu stage interface
             .pfu_hpl_o            (exs_pfu_hpl),
             // instruction decoder stage interface
+            .ids_ins_i            (ids_exs_ins),
             .ids_valid_i          (ids_exs_valid),
             .ids_stall_o          (exs_ids_stall),
             .ids_sofid_i          (ids_exs_sofid),
             .ids_ins_size_i       (ids_exs_ins_size),
             .ids_ins_uerr_i       (ids_exs_ins_uerr),
             .ids_ins_ferr_i       (ids_exs_ins_ferr),
+            .ids_fencei_i         (ids_exs_fencei),
             .ids_jump_i           (ids_exs_jump),
             .ids_ecall_i          (ids_exs_ecall),
             .ids_trap_rtn_i       (ids_exs_trap_rtn),
@@ -271,6 +297,7 @@ module merlin32i
             .hvec_jump_addr_o     (exs_hvec_jump_addr),
             // load/store queue interface
             .lsq_full_i           (lsq_exs_full),
+            .lsq_empty_i          (lsq_exs_empty),
             .lsq_lq_wr_o          (exs_lsq_lq_wr),
             .lsq_sq_wr_o          (exs_lsq_sq_wr),
             .lsq_hpl_o            (exs_lsq_hpl),
@@ -298,6 +325,7 @@ module merlin32i
             .lsq_reg_data_o     (lsq_ids_reg_data),
             // execution stage interface
             .exs_full_o         (lsq_exs_full),
+            .exs_empty_o        (lsq_exs_empty),
             .exs_lq_wr_i        (exs_lsq_lq_wr),
             .exs_sq_wr_i        (exs_lsq_sq_wr),
             .exs_hpl_i          (exs_lsq_hpl),
@@ -313,7 +341,7 @@ module merlin32i
             .dreqready_i        (dreqready_i),
             .dreqvalid_o        (dreqvalid_o),
             .dreqsize_o         (dreqsize_o),
-            .dreqdvalid_o       (dreqdvalid_o),
+            .dreqwrite_o        (dreqwrite_o),
             .dreqhpl_o          (dreqhpl_o),
             .dreqaddr_o         (dreqaddr_o),
             .dreqdata_o         (dreqdata_o),

@@ -1,3 +1,13 @@
+/*
+ * Author         : Tom Stanway-Mayers
+ * Description    : FIFO
+ * Version:       :
+ * License        : Apache License Version 2.0, January 2004
+ * License URL    : http://www.apache.org/licenses/
+ */
+
+`include "riscv_defs.v"
+
 module fifo
     #(
         parameter C_FIFO_WIDTH   = 1,
@@ -88,6 +98,18 @@ module fifo
             if (wr_i) begin
                 mem[wr_ptr_q[C_FIFO_DEPTH_X-1:0]] <= din_i;
             end
+        end
+    end
+
+
+    //--------------------------------------------------------------
+    // asserts
+    //--------------------------------------------------------------
+    always @ (posedge clk_i)
+    begin
+        if (clk_en_i) begin
+            `RV_ASSERT((full_o & wr_i) == 1'b0, "FIFO written when full!")
+            `RV_ASSERT((empty_o & rd_i) == 1'b0, "FIFO read when empty!")
         end
     end
 endmodule

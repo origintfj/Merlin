@@ -97,32 +97,54 @@ asm (
     "   csrrw   sp,     mscratch,   sp\n"
     "   mret\n"
 );
+
 void writes(char const* const str);
 void writex(int const value);
-void excp_handler(void) {
-    int a;
-    writes("*** Exception ***\n");
-    writes("MCAUSE=0x");
-    asm (
-        "   csrrw   a0,     mcause,     x0\n"
-        "   jal     x1,     writex\n"
-    );
-    writes("\n");
-    asm (
-        "   li      a0,     0x55"
-    );
-    register int temp asm("a0");
-    a = temp;
-    writes("\n");
-    writex(a);
-    writes("\n\n");
 
+int intr_count = 1;
+
+void excp_handler(void) {
+    writes("<External Interrupt! (");
+    writex(intr_count);
+    writes(")>");
+
+    // increment the interrupt counter
+    ++intr_count;
+    if (intr_count > 20) {
+        *(unsigned volatile *const)0xfffffffc = 0; // end test
+    }
     // clear interrupt
     *(int volatile *const)0x00000004 = 1;
 }
 //--------------------------------------------------------------
+/*
+do pfu and jump speculation
+fix load/store alignment
+implement wfi
+*/
+void main(void) {
+    int i, j;
 
-int a = (unsigned const)'0';
+    for (j = 0; j < 4; ++j) {
+        for (i = 0; i < j; ++i) {
+            writes("Hello World!\n");
+        }
+    }
+
+    asm (
+        //"   ecall\n"
+        "   wfi\n"
+    );
+
+    writes("From the Merlin RV32I test program\n");
+    writex(0x27a7fe4);
+
+    writes("Entering a \"while (1)\".\n");
+    asm (
+        "loop:\n"
+        "   j       loop\n"
+    );
+}
 
 void writex(int const value) {
     int i;
@@ -156,6 +178,10 @@ void writes(char const* str) {
             word = *(unsigned const *const)word_addr;
         }
 
+        asm (
+            "   fence.i\n"
+        );
+
         c = word >> (index << 3);
 
         if (c != '\0') {
@@ -163,32 +189,5 @@ void writes(char const* str) {
             ++str;
         }
     } while (c != '\0');
-}
-
-void main(void) {
-    int i, j;
-
-    for (j = 0; j < 4; ++j) {
-        for (i = 0; i < j; ++i) {
-            writes((char const *const)&a);
-            a += 1;
-
-            writes("Hello World!\n");
-        }
-    }
-/*
-    asm (
-        "   ecall\n"
-    );
-*/
-    writes("From the Merlin RV32I test program\n");
-    writex(0x27a7fe4);
-
-    asm (
-        "loop:\n"
-        "   j       loop\n"
-    );
-
-    *(unsigned *const)0xfffffffc = 0; // end test
 }
 
