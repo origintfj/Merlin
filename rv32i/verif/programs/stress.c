@@ -15,6 +15,7 @@ asm (
     "   li      t0,         0x8\n"
     "   csrs    mstatus,    t0\n"
     "   j       main\n"
+    "   j       main\n"
 );
 //--------------------------------------------------------------
 
@@ -178,11 +179,7 @@ void writes(char const* str) {
             word = *(unsigned const *const)word_addr;
         }
 
-        asm (
-            "   fence.i\n"
-        );
-
-        c = word >> (index << 3);
+        c = (word >> (index << 3)) & 0xff;
 
         if (c != '\0') {
             *(unsigned volatile *const)0x80000000 = c;

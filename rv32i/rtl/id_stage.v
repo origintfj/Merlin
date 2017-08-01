@@ -17,7 +17,7 @@ module id_stage
         // pfu interface
         input  wire                      pfu_dav_i,   // new fetch available
         output wire                      pfu_ack_o,   // ack this fetch
-        output wire                [1:0] pfu_ack_size_o, // ack size
+        output reg                 [1:0] pfu_ack_size_o, // ack size
         input  wire    [`RV_SOFID_RANGE] pfu_sofid_i, // first fetch since vectoring
         input  wire               [31:0] pfu_ins_i,   // instruction fetched
         input  wire                      pfu_ferr_i,  // this instruction fetch resulted in error
@@ -66,8 +66,15 @@ module id_stage
 
     // interface assignments
     // id stage qualifier logic
-    // instruction decoder
+    // rv32ic instruction expander
+    wire                     ins_expanded_valid;
+    wire                     rv32ic_ins_uerr;
+    wire              [31:0] ins_expanded;
+    // instruction mux
     wire                     ins_uerr_d;
+    reg               [31:0] rv32i_ins;
+    // instruction decoder
+    wire                     rv32i_ins_uerr;
     wire                     fencei_d;
     wire                     jump_d;
     wire                     ecall_d;
@@ -137,15 +144,42 @@ module id_stage
 
 
     //--------------------------------------------------------------
+    // rv32ic instruction expander
+    //--------------------------------------------------------------
+    rv32ic_expander i_rv32ic_expander (
+            .ins_i     (pfu_ins_i),
+            .ins_rvc_o (ins_expanded_valid),
+            .ins_err_o (rv32ic_ins_uerr),
+            .ins_o     (ins_expanded)
+        );
+
+
+    //--------------------------------------------------------------
+    // instruction mux
+    //--------------------------------------------------------------
+    assign ins_uerr_d = rv32i_ins_uerr | (ins_expanded_valid & rv32ic_ins_uerr);
+    //
+    always @ (*)
+    begin
+        if (ins_expanded_valid) begin
+            pfu_ack_size_o = 2'b01;
+            rv32i_ins      = ins_expanded;
+        end else begin
+            pfu_ack_size_o = 2'b10;
+            rv32i_ins      = pfu_ins_i;
+        end
+    end
+
+
+    //--------------------------------------------------------------
     // instruction decoder
     //--------------------------------------------------------------
-    decoder i_decoder (
+    rv32i_decoder i_rv32i_decoder (
             // instruction decoder interface
                 // ingress side
-            .ins_i                 (pfu_ins_i),
+            .ins_i                 (rv32i_ins),
                 // egress side
-            .ins_size_o            (pfu_ack_size_o),
-            .ins_err_o             (ins_uerr_d),
+            .ins_err_o             (rv32i_ins_uerr),
             .fencei_o              (fencei_d),
             .wfi_o                 (), // TODO
             .jump_o                (jump_d),

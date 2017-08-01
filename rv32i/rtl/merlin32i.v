@@ -122,11 +122,11 @@ module merlin32i
     //--------------------------------------------------------------
     // prefetch unit
     //--------------------------------------------------------------
-    pfu
+    pfu32c
         #(
             .C_FIFO_DEPTH_X (2), // pfu fifo depth base 2 exponent
             .C_RESET_VECTOR (C_RESET_VECTOR)
-        ) i_pfu (
+        ) i_pfu32c (
             // global
             .clk_i           (clk_i),
             .clk_en_i        (clk_en_i),

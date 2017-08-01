@@ -6,17 +6,14 @@
  * License URL    : http://www.apache.org/licenses/
  */
 
-// TODO add support for the 16-bit extention
-
 `include "riscv_defs.v"
 
-module decoder
+module rv32i_decoder
     (
         // instruction decoder interface
             // ingress side
         input  wire              [31:0] ins_i,
             // egress side
-        output wire               [1:0] ins_size_o,
         output reg                      ins_err_o,
         output reg                      fencei_o,
         output reg                      wfi_o,
@@ -73,7 +70,6 @@ module decoder
     //--------------------------------------------------------------
     // global
     //--------------------------------------------------------------
-    assign ins_size_o      = 2'b10;
     assign trap_rtn_mode_o = ins_i[29:28];
     assign regd_addr_o     = regd_addr;
     assign regs1_addr_o    = regs1_addr;

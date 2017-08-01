@@ -201,7 +201,11 @@ module ex_stage
     assign excp_ecall = ids_ecall_q;
     assign excp_ferr  = ids_ins_ferr_q;
     assign excp_uerr  = ids_ins_uerr_q;
-    assign excp_maif  = ids_jump_q & (|(alu_data_out[1:0])); // TODO this will change for compressed instructions
+`ifdef RV_CONFIG_STDEXT_C
+    assign excp_maif  = ids_jump_q & alu_data_out[0];
+`else
+    assign excp_maif  = ids_jump_q & (|(alu_data_out[1:0]));
+`endif
     //
     always @ (*)
     begin

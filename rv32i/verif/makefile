@@ -3,7 +3,7 @@ BOOT_ROM_FILE := programs/hello_world.c
 
 CARGS := -O0
 
-FILE_LIST := -I../rtl/include ../rtl/fifo.v ../rtl/pfu.v ../rtl/decoder.v ../rtl/regfile_integer.v ../rtl/id_stage.v ../rtl/alu.v ../rtl/cs_registers.v ../rtl/ex_stage.v ../rtl/lsqueue.v ../rtl/merlin32i.v
+FILE_LIST := -I../rtl/include ../rtl/fifo.v ../rtl/pfu.v ../rtl/pfu32c.v ../rtl/rv32ic_expander.v ../rtl/rv32i_decoder.v ../rtl/regfile_integer.v ../rtl/id_stage.v ../rtl/alu.v ../rtl/cs_registers.v ../rtl/ex_stage.v ../rtl/lsqueue.v ../rtl/merlin32i.v
 
 SARGS := -DRV_ASSERTS_ON
 
@@ -43,12 +43,13 @@ clean:
 	rm -f *.out
 	rm -f *.hex
 	rm -f *.lxt
+	rm -f *.dis
 
 build_mem: # -ffreestanding -fPIC -fno-builtin
-	riscv32-unknown-elf-gcc -nostdinc -nostdlib -fPIC -e _entry -T link.ld $(CARGS) $(BOOT_ROM_FILE) -o test.out
-	riscv32-unknown-elf-objcopy -O verilog test.out mem.hex
+	$(CC_DIR)/riscv32-unknown-elf-gcc -nostdinc -nostdlib -fPIC -e _entry -T link.ld $(CARGS) $(BOOT_ROM_FILE) -o test.out
+	$(CC_DIR)/riscv32-unknown-elf-objcopy -O verilog test.out mem.hex
 	#cat mem.hex
-	riscv32-unknown-elf-objdump -D test.out
+	$(CC_DIR)/riscv32-unknown-elf-objdump -D test.out > test.dis
 
 run: build_mem run_only
 

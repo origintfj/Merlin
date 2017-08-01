@@ -156,7 +156,7 @@ void writes(char const* str) {
             word = *(unsigned const *const)word_addr;
         }
 
-        c = word >> (index << 3);
+        c = (word >> (index << 3)) & 0xff;
 
         if (c != '\0') {
             *(unsigned volatile *const)0x80000000 = c;

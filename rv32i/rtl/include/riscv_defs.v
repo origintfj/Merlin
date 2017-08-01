@@ -14,13 +14,13 @@
 //--------------------------------------------------------------
 // Core Configuration
 //--------------------------------------------------------------
-//`define RV_CONFIG_RV64 // TODO
-`define RV_CONFIG_EXT_C // TODO
+//`define RV_CONFIG_STDEXT_64 // TODO
+`define RV_CONFIG_STDEXT_C
 
 //--------------------------------------------------------------
 // Global Definitions
 //--------------------------------------------------------------
-`ifdef RV_CONFIG_RV64
+`ifdef RV_CONFIG_STDEXT_64
     `define RV_XLEN_X   6 // 64-bit
 `else
     `define RV_XLEN_X   5 // 32-bit
@@ -140,8 +140,13 @@
 // counteren
 // scratch
 // epc
-`define RV_CSR_EPC_RANGE                            `RV_XLEN-1:2 // TODO `RV_XLEN-1:1 iff Ext. C is supported
-`define RV_CSR_EPC_LOB                              2'b0 // Low Order Bits TODO 1'b1 iff Ext. C is supported
+`ifdef RV_CONFIG_STDEXT_C
+`define RV_CSR_EPC_RANGE                            `RV_XLEN-1:1
+`define RV_CSR_EPC_LOB                              1'b0
+`else
+`define RV_CSR_EPC_RANGE                            `RV_XLEN-1:2
+`define RV_CSR_EPC_LOB                              2'b0
+`endif
 // cause
 `define RV_CSR_INTR_CAUSE_US                        { { `RV_XLEN-4 {1'b0} }, 2'b00, 2'b00 }
 `define RV_CSR_INTR_CAUSE_SS                        { { `RV_XLEN-4 {1'b0} }, 2'b00, 2'b01 }
