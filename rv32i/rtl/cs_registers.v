@@ -465,7 +465,7 @@ module cs_registers
             default : begin
                 rd_invalid_address = 1'b1;
             end
-        endcase;
+        endcase
     end
     always @ (posedge clk_i)
     begin
@@ -603,7 +603,7 @@ module cs_registers
                         12'h344 : mip_q      <= wr_data_i[`RV_CSR_IP_RANGE] & `RV_CSR_MIP_WR_MASK;
                         default : begin
                         end
-                    endcase;
+                    endcase
                 end
             end
         end

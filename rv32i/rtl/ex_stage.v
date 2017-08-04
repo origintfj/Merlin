@@ -385,7 +385,7 @@ module ex_stage
             2'b11 : csr_wr_data = csr_data_out & ~ids_csr_wr_data_q;
             default : begin
             end
-        endcase;
+        endcase
     end
     //
     cs_registers i_cs_registers (

@@ -125,7 +125,7 @@ module merlin32i
     pfu
         #(
             .C_FIFO_DEPTH_X (2), // pfu fifo depth base 2 exponent
-            .C_RESET_VECTOR (32'h00000000)
+            .C_RESET_VECTOR (C_RESET_VECTOR)
         ) i_pfu (
             // global
             .clk_i           (clk_i),
