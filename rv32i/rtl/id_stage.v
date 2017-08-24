@@ -235,15 +235,21 @@ module id_stage
             reg_loading_vector_q <= 31'b0;
         end else if (clk_en_i) begin
             if (regd_addr_d != 5'b0 && pfu_ack_o && zone_d == `RV_ZONE_LOADQ) begin
+`ifdef RV_ASSERTS_ON
                 `RV_ASSERT(reg_loading_vector_q[regd_addr_d] == 1'b0, "Register marked as pending load when already pending.");
+`endif
                 reg_loading_vector_q[regd_addr_d] <= 1'b1;
             end
             if (exs_regd_addr_i != 5'b0 && exs_regd_cncl_load_i) begin
+`ifdef RV_ASSERTS_ON
                 `RV_ASSERT(reg_loading_vector_q[exs_regd_addr_i] == 1'b1, "Load canceled when not pending.");
+`endif
                 reg_loading_vector_q[exs_regd_addr_i] <= 1'b0;
             end
             if (lsq_reg_addr_i != 5'b0 && lsq_reg_wr_i) begin
+`ifdef RV_ASSERTS_ON
                 `RV_ASSERT(reg_loading_vector_q[lsq_reg_addr_i] == 1'b1, "Load written when not pending.");
+`endif
                 reg_loading_vector_q[lsq_reg_addr_i] <= 1'b0;
             end
         end
@@ -436,6 +442,7 @@ module id_stage
     //--------------------------------------------------------------
     // assersions
     //--------------------------------------------------------------
+`ifdef RV_ASSERTS_ON
     always @ (posedge clk_i)
     begin
         if (clk_en_i) begin
@@ -444,4 +451,5 @@ module id_stage
             `RV_ASSERT(!(pfu_ack_o & regs2_rd == 1'b1 && reg_loading_vector_q[regs2_addr]), "Register read when pending a load.");
         end
     end
+`endif
 endmodule
