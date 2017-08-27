@@ -147,7 +147,7 @@ module id_stage
     // rv32ic instruction expander
     //--------------------------------------------------------------
     rv32ic_expander i_rv32ic_expander (
-            .ins_i     (pfu_ins_i),
+            .ins_i     (pfu_ins_i[15:0]),
             .ins_rvc_o (ins_expanded_valid),
             .ins_err_o (rv32ic_ins_uerr),
             .ins_o     (ins_expanded)
