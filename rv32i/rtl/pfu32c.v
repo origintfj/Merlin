@@ -60,9 +60,9 @@ module pfu32c
     // sofid register
     reg                          sofid_q;
     // line fifo
-    parameter C_FIFO_LINE_WIDTH = 1 + 32;
+    parameter C_FIFO_LINE_WIDTH = 1 + 30;
     //
-    parameter C_FERR_LSB        = 32;
+    parameter C_FERR_LSB        = 30;
     parameter C_FIFO_PC_LSB     =  0;
     //
     wire                         fifo_line_rd;
@@ -204,10 +204,10 @@ module pfu32c
     //--------------------------------------------------------------
     assign fifo_line_rd = ids_ack_i & (atom_base | ids_ack_size_i[1]);
     assign fifo_line_din[   C_FERR_LSB +:  1] = irsprerr_i;
-    assign fifo_line_din[C_FIFO_PC_LSB +: 32] = request_addr_q;
+    assign fifo_line_din[C_FIFO_PC_LSB +: 30] = request_addr_q[31:2];
     //
     assign ids_ferr_o    = fifo_line_dout[C_FERR_LSB +: 1];
-    assign ids_pc_o      = { fifo_line_dout[C_FIFO_PC_LSB+2 +: 30], atom_base, 1'b0 };
+    assign ids_pc_o      = { fifo_line_dout[C_FIFO_PC_LSB +: 30], atom_base, 1'b0 };
     //
     fifo
         #(
@@ -274,15 +274,17 @@ module pfu32c
     begin
         if (~resetb_i) begin
             atom_base_q <= 1'b0; // NOTE: don't care
-        end else if (|fifo_atom_dout_sof) begin
-            if (ids_ack_i & ~ids_ack_size_i[1]) begin // ack 16
-                atom_base_q <= ~fifo_atom_dout_sof[1];
-            end else begin // ack 32
-                atom_base_q <= fifo_atom_dout_sof[1];
-            end
         end else if (ids_ack_i) begin
-            if (~ids_ack_size_i[1]) begin // ack 16
-                atom_base_q <= ~atom_base_q;
+            if (|fifo_atom_dout_sof) begin
+                if (~ids_ack_size_i[1]) begin // ack 16
+                    atom_base_q <= ~fifo_atom_dout_sof[1];
+                end else begin // ack 32
+                    atom_base_q <= fifo_atom_dout_sof[1];
+                end
+            end else begin
+                if (~ids_ack_size_i[1]) begin // ack 16
+                    atom_base_q <= ~atom_base_q;
+                end
             end
         end
     end
