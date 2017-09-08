@@ -82,13 +82,13 @@ module alu
     //--------------------------------------------------------------
     // shifter
     //--------------------------------------------------------------
+    assign shift_left_array[0]  = op_left_i;
+    assign shift_right_array[0] = op_left_i;
+    //
     generate
     for (genvar_i = 0; genvar_i < `RV_XLEN_X; genvar_i = genvar_i + 1) begin : shifter
         always @ (*)
         begin
-            shift_left_array[0]  = op_left_i;
-            shift_right_array[0] = op_left_i;
-            //
             if (op_right_i[genvar_i] == 1'b1) begin
                 // left shift
                 shift_left_array[genvar_i + 1][2**genvar_i - 1:   0] = { 2**genvar_i {1'b0} };

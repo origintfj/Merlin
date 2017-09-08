@@ -100,9 +100,9 @@
 //
 // status
 `define RV_CSR_STATUS_RESET_VALUE                   { `RV_XLEN {1'b0} } // all interrupts disabled
-`define RV_CSR_MSTATUS_RW_MASK                      { 4'h8, { `RV_XLEN-32 {1'b0} }, 28'h07ff9bb }
-`define RV_CSR_SSTATUS_RW_MASK                      { 4'h8, { `RV_XLEN-32 {1'b0} }, 28'h00de133 }
-`define RV_CSR_USTATUS_RW_MASK                      { 4'h0, { `RV_XLEN-32 {1'b0} }, 28'h0000011 }
+`define RV_CSR_MSTATUS_RW_MASK                      { 1'b1, { `RV_XLEN-29 {1'b0} }, 28'h07ff9bb }
+`define RV_CSR_SSTATUS_RW_MASK                      { 1'b1, { `RV_XLEN-29 {1'b0} }, 28'h00de133 }
+`define RV_CSR_USTATUS_RW_MASK                      { 1'b0, { `RV_XLEN-29 {1'b0} }, 28'h0000011 }
 `define RV_CSR_STATUS_MPP_RANGE                     12:11
 `define RV_CSR_STATUS_SPP_INDEX                     8
 `define RV_CSR_STATUS_MPIE_INDEX                    7
