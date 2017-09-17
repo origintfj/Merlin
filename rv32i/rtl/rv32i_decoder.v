@@ -111,14 +111,14 @@ module rv32i_decoder
         ins_type              = C_IMM_TYPE_UDEF;
         //
         case (opcode)
-            7'b0110111 : begin // lui
+            `RV_MAJOR_OPCODE_LUI : begin // lui
                 ins_type    = C_IMM_TYPE_U;
                 zone_o      = `RV_ZONE_REGFILE;
                 regd_tgt_o  = 1'b1;
                 aluop_o     = `RV_ALUOP_MOV;
                 sels2_imm_o = 1'b1;
             end
-            7'b0010111 : begin // auipc
+            `RV_MAJOR_OPCODE_AUIPC : begin // auipc
                 ins_type    = C_IMM_TYPE_U;
                 zone_o      = `RV_ZONE_REGFILE;
                 regd_tgt_o  = 1'b1;
@@ -126,7 +126,7 @@ module rv32i_decoder
                 sels1_pc_o  = 1'b1;
                 sels2_imm_o = 1'b1;
             end
-            7'b1101111 : begin // jal
+            `RV_MAJOR_OPCODE_JAL : begin // jal
                 ins_type    = C_IMM_TYPE_UJ;
                 jump_o      = 1'b1;
                 zone_o      = `RV_ZONE_REGFILE;
@@ -136,7 +136,7 @@ module rv32i_decoder
                 sels1_pc_o  = 1'b1;
                 sels2_imm_o = 1'b1;
             end
-            7'b1100111 : begin // jalr
+            `RV_MAJOR_OPCODE_JALR : begin // jalr
                 ins_type    = C_IMM_TYPE_I;
                 jump_o      = 1'b1;
                 zone_o      = `RV_ZONE_REGFILE;
@@ -149,7 +149,7 @@ module rv32i_decoder
                     ins_err_o = 1'b1;
                 end
             end
-            7'b1100011 : begin // branch
+            `RV_MAJOR_OPCODE_BRANCH : begin // branch
                 ins_type      = C_IMM_TYPE_SB;
                 jump_o        = 1'b1;
                 regs1_rd_o    = 1'b1;
@@ -167,7 +167,7 @@ module rv32i_decoder
                     ins_err_o = 1'b1;
                 end
             end
-            7'b0000011 : begin // load
+            `RV_MAJOR_OPCODE_LOAD : begin // load
                 ins_type    = C_IMM_TYPE_I;
                 zone_o      = `RV_ZONE_LOADQ;
                 regd_tgt_o  = 1'b1;
@@ -182,7 +182,7 @@ module rv32i_decoder
                     ins_err_o = 1'b1;
                 end
             end
-            7'b0100011 : begin // store
+            `RV_MAJOR_OPCODE_STORE : begin // store
                 ins_type    = C_IMM_TYPE_S;
                 regs1_rd_o  = 1'b1;
                 regs2_rd_o  = 1'b1;
@@ -195,7 +195,7 @@ module rv32i_decoder
                     ins_err_o = 1'b1;
                 end
             end
-            7'b0010011 : begin // op-imm
+            `RV_MAJOR_OPCODE_OPIMM : begin // op-imm
                 ins_type    = C_IMM_TYPE_I;
                 zone_o      = `RV_ZONE_REGFILE;
                 regd_tgt_o  = 1'b1;
@@ -242,7 +242,7 @@ module rv32i_decoder
                     end
                 endcase
             end
-            7'b0110011 : begin // op
+            `RV_MAJOR_OPCODE_OP : begin // op
                 ins_type   = C_IMM_TYPE_R;
                 zone_o     = `RV_ZONE_REGFILE;
                 regd_tgt_o = 1'b1;
@@ -308,14 +308,14 @@ module rv32i_decoder
                     end
                 endcase
             end
-            7'b0001111 : begin // misc-mem
+            `RV_MAJOR_OPCODE_MISCMEM : begin // misc-mem
                 ins_type = C_IMM_TYPE_MISC_MEM;
                 // NOTE: any fence is treated as a fence.i
                 if (funct3 == 3'b001) begin // fence.i
                     fencei_o = 1'b1;
                 end
             end
-            7'b1110011 : begin // system
+            `RV_MAJOR_OPCODE_SYSTEM : begin // system
                 if (funct3 == `RV_MINOR_OPCODE_PRIV) begin
                     if (regd_addr == 5'b0) begin
                         if (funct7 == 7'b0001001) begin // TODO SFENCE.VMA

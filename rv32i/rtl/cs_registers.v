@@ -65,7 +65,9 @@ module cs_registers
         input  wire          [1:0] trap_rtn_mode_i,
         output reg  [`RV_XLEN-1:0] trap_rtn_addr_o,
         // static i/o
-        output wire          [1:0] mode_o
+        output wire          [1:0] mode_o,
+        // tracer port
+        output wire [`RV_XLEN-1:0] trap_cause_o
     );
 
     //--------------------------------------------------------------
@@ -270,11 +272,12 @@ module cs_registers
                                 excp_masa_i  |
                                 excp_ilgl_i
                             );
+    assign trap_cause_o = trap_cause;
     //
     always @ (*)
     begin
         if (interrupt) begin
-            trap_cause = icause | { 1'b1, { `RV_XLEN-1 {1'b0} } };
+            trap_cause = icause;
         end else begin
             trap_cause = ecause;
         end

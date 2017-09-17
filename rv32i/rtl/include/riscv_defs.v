@@ -10,6 +10,7 @@
 `define RV_RISCV_DEFS_
 
 //`define RV_ASSERTS_ON
+//`define RV_TRACER_ON
 
 //--------------------------------------------------------------
 // Core Configuration
@@ -56,6 +57,18 @@
 //--------------------------------------------------------------
 // OPCODEs
 //--------------------------------------------------------------
+`define RV_MAJOR_OPCODE_LUI     7'b0110111
+`define RV_MAJOR_OPCODE_AUIPC   7'b0010111
+`define RV_MAJOR_OPCODE_JAL     7'b1101111
+`define RV_MAJOR_OPCODE_JALR    7'b1100111
+`define RV_MAJOR_OPCODE_BRANCH  7'b1100011
+`define RV_MAJOR_OPCODE_LOAD    7'b0000011
+`define RV_MAJOR_OPCODE_STORE   7'b0100011
+`define RV_MAJOR_OPCODE_OPIMM   7'b0010011
+`define RV_MAJOR_OPCODE_OP      7'b0110011
+`define RV_MAJOR_OPCODE_MISCMEM 7'b0001111
+`define RV_MAJOR_OPCODE_SYSTEM  7'b1110011
+//
 `define RV_MINOR_OPCODE_ADDSUB  3'b000
 `define RV_MINOR_OPCODE_SLL     3'b001
 `define RV_MINOR_OPCODE_SLT     3'b010
@@ -148,15 +161,15 @@
 `define RV_CSR_EPC_LOB                              2'b0
 `endif
 // cause
-`define RV_CSR_INTR_CAUSE_US                        { { `RV_XLEN-4 {1'b0} }, 2'b00, 2'b00 }
-`define RV_CSR_INTR_CAUSE_SS                        { { `RV_XLEN-4 {1'b0} }, 2'b00, 2'b01 }
-`define RV_CSR_INTR_CAUSE_MS                        { { `RV_XLEN-4 {1'b0} }, 2'b00, 2'b11 }
-`define RV_CSR_INTR_CAUSE_UT                        { { `RV_XLEN-4 {1'b0} }, 2'b01, 2'b00 }
-`define RV_CSR_INTR_CAUSE_ST                        { { `RV_XLEN-4 {1'b0} }, 2'b01, 2'b01 }
-`define RV_CSR_INTR_CAUSE_MT                        { { `RV_XLEN-4 {1'b0} }, 2'b01, 2'b11 }
-`define RV_CSR_INTR_CAUSE_UE                        { { `RV_XLEN-4 {1'b0} }, 2'b10, 2'b00 }
-`define RV_CSR_INTR_CAUSE_SE                        { { `RV_XLEN-4 {1'b0} }, 2'b10, 2'b01 }
-`define RV_CSR_INTR_CAUSE_ME                        { { `RV_XLEN-4 {1'b0} }, 2'b10, 2'b11 }
+`define RV_CSR_INTR_CAUSE_US                        { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b00, 2'b00 }
+`define RV_CSR_INTR_CAUSE_SS                        { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b00, 2'b01 }
+`define RV_CSR_INTR_CAUSE_MS                        { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b00, 2'b11 }
+`define RV_CSR_INTR_CAUSE_UT                        { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b01, 2'b00 }
+`define RV_CSR_INTR_CAUSE_ST                        { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b01, 2'b01 }
+`define RV_CSR_INTR_CAUSE_MT                        { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b01, 2'b11 }
+`define RV_CSR_INTR_CAUSE_UE                        { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b10, 2'b00 }
+`define RV_CSR_INTR_CAUSE_SE                        { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b10, 2'b01 }
+`define RV_CSR_INTR_CAUSE_ME                        { 1'b1, { `RV_XLEN-5 {1'b0} }, 2'b10, 2'b11 }
 `define RV_CSR_EXCP_CAUSE_INS_ADDR_MISALIGNED       { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd00 }
 `define RV_CSR_EXCP_CAUSE_INS_ACCESS_FAULT          { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd01 }
 `define RV_CSR_EXCP_CAUSE_ILLEGAL_INS               { 1'b0, { `RV_XLEN-5 {1'b0} }, 4'd02 }

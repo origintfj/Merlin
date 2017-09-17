@@ -142,6 +142,8 @@ module ex_stage
     wire    [`RV_XLEN-1:0] csr_trap_entry_addr;
     wire    [`RV_XLEN-1:0] csr_trap_rtn_addr;
     wire             [1:0] csr_mode;
+    wire    [`RV_XLEN-1:0] csr_trap_cause;
+    // core tracer
 
     //--------------------------------------------------------------
 
@@ -437,6 +439,32 @@ module ex_stage
             .trap_rtn_mode_i   (ids_trap_rtn_mode_q),
             .trap_rtn_addr_o   (csr_trap_rtn_addr),
             // static i/o
-            .mode_o            (csr_mode)
+            .mode_o            (csr_mode),
+            // tracer port
+            .trap_cause_o      (csr_trap_cause)
         );
+
+
+    //--------------------------------------------------------------
+    // core tracer
+    //--------------------------------------------------------------
+`ifdef RV_TRACER_ON
+    rv32ic_core_tracer i_rv32ic_core_tracer (
+            // global
+            .clk_i                 (clk_i),
+            .clk_en_i              (clk_en_i),
+            .resetb_i              (resetb_i),
+            // tracer interface
+            .ex_stage_en_i         (ex_stage_en),
+            .execute_commit_i      (execute_commit),
+            .ins_addr_i            (ids_pc_q),
+            .ins_value_i           (ids_ins_q),
+            .alu_dout_i            (alu_data_out),
+            .csr_mode_i            (csr_mode),
+            .csr_jump_to_trap_i    (csr_jump_to_trap),
+            .csr_trap_cause_i      (csr_trap_cause),
+            .csr_trap_entry_addr_i (csr_trap_entry_addr),
+            .csr_trap_rtn_addr_i   (csr_trap_rtn_addr)
+        );
+`endif
 endmodule
