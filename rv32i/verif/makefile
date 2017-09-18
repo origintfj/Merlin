@@ -3,7 +3,7 @@ BOOT_ROM_FILE := programs/hello_world.c
 
 CARGS := -O0
 
-FILE_LIST := -I../rtl/include ../rtl/fifo.v ../rtl/pfu.v ../rtl/pfu32c.v ../rtl/rv32ic_expander.v ../rtl/rv32i_decoder.v ../rtl/regfile_integer.v ../rtl/id_stage.v ../rtl/alu.v ../rtl/cs_registers.v ../rtl/core_tracer.v ../rtl/ex_stage.v ../rtl/lsqueue.v ../rtl/merlin32i.v
+FILE_LIST := -I../rtl/include ../rtl/fifo.v ../rtl/pfu.v ../rtl/pfu32c.v ../rtl/rv32ic_expander.v ../rtl/rv32i_decoder.v ../rtl/regfile_integer.v ../rtl/id_stage.v ../rtl/alu.v ../rtl/cs_registers.v ../rtl/rv32ic_core_tracer.v ../rtl/ex_stage.v ../rtl/lsqueue.v ../rtl/merlin32i.v
 
 SARGS := -DRV_ASSERTS_ON -DRV_TRACER_ON
 
