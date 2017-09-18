@@ -459,6 +459,7 @@ module ex_stage
             .execute_commit_i      (execute_commit),
             .ins_addr_i            (ids_pc_q),
             .ins_value_i           (ids_ins_q),
+            .regs2_data_i          (ids_regs2_data_q),
             .alu_dout_i            (alu_data_out),
             .csr_mode_i            (csr_mode),
             .csr_jump_to_trap_i    (csr_jump_to_trap),

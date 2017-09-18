@@ -19,6 +19,7 @@ module rv32ic_core_tracer
         input wire                execute_commit_i,
         input wire [`RV_XLEN-1:0] ins_addr_i,
         input wire         [31:0] ins_value_i,
+        input wire [`RV_XLEN-1:0] regs2_data_i,
         input wire [`RV_XLEN-1:0] alu_dout_i,
         input wire          [1:0] csr_mode_i,
         input wire                csr_jump_to_trap_i,
@@ -285,6 +286,7 @@ module rv32ic_core_tracer
                             $fwrite(logfile, "lhu   x%0d, %8d(x%0d)", regd_addr, $signed(imm), regs1_addr);
                         end
                     endcase
+                    $fwrite(logfile, "    *0x%08x", alu_dout_i);
                 end else if (rv32i_ins[6:0] == `RV_MAJOR_OPCODE_STORE) begin
                     case (funct3)
                         3'b000 : begin
@@ -297,6 +299,7 @@ module rv32ic_core_tracer
                             $fwrite(logfile, "sw    x%0d, %8d(x%0d)", regs2_addr, $signed(imm), regs1_addr);
                         end
                     endcase
+                    $fwrite(logfile, "    *0x%08x = 0x%08x", alu_dout_i, regs2_data_i);
                 end else if (rv32i_ins[6:0] == `RV_MAJOR_OPCODE_OPIMM) begin
                     case (alu_op)
                         `RV_ALUOP_ADD : begin
