@@ -32,7 +32,8 @@ module rv32ic_core_tracer
 
     // program variables
     integer                logfile;
-    integer                call_depth;
+    integer                stack_depth;
+    integer                trap_depth;
     integer                i;
     // rv32ic instruction expander
     wire            [31:0] rv32i_ins_expanded;
@@ -58,8 +59,9 @@ module rv32ic_core_tracer
     //--------------------------------------------------------------
 
     initial begin
-        call_depth = 0;
-        logfile    = $fopen("merlin_htt.log", "w");
+        stack_depth = 0;
+        trap_depth  = 0;
+        logfile     = $fopen("merlin_htt.log", "w");
 
         $fwrite(logfile, "TIME         M   ADDR       INS         DESCRIPTION\n");
     end
@@ -126,6 +128,13 @@ module rv32ic_core_tracer
         if (~resetb_i) begin
         end else if (clk_en_i & ex_stage_en_i) begin
             if (csr_jump_to_trap_i) begin
+                trap_depth = trap_depth + 1;
+                if (trap_depth > 0) begin
+                    $fwrite(logfile, "T [%5d]", stack_depth);
+                end else begin
+                    $fwrite(logfile, "  [%5d]", stack_depth);
+                end
+                //
                 $fwrite(logfile, "%12t ", $time());
                 $fwrite(logfile, "[%0d] ", csr_mode_i);
                 if (ins_expanded_valid) begin
@@ -133,12 +142,8 @@ module rv32ic_core_tracer
                 end else begin
                     $fwrite(logfile, "0x%8x (%08x): ", ins_addr_i, ins_value_i);
                 end
-                for (i = 0; i < call_depth; i = i + 1) begin
-                    $fwrite(logfile, "| ");
-                end
                 //
                 $fwrite(logfile, "JUMP TO TRAP - ");
-                call_depth = call_depth + 1;
                 case (csr_trap_cause_i)
                     `RV_CSR_INTR_CAUSE_US : begin
                         $fwrite(logfile, "U-MODE SWI ");
@@ -220,15 +225,18 @@ module rv32ic_core_tracer
                 $fwrite(logfile, "(0x%8x)", csr_trap_entry_addr_i);
                 $fwrite(logfile, "\n");
             end else if (execute_commit_i) begin
+                if (trap_depth > 0) begin
+                    $fwrite(logfile, "T [%5d]", stack_depth);
+                end else begin
+                    $fwrite(logfile, "  [%5d]", stack_depth);
+                end
+                //
                 $fwrite(logfile, "%12t ", $time());
                 $fwrite(logfile, "[%0d] ", csr_mode_i);
                 if (ins_expanded_valid) begin
                     $fwrite(logfile, "0x%8x (    %04x): ", ins_addr_i, ins_value_i[15:0]);
                 end else begin
                     $fwrite(logfile, "0x%8x (%08x): ", ins_addr_i, ins_value_i);
-                end
-                for (i = 0; i < call_depth; i = i + 1) begin
-                    $fwrite(logfile, "| ");
                 end
                 //
                 if (rv32i_ins[6:0] == `RV_MAJOR_OPCODE_LUI) begin
@@ -238,13 +246,11 @@ module rv32ic_core_tracer
                 end else if (rv32i_ins[6:0] == `RV_MAJOR_OPCODE_JAL) begin
                     $fwrite(logfile, "jal   x%0d, %0d (0x%x)", regd_addr, $signed(imm), alu_dout_i);
                     if (regd_addr == 5'd1) begin // if link register - treat as function call
-                        call_depth = call_depth + 1;
                         $fwrite(logfile, " (CALL)");
                     end
                 end else if (rv32i_ins[6:0] == `RV_MAJOR_OPCODE_JALR) begin
                     $fwrite(logfile, "jalr  x%0d, x%0d, %0d (0x%x)", regd_addr, regs1_addr, $signed(imm), alu_dout_i);
                     if (regs1_addr == 5'd1 && imm == 32'b0) begin // if link register - treat as function return
-                        call_depth = call_depth - 1;
                         $fwrite(logfile, " (RTN)");
                     end
                 end else if (rv32i_ins[6:0] == `RV_MAJOR_OPCODE_BRANCH) begin
@@ -271,32 +277,32 @@ module rv32ic_core_tracer
                 end else if (rv32i_ins[6:0] == `RV_MAJOR_OPCODE_LOAD) begin
                     case (funct3)
                         3'b000 : begin
-                            $fwrite(logfile, "lb    x%0d, %8d(x%0d)", regd_addr, $signed(imm), regs1_addr);
+                            $fwrite(logfile, "lb    x%0d, %0d(x%0d)", regd_addr, $signed(imm), regs1_addr);
                         end
                         3'b001 : begin
-                            $fwrite(logfile, "lh    x%0d, %8d(x%0d)", regd_addr, $signed(imm), regs1_addr);
+                            $fwrite(logfile, "lh    x%0d, %0d(x%0d)", regd_addr, $signed(imm), regs1_addr);
                         end
                         3'b010 : begin
-                            $fwrite(logfile, "lw    x%0d, %8d(x%0d)", regd_addr, $signed(imm), regs1_addr);
+                            $fwrite(logfile, "lw    x%0d, %0d(x%0d)", regd_addr, $signed(imm), regs1_addr);
                         end
                         3'b100 : begin
-                            $fwrite(logfile, "lbu   x%0d, %8d(x%0d)", regd_addr, $signed(imm), regs1_addr);
+                            $fwrite(logfile, "lbu   x%0d, %0d(x%0d)", regd_addr, $signed(imm), regs1_addr);
                         end
                         3'b101 : begin
-                            $fwrite(logfile, "lhu   x%0d, %8d(x%0d)", regd_addr, $signed(imm), regs1_addr);
+                            $fwrite(logfile, "lhu   x%0d, %0d(x%0d)", regd_addr, $signed(imm), regs1_addr);
                         end
                     endcase
                     $fwrite(logfile, "    *0x%08x", alu_dout_i);
                 end else if (rv32i_ins[6:0] == `RV_MAJOR_OPCODE_STORE) begin
                     case (funct3)
                         3'b000 : begin
-                            $fwrite(logfile, "sb    x%0d, %8d(x%0d)", regs2_addr, $signed(imm), regs1_addr);
+                            $fwrite(logfile, "sb    x%0d, %0d(x%0d)", regs2_addr, $signed(imm), regs1_addr);
                         end
                         3'b001 : begin
-                            $fwrite(logfile, "sh    x%0d, %8d(x%0d)", regs2_addr, $signed(imm), regs1_addr);
+                            $fwrite(logfile, "sh    x%0d, %0d(x%0d)", regs2_addr, $signed(imm), regs1_addr);
                         end
                         3'b010 : begin
-                            $fwrite(logfile, "sw    x%0d, %8d(x%0d)", regs2_addr, $signed(imm), regs1_addr);
+                            $fwrite(logfile, "sw    x%0d, %0d(x%0d)", regs2_addr, $signed(imm), regs1_addr);
                         end
                     endcase
                     $fwrite(logfile, "    *0x%08x = 0x%08x", alu_dout_i, regs2_data_i);
@@ -304,6 +310,9 @@ module rv32ic_core_tracer
                     case (alu_op)
                         `RV_ALUOP_ADD : begin
                             $fwrite(logfile, "addi  x%0d, x%0d, %0d", regd_addr, regs1_addr, $signed(imm));
+                            if (regd_addr == 5'd2 && regs1_addr == 5'd2) begin
+                                stack_depth = stack_depth + $signed(imm);
+                            end
                         end
                         `RV_ALUOP_SLL : begin
                             $fwrite(logfile, "slli  x%0d, x%0d, %0d", regd_addr, regs1_addr, $signed(imm));
@@ -375,7 +384,7 @@ module rv32ic_core_tracer
                     end else if (csr_wr) begin
                         $fwrite(logfile, "csr[0x%02x] = x%0d", csr_addr[7:0], regs1_addr);
                     end else if (trap_rtn) begin
-                        call_depth = call_depth - 1;
+                        trap_depth = trap_depth - 1;
                         case (trap_rtn_mode)
                             2'b00 : begin
                                 $fwrite(logfile, "uret  (0x%8x)", csr_trap_rtn_addr_i);
