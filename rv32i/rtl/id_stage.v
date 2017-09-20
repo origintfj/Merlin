@@ -140,7 +140,7 @@ module id_stage
     //--------------------------------------------------------------
     // id stage qualifier logic
     //--------------------------------------------------------------
-    assign pfu_ack_o = pfu_dav_i & ~ids_stall & (~exs_stall_i | exs_valid_o);
+    assign pfu_ack_o = pfu_dav_i & ~ids_stall & (~exs_stall_i | ~exs_valid_o);
 
 
     //--------------------------------------------------------------
