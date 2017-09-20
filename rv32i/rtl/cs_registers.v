@@ -59,6 +59,8 @@ module cs_registers
         input  wire [`RV_XLEN-1:0] excp_pc_i,
         input  wire [`RV_XLEN-1:0] excp_ins_i,
         //
+        output wire                interrupt_o,
+        //
         output wire                jump_to_trap_o,
         output reg  [`RV_XLEN-1:0] trap_entry_addr_o,
         input  wire                trap_rtn_i,
@@ -141,7 +143,8 @@ module cs_registers
     assign raw_irqv = { irqm_extern_i, 1'b0, irqs_extern_i, irqu_extern_i,
                         irqm_timer_i,  1'b0, irqs_timer_i,  irqu_timer_i, 
                         irqm_softw_i,  1'b0, irqs_softw_i,  irqu_softw_i } | mip_q;
-    assign irqv = raw_irqv & mie_q;
+    assign irqv        = raw_irqv & mie_q;
+    assign interrupt_o = interrupt;
     //
     always @ (*)
     begin
