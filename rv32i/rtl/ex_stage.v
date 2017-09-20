@@ -40,6 +40,7 @@ module ex_stage
         input  wire                     ids_ins_uerr_i,
         input  wire                     ids_ins_ferr_i,
         input  wire                     ids_fencei_i,
+        input  wire                     ids_wfi_i,
         input  wire                     ids_jump_i,
         input  wire                     ids_ecall_i,
         input  wire                     ids_trap_rtn_i,
@@ -105,6 +106,7 @@ module ex_stage
     reg                    ids_ins_uerr_q;
     reg                    ids_ins_ferr_q;
     reg                    ids_fencei_q;
+    reg                    ids_wfi_q;
     reg                    ids_jump_q;
     reg                    ids_ecall_q;
     reg                    ids_trap_rtn_q;
@@ -123,6 +125,8 @@ module ex_stage
     reg     [`RV_XLEN-1:0] ids_regs2_data_q;
     reg              [4:0] ids_regd_addr_q;
     reg              [2:0] funct3_q;
+    // wfi latch
+    reg                    wfi_latch_q;
     // ex stage stall controller
     wire                   ex_stage_en;
     reg                    exs_stall;
@@ -138,6 +142,7 @@ module ex_stage
     wire                   csr_bad_addr;
     wire                   csr_readonly;
     wire                   csr_priv_too_low;
+    wire                   csr_interrupt;
     wire                   csr_jump_to_trap;
     wire    [`RV_XLEN-1:0] csr_trap_entry_addr;
     wire    [`RV_XLEN-1:0] csr_trap_rtn_addr;
@@ -285,6 +290,7 @@ module ex_stage
                 ids_ins_uerr_q      <= ids_ins_uerr_i;
                 ids_ins_ferr_q      <= ids_ins_ferr_i;
                 ids_fencei_q        <= ids_fencei_i;
+                ids_wfi_q           <= ids_wfi_i;
                 ids_jump_q          <= ids_jump_i;
                 ids_ecall_q         <= ids_ecall_i;
                 ids_trap_rtn_q      <= ids_trap_rtn_i;
@@ -316,13 +322,32 @@ module ex_stage
 
 
     //--------------------------------------------------------------
+    // wfi latch
+    //--------------------------------------------------------------
+    always @ (posedge clk_i or negedge resetb_i)
+    begin
+        if (~resetb_i) begin
+            wfi_latch_q <= 1'b0;
+        end else if (clk_en_i) begin
+            if (csr_interrupt) begin
+                wfi_latch_q <= 1'b0;
+            end else if (ex_stage_en) begin
+                if (execute_commit & ids_wfi_q) begin
+                    wfi_latch_q <= 1'b1;
+                end
+            end
+        end
+    end
+
+
+    //--------------------------------------------------------------
     // ex stage stall controller
     //--------------------------------------------------------------
     assign ex_stage_en = ~exs_stall;
     //
     always @ (*)
     begin
-        exs_stall = 1'b0;
+        exs_stall = wfi_latch_q;
         if (execute_commit) begin
             if ( ( lsq_full_i & (lq_wr_q | sq_wr_q)) |
                  (~lsq_empty_i & ids_fencei_q) ) begin
@@ -432,6 +457,8 @@ module ex_stage
             .excp_ecall_i      (excp_ecall),
             .excp_pc_i         (ids_pc_q),
             .excp_ins_i        (ids_ins_q),
+            //
+            .interrupt_o       (csr_interrupt),
             //
             .jump_to_trap_o    (csr_jump_to_trap),
             .trap_entry_addr_o (csr_trap_entry_addr),

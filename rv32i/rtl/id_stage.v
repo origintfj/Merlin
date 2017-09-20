@@ -31,6 +31,7 @@ module id_stage
         output reg                       exs_ins_uerr_o,
         output reg                       exs_ins_ferr_o,
         output reg                       exs_fencei_o,
+        output reg                       exs_wfi_o,
         output reg                       exs_jump_o,
         output reg                       exs_ecall_o,
         output reg                       exs_trap_rtn_o,
@@ -76,6 +77,7 @@ module id_stage
     // instruction decoder
     wire                     rv32i_ins_uerr;
     wire                     fencei_d;
+    wire                     wfi_d;
     wire                     jump_d;
     wire                     ecall_d;
     wire                     trap_rtn_d;
@@ -181,7 +183,7 @@ module id_stage
                 // egress side
             .ins_err_o             (rv32i_ins_uerr),
             .fencei_o              (fencei_d),
-            .wfi_o                 (), // TODO
+            .wfi_o                 (wfi_d),
             .jump_o                (jump_d),
             .ecall_o               (ecall_d),
             .trap_rtn_o            (trap_rtn_d),
@@ -318,6 +320,7 @@ module id_stage
                 exs_ins_o             <= { { `RV_XLEN-32 {1'b0} }, pfu_ins_i };
                 exs_sofid_o           <= pfu_sofid_i;
                 exs_fencei_o          <= fencei_d;
+                exs_wfi_o             <= wfi_d;
                 exs_jump_o            <= jump_d;
                 exs_ecall_o           <= ecall_d;
                 exs_trap_rtn_o        <= trap_rtn_d;

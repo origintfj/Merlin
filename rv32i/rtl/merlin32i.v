@@ -73,6 +73,7 @@ module merlin32i
     wire                     ids_exs_ins_uerr;
     wire                     ids_exs_ins_ferr;
     wire                     ids_exs_fencei;
+    wire                     ids_exs_wfi;
     wire                     ids_exs_jump;
     wire                     ids_exs_ecall;
     wire                     ids_exs_trap_rtn;
@@ -181,6 +182,7 @@ module merlin32i
             .exs_ins_uerr_o       (ids_exs_ins_uerr),
             .exs_ins_ferr_o       (ids_exs_ins_ferr),
             .exs_fencei_o         (ids_exs_fencei),
+            .exs_wfi_o            (ids_exs_wfi),
             .exs_jump_o           (ids_exs_jump),
             .exs_ecall_o          (ids_exs_ecall),
             .exs_trap_rtn_o       (ids_exs_trap_rtn),
@@ -245,6 +247,7 @@ module merlin32i
             .ids_ins_uerr_i       (ids_exs_ins_uerr),
             .ids_ins_ferr_i       (ids_exs_ins_ferr),
             .ids_fencei_i         (ids_exs_fencei),
+            .ids_wfi_i            (ids_exs_wfi),
             .ids_jump_i           (ids_exs_jump),
             .ids_ecall_i          (ids_exs_ecall),
             .ids_trap_rtn_i       (ids_exs_trap_rtn),
