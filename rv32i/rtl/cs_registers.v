@@ -139,7 +139,7 @@ module cs_registers
     // interrupt logic
     //--------------------------------------------------------------
     assign raw_irqv = { irqm_extern_i, 1'b0, irqs_extern_i, irqu_extern_i,
-                        irqm_timer_i,  1'b0, irqs_timer_i,  irqu_timer_i, 
+                        irqm_timer_i,  1'b0, irqs_timer_i,  irqu_timer_i,
                         irqm_softw_i,  1'b0, irqs_softw_i,  irqu_softw_i } | mip_q;
     assign irqv = raw_irqv & mie_q;
     //

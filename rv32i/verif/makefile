@@ -3,25 +3,50 @@ BOOT_ROM_FILE := programs/hello_world.c
 
 CARGS := -O0
 
-FILE_LIST := -I../rtl/include ../rtl/fifo.v ../rtl/pfu.v ../rtl/pfu32c.v ../rtl/rv32ic_expander.v ../rtl/rv32i_decoder.v ../rtl/regfile_integer.v ../rtl/id_stage.v ../rtl/alu.v ../rtl/cs_registers.v ../rtl/rv32ic_core_tracer.v ../rtl/ex_stage.v ../rtl/lsqueue.v ../rtl/merlin32i.v
+DESIGN_HOME := ../
 
-SARGS := -DRV_ASSERTS_ON -DRV_TRACER_ON
+RTL_DIR     := $(DESIGN_HOME)/rtl
+TB_SRC_DIR  := $(DESIGN_HOME)/verif/tb
+
+RTL_INC_DIR := $(RTL_DIR)/include
+
+RTL_FILE_LIST :=                         \
+	$(RTL_DIR)/fifo.v                    \
+	$(RTL_DIR)/pfu.v                     \
+	$(RTL_DIR)/pfu32c.v                  \
+	$(RTL_DIR)/rv32ic_expander.v         \
+	$(RTL_DIR)/rv32i_decoder.v           \
+	$(RTL_DIR)/regfile_integer.v         \
+	$(RTL_DIR)/id_stage.v                \
+	$(RTL_DIR)/alu.v                     \
+	$(RTL_DIR)/cs_registers.v            \
+	$(RTL_DIR)/rv32ic_core_tracer.v      \
+	$(RTL_DIR)/ex_stage.v                \
+	$(RTL_DIR)/lsqueue.v                 \
+	$(RTL_DIR)/merlin32i.v
+
+TB_FILE_LIST :=                          \
+	$(TB_SRC_DIR)/boot_rom.v             \
+	$(TB_SRC_DIR)/ssram.v                \
+	$(TB_SRC_DIR)/tb_core.v
 
 # optional alternate boot rom
 ifdef TESTNAME
 	BOOT_ROM_FILE := programs/$(TESTNAME).c
 endif
 
+IV_ARGS := -DRV_ASSERTS_ON -DRV_TRACER_ON
 ifdef TIMEOUT
-	SARGS += -Ptb_core.C_TIMEOUT=$(TIMEOUT)
+	IV_ARGS += -Ptb_core.C_TIMEOUT=$(TIMEOUT)
 endif
+IV_ARGS += $(USER_IV_ARGS)
 
 ifdef DUMP
 	DUMP_LXT2 := -lxt2
 endif
 
 ifdef GATES
-	FILE_LIST := osu035_stdcells.v merlin32i.rtlnopwr.v
+	RTL_FILE_LIST := osu035_stdcells.v merlin32i.rtlnopwr.v
 endif
 
 test:
@@ -54,7 +79,7 @@ build_mem: # -ffreestanding -fPIC -fno-builtin
 run: build_mem run_only
 
 run_only:
-	iverilog $(SARGS) -o tb_core.out -g2012 $(FILE_LIST) tb/boot_rom.v tb/ssram.v tb/tb_core.v
+	iverilog $(IV_ARGS) -o tb_core.out -g2012 -I$(RTL_INC_DIR) $(RTL_FILE_LIST) $(TB_FILE_LIST)
 	vvp tb_core.out $(DUMP_LXT2)
 
 synth:
