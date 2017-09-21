@@ -10,24 +10,24 @@ TB_SRC_DIR  := $(DESIGN_HOME)/verif/tb
 
 RTL_INC_DIR := $(RTL_DIR)/include
 
-RTL_FILE_LIST :=                         \
-	$(RTL_DIR)/fifo.v                    \
-	$(RTL_DIR)/pfu.v                     \
-	$(RTL_DIR)/pfu32c.v                  \
-	$(RTL_DIR)/rv32ic_expander.v         \
-	$(RTL_DIR)/rv32i_decoder.v           \
-	$(RTL_DIR)/regfile_integer.v         \
-	$(RTL_DIR)/id_stage.v                \
-	$(RTL_DIR)/alu.v                     \
-	$(RTL_DIR)/cs_registers.v            \
-	$(RTL_DIR)/rv32ic_core_tracer.v      \
-	$(RTL_DIR)/ex_stage.v                \
-	$(RTL_DIR)/lsqueue.v                 \
-	$(RTL_DIR)/merlin32i.v
+RTL_FILE_LIST :=                                 \
+	$(RTL_DIR)/merlin_fifo.v                     \
+	$(RTL_DIR)/merlin_pfu.v                      \
+	$(RTL_DIR)/merlin_pfu32ic.v                  \
+	$(RTL_DIR)/merlin_rv32ic_expander.v          \
+	$(RTL_DIR)/merlin_rv32i_decoder.v            \
+	$(RTL_DIR)/merlin_int_regs.v                 \
+	$(RTL_DIR)/merlin_id_stage.v                 \
+	$(RTL_DIR)/merlin_alu.v                      \
+	$(RTL_DIR)/merlin_cs_regs.v                  \
+	$(RTL_DIR)/merlin_rv32ic_trace_logger.v      \
+	$(RTL_DIR)/merlin_ex_stage.v                 \
+	$(RTL_DIR)/merlin_lsqueue.v                  \
+	$(RTL_DIR)/merlin.v
 
-TB_FILE_LIST :=                          \
-	$(TB_SRC_DIR)/boot_rom.v             \
-	$(TB_SRC_DIR)/ssram.v                \
+TB_FILE_LIST :=                                  \
+	$(TB_SRC_DIR)/boot_rom.v                     \
+	$(TB_SRC_DIR)/ssram.v                        \
 	$(TB_SRC_DIR)/tb_core.v
 
 # optional alternate boot rom

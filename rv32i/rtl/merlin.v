@@ -10,7 +10,7 @@
 
 `include "riscv_defs.v"
 
-module merlin32i
+module merlin
     #(
         parameter C_RESET_VECTOR = 32'h0
     )
@@ -123,11 +123,11 @@ module merlin32i
     //--------------------------------------------------------------
     // prefetch unit
     //--------------------------------------------------------------
-    pfu32c
+    merlin_pfu32ic
         #(
             .C_FIFO_DEPTH_X (2), // pfu fifo depth base 2 exponent
             .C_RESET_VECTOR (C_RESET_VECTOR)
-        ) i_pfu32c (
+        ) i_merlin_pfu32ic (
             // global
             .clk_i           (clk_i),
             .clk_en_i        (clk_en_i),
@@ -160,7 +160,7 @@ module merlin32i
     //--------------------------------------------------------------
     // instruction decoder stage
     //--------------------------------------------------------------
-    id_stage i_id_stage (
+    merlin_id_stage i_merlin_id_stage (
             // global
             .clk_i                (clk_i),
             .clk_en_i             (clk_en_i),
@@ -218,7 +218,7 @@ module merlin32i
     //--------------------------------------------------------------
     // execution stage
     //--------------------------------------------------------------
-    ex_stage i_ex_stage (
+    merlin_ex_stage i_merlin_ex_stage (
             // global
             .clk_i                (clk_i),
             .clk_en_i             (clk_en_i),
@@ -289,10 +289,10 @@ module merlin32i
     //--------------------------------------------------------------
     // load/store queue
     //--------------------------------------------------------------
-    lsqueue
+    merlin_lsqueue
         #(
             .C_FIFO_DEPTH_X     (2)
-        ) i_lsqueue (
+        ) i_merlin_lsqueue (
             // global
             .clk_i              (clk_i),
             .clk_en_i           (clk_en_i),

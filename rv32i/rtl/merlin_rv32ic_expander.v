@@ -8,7 +8,7 @@
 
 `include "riscv_defs.v"
 
-module rv32ic_expander
+module merlin_rv32ic_expander
     (
         input  wire [15:0] ins_i,
         output reg         ins_rvc_o,

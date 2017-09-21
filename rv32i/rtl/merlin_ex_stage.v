@@ -10,7 +10,7 @@
 // only jumps
 `include "riscv_defs.v"
 
-module ex_stage
+module merlin_ex_stage
     (
         // global
         input  wire                     clk_i,
@@ -386,7 +386,7 @@ module ex_stage
     //--------------------------------------------------------------
     // alu
     //--------------------------------------------------------------
-    alu i_alu (
+    merlin_alu i_merlin_alu (
             //
             .clk_i        (clk_i),
             .clk_en_i     (clk_en_i & ex_stage_en),
@@ -419,7 +419,7 @@ module ex_stage
         endcase
     end
     //
-    cs_registers i_cs_registers (
+    merlin_cs_regs i_merlin_cs_regs (
             //
             .clk_i             (clk_i),
             .clk_en_i          (clk_en_i),
@@ -476,7 +476,7 @@ module ex_stage
     // core tracer
     //--------------------------------------------------------------
 `ifdef RV_TRACER_ON
-    rv32ic_core_tracer i_rv32ic_core_tracer (
+    merlin_rv32ic_trace_logger i_merlin_rv32ic_trace_logger (
             // global
             .clk_i                 (clk_i),
             .clk_en_i              (clk_en_i),

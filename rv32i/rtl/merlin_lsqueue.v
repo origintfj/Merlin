@@ -11,7 +11,7 @@
 //
 `include "riscv_defs.v"
 
-module lsqueue
+module merlin_lsqueue
     #(
         parameter C_FIFO_DEPTH_X = 2
     )
@@ -139,11 +139,11 @@ module lsqueue
     assign req_fifo_rd_data_hpl    = req_fifo_rd_data[                   1 +:        2];
     assign req_fifo_rd_data_wr     = req_fifo_rd_data[0];
     //
-    fifo
+    merlin_fifo
         #(
             .C_FIFO_WIDTH   (C_REQ_FIFO_WIDTH),
             .C_FIFO_DEPTH_X (C_FIFO_DEPTH_X)
-        ) i_req_fifo (
+        ) i_req_merlin_fifo (
             // global
             .clk_i          (clk_i),
             .clk_en_i       (clk_en_i),
@@ -170,11 +170,11 @@ module lsqueue
     assign lsq_reg_addr_o                  = req_ctrl_fifo_rd_data[3 +: 5];
     assign req_ctrl_fifo_rd_data_funct3    = req_ctrl_fifo_rd_data[0 +: 3];
     //
-    fifo
+    merlin_fifo
         #(
             .C_FIFO_WIDTH   (C_RSP_CTRL_FIFO_WIDTH),
             .C_FIFO_DEPTH_X (C_FIFO_DEPTH_X)
-        ) i_rsp_ctrl_fifo (
+        ) i_rsp_ctrl_merlin_fifo (
             // global
             .clk_i          (clk_i),
             .clk_en_i       (clk_en_i),
@@ -197,11 +197,11 @@ module lsqueue
     //--------------------------------------------------------------
     assign rsp_data_fifo_wr_data = (drsprerr_i ? { `RV_XLEN {1'b0} } : drspdata_i); // if read error -> return 0
     //
-    fifo
+    merlin_fifo
         #(
             .C_FIFO_WIDTH   (`RV_XLEN),
             .C_FIFO_DEPTH_X (C_FIFO_DEPTH_X)
-        ) i_rsp_data_fifo (
+        ) i_rsp_data_merlin_fifo (
             // global
             .clk_i          (clk_i),
             .clk_en_i       (clk_en_i),

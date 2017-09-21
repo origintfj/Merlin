@@ -19,7 +19,7 @@
 
 `include "riscv_defs.v"
 
-module cs_registers
+module merlin_cs_regs
     (
         //
         input  wire                clk_i,

@@ -8,7 +8,7 @@
 
 `include "riscv_defs.v"
 
-module regfile_integer
+module merlin_int_regs
     (
         // global
         input  wire                clk_i,

@@ -8,7 +8,7 @@
 
 `include "riscv_defs.v"
 
-module fifo
+module merlin_fifo
     #(
         parameter C_FIFO_WIDTH   = 1,
         parameter C_FIFO_DEPTH_X = 1,

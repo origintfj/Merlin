@@ -10,7 +10,7 @@
 
 `include "riscv_defs.v"
 
-module alu
+module merlin_alu
     (
         //
         input  wire                   clk_i,

@@ -94,12 +94,12 @@ module tb_core;
     end
 
 
-    // merlin rv32i core
+    // merlin core
     //
-    merlin32i
+    merlin
         #(
             .C_RESET_VECTOR      ('0)
-        ) i_merlin32i (
+        ) i_merlin (
             // global
             .clk_i               (clk),
             .clk_en_i            (1'b1),
@@ -182,17 +182,17 @@ module tb_core;
 
     // assersions
     //
-    assign rom_data[ 7: 0] = i_boot_rom.mem[i_merlin32i.pfu_ids_pc + 0];
-    assign rom_data[15: 8] = i_boot_rom.mem[i_merlin32i.pfu_ids_pc + 1];
-    assign rom_data[23:16] = i_boot_rom.mem[i_merlin32i.pfu_ids_pc + 2];
-    assign rom_data[31:24] = i_boot_rom.mem[i_merlin32i.pfu_ids_pc + 3];
+    assign rom_data[ 7: 0] = i_boot_rom.mem[i_merlin.pfu_ids_pc + 0];
+    assign rom_data[15: 8] = i_boot_rom.mem[i_merlin.pfu_ids_pc + 1];
+    assign rom_data[23:16] = i_boot_rom.mem[i_merlin.pfu_ids_pc + 2];
+    assign rom_data[31:24] = i_boot_rom.mem[i_merlin.pfu_ids_pc + 3];
     always @ (posedge clk or negedge resetb)
     begin
         if (~resetb) begin
         end else begin
-            if (i_merlin32i.pfu_ids_dav == 1'b1) begin
-                if (i_merlin32i.pfu_ids_ins != rom_data) begin
-                    $display("ERROR: PFU data output missmatch, Got 0x%08X, Expected 0x%08X.", i_merlin32i.pfu_ids_ins, rom_data);
+            if (i_merlin.pfu_ids_dav == 1'b1) begin
+                if (i_merlin.pfu_ids_ins != rom_data) begin
+                    $display("ERROR: PFU data output missmatch, Got 0x%08X, Expected 0x%08X.", i_merlin.pfu_ids_ins, rom_data);
                 end
             end
         end

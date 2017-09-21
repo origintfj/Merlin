@@ -8,7 +8,7 @@
 
 `include "riscv_defs.v"
 
-module rv32i_decoder
+module merlin_rv32i_decoder
     (
         // instruction decoder interface
             // ingress side

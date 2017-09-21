@@ -8,7 +8,7 @@
 
 `include "riscv_defs.v"
 
-module rv32ic_core_tracer
+module merlin_rv32ic_trace_logger
     (
         // global
         input wire                clk_i,
@@ -69,7 +69,7 @@ module rv32ic_core_tracer
     //--------------------------------------------------------------
     // rv32ic instruction expander
     //--------------------------------------------------------------
-    rv32ic_expander i_rv32ic_expander (
+    merlin_rv32ic_expander i_merlin_rv32ic_expander (
             .ins_i     (ins_value_i[15:0]),
             .ins_rvc_o (ins_expanded_valid),
             .ins_err_o (),
@@ -86,7 +86,7 @@ module rv32ic_core_tracer
     //--------------------------------------------------------------
     // decoder
     //--------------------------------------------------------------
-    rv32i_decoder i_rv32i_decoder
+    merlin_rv32i_decoder i_merlin_rv32i_decoder
         (
             // instruction decoder interface
                 // ingress side

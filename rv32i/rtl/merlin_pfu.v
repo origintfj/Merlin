@@ -8,7 +8,7 @@
 
 `include "riscv_defs.v"
 
-module pfu
+module merlin_pfu
     #(
         parameter C_FIFO_DEPTH_X = 2, // depth >= read latency + 2
         parameter C_RESET_VECTOR = { `RV_XLEN {1'b0} }
@@ -207,11 +207,11 @@ module pfu
     assign ids_pc_o       = fifo_dout[ C_FIFO_PC_LSB +: `RV_XLEN];
     assign fifo_dout_data = fifo_dout[C_FIFO_INS_LSB +: `RV_XLEN];
     //
-    fifo
+    merlin_fifo
         #(
             .C_FIFO_WIDTH   (C_FIFO_WIDTH),
             .C_FIFO_DEPTH_X (C_FIFO_DEPTH_X)
-        ) i_fifo (
+        ) i_merlin_fifo (
             // global
             .clk_i          (clk_i),
             .clk_en_i       (clk_en_i),

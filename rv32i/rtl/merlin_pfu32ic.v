@@ -8,7 +8,7 @@
 
 `include "riscv_defs.v"
 
-module pfu32c
+module merlin_pfu32ic
     #(
         parameter C_FIFO_DEPTH_X = 2, // depth >= read latency + 2
         parameter C_RESET_VECTOR = 32'b0
@@ -209,11 +209,11 @@ module pfu32c
     assign ids_ferr_o    = fifo_line_dout[C_FERR_LSB +: 1];
     assign ids_pc_o      = { fifo_line_dout[C_FIFO_PC_LSB +: 30], atom_base, 1'b0 };
     //
-    fifo
+    merlin_fifo
         #(
             .C_FIFO_WIDTH   (C_FIFO_LINE_WIDTH),
             .C_FIFO_DEPTH_X (C_FIFO_DEPTH_X)
-        ) i_line_fifo (
+        ) i_line_merlin_fifo (
             // global
             .clk_i          (clk_i),
             .clk_en_i       (clk_en_i),
@@ -243,11 +243,11 @@ module pfu32c
         assign fifo_atom_dout_ins[genvar_i] = fifo_atom_dout[genvar_i][15:0];
         assign fifo_atom_dout_sof[genvar_i] = fifo_atom_dout[genvar_i][16];
         //
-        fifo
+        merlin_fifo
             #(
                 .C_FIFO_WIDTH   (17), // <last> <first> <instruction atom>
                 .C_FIFO_DEPTH_X (C_FIFO_DEPTH_X)
-            ) i_atom_fifo (
+            ) i_atom_merlin_fifo (
                 // global
                 .clk_i          (clk_i),
                 .clk_en_i       (clk_en_i),

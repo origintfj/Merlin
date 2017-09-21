@@ -8,7 +8,7 @@
 
 `include "riscv_defs.v"
 
-module id_stage
+module merlin_id_stage
     (
         // global
         input  wire                      clk_i,
@@ -148,7 +148,7 @@ module id_stage
     //--------------------------------------------------------------
     // rv32ic instruction expander
     //--------------------------------------------------------------
-    rv32ic_expander i_rv32ic_expander (
+    merlin_rv32ic_expander i_merlin_rv32ic_expander (
             .ins_i     (pfu_ins_i[15:0]),
             .ins_rvc_o (ins_expanded_valid),
             .ins_err_o (rv32ic_ins_uerr),
@@ -176,7 +176,7 @@ module id_stage
     //--------------------------------------------------------------
     // instruction decoder
     //--------------------------------------------------------------
-    rv32i_decoder i_rv32i_decoder (
+    merlin_rv32i_decoder i_merlin_rv32i_decoder (
             // instruction decoder interface
                 // ingress side
             .ins_i                 (rv32i_ins),
@@ -261,7 +261,7 @@ module id_stage
     //--------------------------------------------------------------
     // integer register file
     //--------------------------------------------------------------
-    regfile_integer i_regfile_integer (
+    merlin_int_regs i_merlin_int_regs (
             // global
             .clk_i         (clk_i),
             .clk_en_i      (clk_en_i),
