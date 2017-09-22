@@ -10,8 +10,9 @@
 
 module merlin_pfu32ic
     #(
-        parameter C_FIFO_DEPTH_X = 2, // depth >= read latency + 2
-        parameter C_RESET_VECTOR = 32'b0
+        parameter C_FIFO_PASSTHROUGH = 0,
+        parameter C_FIFO_DEPTH_X     = 2, // depth >= read latency + 2
+        parameter C_RESET_VECTOR     = 32'b0
     )
     (
         // global
@@ -211,23 +212,24 @@ module merlin_pfu32ic
     //
     merlin_fifo
         #(
-            .C_FIFO_WIDTH   (C_FIFO_LINE_WIDTH),
-            .C_FIFO_DEPTH_X (C_FIFO_DEPTH_X)
+            .C_FIFO_PASSTHROUGH (C_FIFO_PASSTHROUGH),
+            .C_FIFO_WIDTH       (C_FIFO_LINE_WIDTH),
+            .C_FIFO_DEPTH_X     (C_FIFO_DEPTH_X)
         ) i_line_merlin_fifo (
             // global
-            .clk_i          (clk_i),
-            .clk_en_i       (clk_en_i),
-            .resetb_i       (resetb_i),
+            .clk_i              (clk_i),
+            .clk_en_i           (clk_en_i),
+            .resetb_i           (resetb_i),
             // control and status
-            .flush_i        (exs_pc_wr_i | vectoring_q),
-            .empty_o        (fifo_line_empty),
-            .full_o         (),
+            .flush_i            (exs_pc_wr_i | vectoring_q),
+            .empty_o            (fifo_line_empty),
+            .full_o             (),
             // write port
-            .wr_i           (response),
-            .din_i          (fifo_line_din),
+            .wr_i               (response),
+            .din_i              (fifo_line_din),
             // read port
-            .rd_i           (fifo_line_rd),
-            .dout_o         (fifo_line_dout)
+            .rd_i               (fifo_line_rd),
+            .dout_o             (fifo_line_dout)
         );
 
 
@@ -245,23 +247,24 @@ module merlin_pfu32ic
         //
         merlin_fifo
             #(
-                .C_FIFO_WIDTH   (17), // <last> <first> <instruction atom>
-                .C_FIFO_DEPTH_X (C_FIFO_DEPTH_X)
+                .C_FIFO_PASSTHROUGH (C_FIFO_PASSTHROUGH),
+                .C_FIFO_WIDTH       (17), // <last> <first> <instruction atom>
+                .C_FIFO_DEPTH_X     (C_FIFO_DEPTH_X)
             ) i_atom_merlin_fifo (
                 // global
-                .clk_i          (clk_i),
-                .clk_en_i       (clk_en_i),
-                .resetb_i       (resetb_i),
+                .clk_i              (clk_i),
+                .clk_en_i           (clk_en_i),
+                .resetb_i           (resetb_i),
                 // control and status
-                .flush_i        (exs_pc_wr_i | vectoring_q),
-                .empty_o        (fifo_atom_empty[genvar_i]),
-                .full_o         (),
+                .flush_i            (exs_pc_wr_i | vectoring_q),
+                .empty_o            (fifo_atom_empty[genvar_i]),
+                .full_o             (),
                 // write port
-                .wr_i           (response & fifo_atom_wr_mask[genvar_i]),
-                .din_i          ({ fifo_atom_din_sof[genvar_i], irspdata_i[16*genvar_i +: 16] }),
+                .wr_i               (response & fifo_atom_wr_mask[genvar_i]),
+                .din_i              ({ fifo_atom_din_sof[genvar_i], irspdata_i[16*genvar_i +: 16] }),
                 // read port
-                .rd_i           (ids_ack_i & fifo_atom_rd_mask[genvar_i]),
-                .dout_o         (fifo_atom_dout[genvar_i])
+                .rd_i               (ids_ack_i & fifo_atom_rd_mask[genvar_i]),
+                .dout_o             (fifo_atom_dout[genvar_i])
             );
     end
     endgenerate

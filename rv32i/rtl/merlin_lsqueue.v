@@ -13,7 +13,8 @@
 
 module merlin_lsqueue
     #(
-        parameter C_FIFO_DEPTH_X = 2
+        parameter C_FIFO_PASSTHROUGH = 0,
+        parameter C_FIFO_DEPTH_X     = 2
     )
     (
         // global
@@ -141,23 +142,24 @@ module merlin_lsqueue
     //
     merlin_fifo
         #(
-            .C_FIFO_WIDTH   (C_REQ_FIFO_WIDTH),
-            .C_FIFO_DEPTH_X (C_FIFO_DEPTH_X)
+            .C_FIFO_PASSTHROUGH (C_FIFO_PASSTHROUGH),
+            .C_FIFO_WIDTH       (C_REQ_FIFO_WIDTH),
+            .C_FIFO_DEPTH_X     (C_FIFO_DEPTH_X)
         ) i_req_merlin_fifo (
             // global
-            .clk_i          (clk_i),
-            .clk_en_i       (clk_en_i),
-            .resetb_i       (resetb_i),
+            .clk_i              (clk_i),
+            .clk_en_i           (clk_en_i),
+            .resetb_i           (resetb_i),
             // control and status
-            .flush_i        (1'b0),
-            .empty_o        (req_fifo_empty),
-            .full_o         (exs_full_o),
+            .flush_i            (1'b0),
+            .empty_o            (req_fifo_empty),
+            .full_o             (exs_full_o),
             // write port
-            .wr_i           (req_fifo_wr),
-            .din_i          (req_fifo_wr_data),
+            .wr_i               (req_fifo_wr),
+            .din_i              (req_fifo_wr_data),
             // read port
-            .rd_i           (request),
-            .dout_o         (req_fifo_rd_data)
+            .rd_i               (request),
+            .dout_o             (req_fifo_rd_data)
         );
 
 
@@ -172,23 +174,24 @@ module merlin_lsqueue
     //
     merlin_fifo
         #(
-            .C_FIFO_WIDTH   (C_RSP_CTRL_FIFO_WIDTH),
-            .C_FIFO_DEPTH_X (C_FIFO_DEPTH_X)
+            .C_FIFO_PASSTHROUGH (C_FIFO_PASSTHROUGH),
+            .C_FIFO_WIDTH       (C_RSP_CTRL_FIFO_WIDTH),
+            .C_FIFO_DEPTH_X     (C_FIFO_DEPTH_X)
         ) i_rsp_ctrl_merlin_fifo (
             // global
-            .clk_i          (clk_i),
-            .clk_en_i       (clk_en_i),
-            .resetb_i       (resetb_i),
+            .clk_i              (clk_i),
+            .clk_en_i           (clk_en_i),
+            .resetb_i           (resetb_i),
             // control and status
-            .flush_i        (1'b0),
-            .empty_o        (rsp_ctrl_fifo_empty),
-            .full_o         (rsp_ctrl_fifo_full),
+            .flush_i            (1'b0),
+            .empty_o            (rsp_ctrl_fifo_empty),
+            .full_o             (rsp_ctrl_fifo_full),
             // write port
-            .wr_i           (request & ~req_fifo_rd_data_wr),
-            .din_i          (req_ctrl_fifo_wr_data), // <regd_addr><funct3>
+            .wr_i               (request & ~req_fifo_rd_data_wr),
+            .din_i              (req_ctrl_fifo_wr_data), // <regd_addr><funct3>
             // read port
-            .rd_i           (lsq_reg_wr_o),
-            .dout_o         (req_ctrl_fifo_rd_data)
+            .rd_i               (lsq_reg_wr_o),
+            .dout_o             (req_ctrl_fifo_rd_data)
         );
 
 
@@ -199,23 +202,24 @@ module merlin_lsqueue
     //
     merlin_fifo
         #(
-            .C_FIFO_WIDTH   (`RV_XLEN),
-            .C_FIFO_DEPTH_X (C_FIFO_DEPTH_X)
+            .C_FIFO_PASSTHROUGH (C_FIFO_PASSTHROUGH),
+            .C_FIFO_WIDTH       (`RV_XLEN),
+            .C_FIFO_DEPTH_X     (C_FIFO_DEPTH_X)
         ) i_rsp_data_merlin_fifo (
             // global
-            .clk_i          (clk_i),
-            .clk_en_i       (clk_en_i),
-            .resetb_i       (resetb_i),
+            .clk_i              (clk_i),
+            .clk_en_i           (clk_en_i),
+            .resetb_i           (resetb_i),
             // control and status
-            .flush_i        (1'b0),
-            .empty_o        (rsp_data_fifo_empty),
-            .full_o         (rsp_data_fifo_full),
+            .flush_i            (1'b0),
+            .empty_o            (rsp_data_fifo_empty),
+            .full_o             (rsp_data_fifo_full),
             // write port
-            .wr_i           (drspready_o & ~drspwerr_i),
-            .din_i          (rsp_data_fifo_wr_data),
+            .wr_i               (drspready_o & ~drspwerr_i),
+            .din_i              (rsp_data_fifo_wr_data),
             // read port
-            .rd_i           (lsq_reg_wr_o),
-            .dout_o         (rsp_data_fifo_rd_data)
+            .rd_i               (lsq_reg_wr_o),
+            .dout_o             (rsp_data_fifo_rd_data)
         );
 
 

@@ -125,8 +125,9 @@ module merlin
     //--------------------------------------------------------------
     merlin_pfu32ic
         #(
-            .C_FIFO_DEPTH_X (2), // pfu fifo depth base 2 exponent
-            .C_RESET_VECTOR (C_RESET_VECTOR)
+            .C_FIFO_PASSTHROUGH (`RV_PFU_BYPASS),
+            .C_FIFO_DEPTH_X     (2), // pfu fifo depth base 2 exponent
+            .C_RESET_VECTOR     (C_RESET_VECTOR)
         ) i_merlin_pfu32ic (
             // global
             .clk_i           (clk_i),
@@ -291,6 +292,7 @@ module merlin
     //--------------------------------------------------------------
     merlin_lsqueue
         #(
+            .C_FIFO_PASSTHROUGH (`RV_LSQUEUE_BYPASS),
             .C_FIFO_DEPTH_X     (2)
         ) i_merlin_lsqueue (
             // global

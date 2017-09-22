@@ -10,8 +10,9 @@
 
 module merlin_pfu
     #(
-        parameter C_FIFO_DEPTH_X = 2, // depth >= read latency + 2
-        parameter C_RESET_VECTOR = { `RV_XLEN {1'b0} }
+        parameter C_FIFO_PASSTHROUGH = 0,
+        parameter C_FIFO_DEPTH_X     = 2, // depth >= read latency + 2
+        parameter C_RESET_VECTOR     = { `RV_XLEN {1'b0} }
     )
     (
         // global
@@ -209,8 +210,9 @@ module merlin_pfu
     //
     merlin_fifo
         #(
-            .C_FIFO_WIDTH   (C_FIFO_WIDTH),
-            .C_FIFO_DEPTH_X (C_FIFO_DEPTH_X)
+            .C_FIFO_PASSTHROUGH (C_FIFO_PASSTHROUGH),
+            .C_FIFO_WIDTH       (C_FIFO_WIDTH),
+            .C_FIFO_DEPTH_X     (C_FIFO_DEPTH_X)
         ) i_merlin_fifo (
             // global
             .clk_i          (clk_i),

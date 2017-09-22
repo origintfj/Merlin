@@ -17,6 +17,8 @@
 //--------------------------------------------------------------
 //`define RV_CONFIG_STDEXT_64 // TODO
 `define RV_CONFIG_STDEXT_C
+//`define RV_LSQUEUE_PASSTHROUGH
+//`define RV_PFU_PASSTHROUGH
 
 //--------------------------------------------------------------
 // Global Definitions
@@ -25,6 +27,17 @@
     `define RV_XLEN_X   6 // 64-bit
 `else
     `define RV_XLEN_X   5 // 32-bit
+`endif
+
+`ifdef RV_LSQUEUE_PASSTHROUGH
+    `define RV_LSQUEUE_BYPASS   1
+`else
+    `define RV_LSQUEUE_BYPASS   0
+`endif
+`ifdef RV_PFU_PASSTHROUGH
+    `define RV_PFU_BYPASS       1
+`else
+    `define RV_PFU_BYPASS       0
 `endif
 
 `define RV_XLEN                 (2**`RV_XLEN_X)

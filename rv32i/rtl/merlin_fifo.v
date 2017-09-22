@@ -10,10 +10,11 @@
 
 module merlin_fifo
     #(
-        parameter C_FIFO_WIDTH   = 1,
-        parameter C_FIFO_DEPTH_X = 1,
+        parameter C_FIFO_PASSTHROUGH = 0,
+        parameter C_FIFO_WIDTH       = 1,
+        parameter C_FIFO_DEPTH_X     = 1,
         //
-        parameter C_FIFO_DEPTH   = 2**C_FIFO_DEPTH_X
+        parameter C_FIFO_DEPTH       = 2**C_FIFO_DEPTH_X
     )
     (
         // global
@@ -34,6 +35,9 @@ module merlin_fifo
 
     //--------------------------------------------------------------
 
+    // interface assignments
+    // status signals
+    reg                    empty_int;
     // pointers
     reg [C_FIFO_DEPTH_X:0] rd_ptr_q;
     reg [C_FIFO_DEPTH_X:0] wr_ptr_q;
@@ -45,7 +49,13 @@ module merlin_fifo
     //--------------------------------------------------------------
     // interface assignments
     //--------------------------------------------------------------
-    assign dout_o = mem[rd_ptr_q[C_FIFO_DEPTH_X-1:0]];
+    generate if (C_FIFO_PASSTHROUGH) begin
+        assign empty_o = (empty_int == 1'b1 ? ~wr_i : empty_int);
+        assign dout_o  = (empty_int == 1'b1 ? din_i : mem[rd_ptr_q[C_FIFO_DEPTH_X-1:0]]);
+    end else begin
+        assign empty_o = empty_int;
+        assign dout_o  = mem[rd_ptr_q[C_FIFO_DEPTH_X-1:0]];
+    end endgenerate
 
 
     //--------------------------------------------------------------
@@ -53,13 +63,13 @@ module merlin_fifo
     //--------------------------------------------------------------
     always @ (*)
     begin
-        empty_o = 1'b0;
-        full_o  = 1'b0;
+        empty_int = 1'b0;
+        full_o    = 1'b0;
         if (rd_ptr_q[C_FIFO_DEPTH_X-1:0] == wr_ptr_q[C_FIFO_DEPTH_X-1:0]) begin
             if (rd_ptr_q[C_FIFO_DEPTH_X] == wr_ptr_q[C_FIFO_DEPTH_X]) begin
-                empty_o = 1'b1;
+                empty_int = 1'b1;
             end else begin
-                full_o  = 1'b1;
+                full_o = 1'b1;
             end
         end
     end
