@@ -58,6 +58,8 @@ module merlin_lsqueue
 
     // top-level assignments
     wire                             request;
+    // request data formatter
+    reg               [`RV_XLEN-1:0] exs_regs2_data_justified;
     // request fifo
     parameter C_REQ_FIFO_WIDTH = `RV_XLEN + `RV_XLEN + 3 + 2 + 1;
     wire                             req_fifo_wr;
@@ -112,6 +114,23 @@ module merlin_lsqueue
 
 
     //--------------------------------------------------------------
+    // request data formatter
+    //--------------------------------------------------------------
+    always @ (*)
+    begin
+        case (exs_funct3_i)
+            3'b000  : exs_regs2_data_justified = { exs_regs2_data_i[ 7:0],
+                                                   exs_regs2_data_i[ 7:0],
+                                                   exs_regs2_data_i[ 7:0],
+                                                   exs_regs2_data_i[ 7:0] };
+            3'b001  : exs_regs2_data_justified = { exs_regs2_data_i[15:0],
+                                                   exs_regs2_data_i[15:0] };
+            default : exs_regs2_data_justified = exs_regs2_data_i;
+        endcase
+    end
+
+
+    //--------------------------------------------------------------
     // request fifo
     //--------------------------------------------------------------
     assign req_fifo_wr = exs_lq_wr_i | exs_sq_wr_i;
@@ -126,7 +145,7 @@ module merlin_lsqueue
                                  exs_sq_wr_i };
         end else begin
             req_fifo_wr_data = { exs_addr_i,
-                                 exs_regs2_data_i,
+                                 exs_regs2_data_justified,
                                  exs_funct3_i,
                                  exs_hpl_i,
                                  exs_sq_wr_i };
