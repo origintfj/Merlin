@@ -8,6 +8,8 @@
 
 `include "riscv_defs.v"
 
+`ifdef RV_TRACER_ON
+
 module merlin_rv32ic_trace_logger
     (
         // global
@@ -405,3 +407,4 @@ module merlin_rv32ic_trace_logger
         end
     end
 endmodule
+`endif

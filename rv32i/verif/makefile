@@ -71,10 +71,10 @@ clean:
 	rm -f *.dis
 
 build_mem: # -ffreestanding -fPIC -fno-builtin
-	$(CC_DIR)/riscv32-unknown-elf-gcc -nostdinc -nostdlib -fPIC -e _entry -T link.ld $(CARGS) $(BOOT_ROM_FILE) -o test.out
-	$(CC_DIR)/riscv32-unknown-elf-objcopy -O verilog test.out mem.hex
+	$(CC_DIR)/bin/riscv32-unknown-elf-gcc -nostdinc -nostdlib -fPIC -e _entry -T link.ld $(CARGS) $(BOOT_ROM_FILE) -o test.out
+	$(CC_DIR)/bin/riscv32-unknown-elf-objcopy -O verilog test.out mem.hex
 	#cat mem.hex
-	$(CC_DIR)/riscv32-unknown-elf-objdump -D test.out > test.dis
+	$(CC_DIR)/bin/riscv32-unknown-elf-objdump -D test.out > test.dis
 
 run: build_mem run_only
 
