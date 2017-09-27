@@ -11,4 +11,3 @@ This is an open source implementation or a 32-bit base integer (with optional 'C
 * Implement the performance counters.
 
 ### Optional TODOs
-* Change the "wfi" instruction implementation from "nop" to one which sleeps the CPU while waiting for interrupt.
