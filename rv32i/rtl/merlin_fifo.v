@@ -23,7 +23,7 @@ module merlin_fifo
         input  wire                     resetb_i,
         // control and status
         input  wire                     flush_i,
-        output reg                      empty_o,
+        output wire                     empty_o,
         output reg                      full_o,
         // write port
         input  wire                     wr_i,
