@@ -70,6 +70,9 @@ clean:
 	rm -f *.lxt
 	rm -f *.dis
 
+lint:
+	verilator --lint-only --top-module merlin -I$(RTL_INC_DIR) $(RTL_FILE_LIST)
+
 build_mem: # -ffreestanding -fPIC -fno-builtin
 	$(CC_DIR)/bin/riscv32-unknown-elf-gcc -nostdinc -nostdlib -fPIC -e _entry -T link.ld $(CARGS) $(BOOT_ROM_FILE) -o test.out
 	$(CC_DIR)/bin/riscv32-unknown-elf-objcopy -O verilog test.out mem.hex

@@ -304,6 +304,8 @@ module merlin_ex_stage
                     `RV_ZONE_LOADQ   : lq_wr_q   <= 1'b1;
                     `RV_ZONE_STOREQ  : sq_wr_q   <= 1'b1;
                     `RV_ZONE_REGFILE : regd_wr_q <= 1'b1;
+                    default : begin
+                    end
                 endcase
                 //
                 ids_csr_rd_q      <= ids_csr_rd_i;

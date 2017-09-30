@@ -550,6 +550,8 @@ module merlin_cs_regs
                             ucause_q <= trap_cause;
                             utval_q  <= trap_value;
                         end
+                        default : begin
+                        end
                     endcase
                 end else if (trap_rtn_i) begin
                     mstatus_q[`RV_CSR_STATUS_MPP_RANGE] <= `RV_CSR_MODE_USER;
@@ -569,6 +571,8 @@ module merlin_cs_regs
                         `RV_CSR_MODE_USER : begin
                             mstatus_q[`RV_CSR_STATUS_UIE_INDEX]  <= mstatus_q[`RV_CSR_STATUS_UPIE_INDEX];
                             mstatus_q[`RV_CSR_STATUS_UPIE_INDEX] <= 1'b1;
+                        end
+                        default : begin
                         end
                     endcase
                 end else if (wr_i) begin
