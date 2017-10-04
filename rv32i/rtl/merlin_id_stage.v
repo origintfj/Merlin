@@ -104,6 +104,8 @@ module merlin_id_stage
     wire              [11:0] csr_addr_d;
     wire                     conditional_d;
     // id stage stall controller
+    wire                     s1_lq_fwd_available;
+    wire                     s2_lq_fwd_available;
     reg                      ids_stall;
     reg               [31:1] reg_loading_vector_q;
     // integer register file
@@ -113,6 +115,9 @@ module merlin_id_stage
     reg                      fwd_regd_wr_q;
     reg                [4:0] fwd_regd_addr_q;
     reg       [`RV_XLEN-1:0] fwd_regd_data_q;
+    reg                      fwd_regl_wr_q;
+    reg                [4:0] fwd_regl_addr_q;
+    reg       [`RV_XLEN-1:0] fwd_regl_data_q;
     // id register stage
     reg       [`RV_XLEN-1:0] pc_q;
     reg                      ex_udefins_err_q;
@@ -223,18 +228,26 @@ module merlin_id_stage
      * No register can be targeted if it has a pending load
      *
      */
+    assign s1_lq_fwd_available = (lsq_reg_wr_i  && lsq_reg_addr_i  == regs1_addr) ||
+                                 (fwd_regl_wr_q && fwd_regl_addr_q == regs1_addr);
+    assign s2_lq_fwd_available = (lsq_reg_wr_i  && lsq_reg_addr_i  == regs2_addr) ||
+                                 (fwd_regl_wr_q && fwd_regl_addr_q == regs2_addr);
+    //
     always @ (*)
     begin
         ids_stall = 1'b0;
         //
         if (pfu_dav_i) begin
-            if ( ( regs1_addr != 5'b0 && regs1_rd && reg_loading_vector_q[regs1_addr]) ||
-                 ( regs2_addr != 5'b0 && regs2_rd && reg_loading_vector_q[regs2_addr]) ||
+            if ( (regs1_addr != 5'b0 && regs1_rd &&
+                   reg_loading_vector_q[regs1_addr] && !s1_lq_fwd_available) ||
+                 (regs2_addr != 5'b0 && regs2_rd &&
+                   reg_loading_vector_q[regs2_addr] && !s2_lq_fwd_available) ||
                  (regd_addr_d != 5'b0 && regd_tgt && reg_loading_vector_q[regd_addr_d]) ) begin
                 ids_stall = 1'b1;
             end
         end
     end
+    //
     always @ (posedge clk_i or negedge resetb_i)
     begin
         if (~resetb_i) begin
@@ -282,8 +295,9 @@ module merlin_id_stage
 
 
     //--------------------------------------------------------------
-    // forwarding register
+    // forwarding registers
     //--------------------------------------------------------------
+    // regd forwarding register
     always @ (posedge clk_i or negedge resetb_i)
     begin
         if (~resetb_i) begin
@@ -294,6 +308,19 @@ module merlin_id_stage
             fwd_regd_wr_q   <= exs_regd_wr_i;
             fwd_regd_addr_q <= exs_regd_addr_i;
             fwd_regd_data_q <= exs_regd_data_i;
+        end
+    end
+    // lqueue write-back forwarding register
+    always @ (posedge clk_i or negedge resetb_i)
+    begin
+        if (~resetb_i) begin
+            fwd_regl_wr_q   <= 1'b0;
+            //fwd_regl_addr_q <= 5'b0; // NOTE: don't actually care
+            //fwd_regl_data_q <= { `RV_XLEN {1'b0} }; // NOTE: don't actually care
+        end else if (clk_en_i) begin
+            fwd_regl_wr_q   <= lsq_reg_wr_i;
+            fwd_regl_addr_q <= lsq_reg_addr_i;
+            fwd_regl_data_q <= lsq_reg_data_i;
         end
     end
 
@@ -364,8 +391,14 @@ module merlin_id_stage
             // operand at alu output
             fwd_mux_regs1_data = exs_regd_data_i;
         end else if (fwd_regd_wr_q && fwd_regd_addr_q == regs1_addr_q) begin
-            // operand at forwarding register output
+            // operand at alu forwarding register output
             fwd_mux_regs1_data = fwd_regd_data_q;
+        end else if (lsq_reg_wr_i && lsq_reg_addr_i == regs1_addr_q) begin
+            // operand at load queue write-back output
+            fwd_mux_regs1_data = lsq_reg_data_i;
+        end else if (fwd_regl_wr_q && fwd_regl_addr_q == regs1_addr_q) begin
+            // operand at load queue forwarding register output
+            fwd_mux_regs1_data = fwd_regl_data_q;
         end else begin
             // operand at register file output
             fwd_mux_regs1_data = regs1_dout;
@@ -381,8 +414,14 @@ module merlin_id_stage
             // operand at alu output
             fwd_mux_regs2_data = exs_regd_data_i;
         end else if (fwd_regd_wr_q && fwd_regd_addr_q == regs2_addr_q) begin
-            // operand at forwarding register output
+            // operand at alu forwarding register output
             fwd_mux_regs2_data = fwd_regd_data_q;
+        end else if (lsq_reg_wr_i && lsq_reg_addr_i == regs2_addr_q) begin
+            // operand at load queue write-back output
+            fwd_mux_regs2_data = lsq_reg_data_i;
+        end else if (fwd_regl_wr_q && fwd_regl_addr_q == regs2_addr_q) begin
+            // operand at load queue forwarding register output
+            fwd_mux_regs2_data = fwd_regl_data_q;
         end else begin
             // operand at register file output
             fwd_mux_regs2_data = regs2_dout;
@@ -450,8 +489,19 @@ module merlin_id_stage
     begin
         if (clk_en_i) begin
             // register file access assertions
-            `RV_ASSERT(!(id_stage_en & regs1_rd == 1'b1 && reg_loading_vector_q[regs1_addr]), "Register read when pending a load.")
-            `RV_ASSERT(!(id_stage_en & regs2_rd == 1'b1 && reg_loading_vector_q[regs2_addr]), "Register read when pending a load.")
+            `RV_ASSERT(
+                !(pfu_ack_o == 1'b1 &&
+                  regs1_addr != 5'b0 && regs1_rd &&
+                  reg_loading_vector_q[regs1_addr] && !s1_lq_fwd_available),
+                "Register read when pending a load."
+            )
+
+            `RV_ASSERT(
+                !(pfu_ack_o == 1'b1 &&
+                  regs2_addr != 5'b0 && regs2_rd &&
+                  reg_loading_vector_q[regs2_addr] && !s2_lq_fwd_available),
+                "Register read when pending a load."
+            )
         end
     end
 `endif
