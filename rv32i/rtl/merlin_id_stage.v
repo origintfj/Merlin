@@ -67,6 +67,8 @@ module merlin_id_stage
 
     // interface assignments
     // id stage qualifier logic
+    wire                     id_stage_en;
+    wire                     exs_stall;
     // rv32ic instruction expander
     wire                     ins_expanded_valid;
     wire                     rv32ic_ins_uerr;
@@ -142,7 +144,9 @@ module merlin_id_stage
     //--------------------------------------------------------------
     // id stage qualifier logic
     //--------------------------------------------------------------
-    assign pfu_ack_o = pfu_dav_i & ~ids_stall & (~exs_stall_i | ~exs_valid_o);
+    assign pfu_ack_o    = pfu_dav_i & ~ids_stall & ~exs_stall;
+    assign id_stage_en  = pfu_ack_o;
+    assign exs_stall    = exs_stall_i & exs_valid_o;
 
 
     //--------------------------------------------------------------
@@ -236,7 +240,7 @@ module merlin_id_stage
         if (~resetb_i) begin
             reg_loading_vector_q <= 31'b0;
         end else if (clk_en_i) begin
-            if (regd_addr_d != 5'b0 && pfu_ack_o && zone_d == `RV_ZONE_LOADQ) begin
+            if (regd_addr_d != 5'b0 && id_stage_en && zone_d == `RV_ZONE_LOADQ) begin
 `ifdef RV_ASSERTS_ON
                 `RV_ASSERT(reg_loading_vector_q[regd_addr_d] == 1'b0, "Register marked as pending load when already pending.");
 `endif
@@ -274,10 +278,10 @@ module merlin_id_stage
             .wreg_b_addr_i (lsq_reg_addr_i),
             .wreg_b_data_i (lsq_reg_data_i),
             // read port
-            .rreg_a_rd_i   (pfu_ack_o & regs1_rd),
+            .rreg_a_rd_i   (id_stage_en & regs1_rd),
             .rreg_a_addr_i (regs1_addr),
             .rreg_a_data_o (regs1_dout),
-            .rreg_b_rd_i   (pfu_ack_o & regs2_rd),
+            .rreg_b_rd_i   (id_stage_en & regs2_rd),
             .rreg_b_addr_i (regs2_addr),
             .rreg_b_data_o (regs2_dout)
         );
@@ -308,15 +312,17 @@ module merlin_id_stage
         if (~resetb_i) begin
             exs_valid_o <= 1'b0;
         end else if (clk_en_i) begin
-            if (~exs_stall_i) begin
-                exs_valid_o <= pfu_ack_o;
+            if (id_stage_en) begin
+                exs_valid_o <= 1'b1;
+            end else if (~exs_stall) begin
+                exs_valid_o <= 1'b0;
             end
         end
     end
     always @ (posedge clk_i)
     begin
         if (clk_en_i) begin
-            if (pfu_ack_o) begin
+            if (id_stage_en) begin
                 exs_ins_o             <= { { `RV_XLEN-32 {1'b0} }, pfu_ins_i };
                 exs_sofid_o           <= pfu_sofid_i;
                 exs_fencei_o          <= fencei_d;
@@ -450,8 +456,8 @@ module merlin_id_stage
     begin
         if (clk_en_i) begin
             // register file access assertions
-            `RV_ASSERT(!(pfu_ack_o & regs1_rd == 1'b1 && reg_loading_vector_q[regs1_addr]), "Register read when pending a load.");
-            `RV_ASSERT(!(pfu_ack_o & regs2_rd == 1'b1 && reg_loading_vector_q[regs2_addr]), "Register read when pending a load.");
+            `RV_ASSERT(!(id_stage_en & regs1_rd == 1'b1 && reg_loading_vector_q[regs1_addr]), "Register read when pending a load.");
+            `RV_ASSERT(!(id_stage_en & regs2_rd == 1'b1 && reg_loading_vector_q[regs2_addr]), "Register read when pending a load.");
         end
     end
 `endif
