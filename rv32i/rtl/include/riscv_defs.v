@@ -218,7 +218,9 @@
             $finish();                                                      \
         end
 `else
-    `define RV_ASSERT(assertion, message)
+    `define RV_ASSERT(assertion, message)   \
+        if (0) begin                        \
+        end
 `endif
 
 `endif
