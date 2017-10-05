@@ -119,8 +119,8 @@ module merlin_fifo
     always @ (posedge clk_i)
     begin
         if (clk_en_i) begin
-            `RV_ASSERT((full_o & wr_i) == 1'b0, "FIFO written when full!")
-            `RV_ASSERT((empty_o & rd_i) == 1'b0, "FIFO read when empty!")
+            `RV_ASSERT(((full_o & wr_i) == 1'b0), "FIFO written when full!")
+            `RV_ASSERT(((empty_o & rd_i) == 1'b0), "FIFO read when empty!")
         end
     end
 `endif

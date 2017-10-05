@@ -241,21 +241,15 @@ module merlin_id_stage
             reg_loading_vector_q <= 31'b0;
         end else if (clk_en_i) begin
             if (regd_addr_d != 5'b0 && id_stage_en && zone_d == `RV_ZONE_LOADQ) begin
-`ifdef RV_ASSERTS_ON
-                `RV_ASSERT(reg_loading_vector_q[regd_addr_d] == 1'b0, "Register marked as pending load when already pending.");
-`endif
+                `RV_ASSERT(reg_loading_vector_q[regd_addr_d] == 1'b0, "Register marked as pending load when already pending.")
                 reg_loading_vector_q[regd_addr_d] <= 1'b1;
             end
             if (exs_regd_addr_i != 5'b0 && exs_regd_cncl_load_i) begin
-`ifdef RV_ASSERTS_ON
-                `RV_ASSERT(reg_loading_vector_q[exs_regd_addr_i] == 1'b1, "Load canceled when not pending.");
-`endif
+                `RV_ASSERT(reg_loading_vector_q[exs_regd_addr_i] == 1'b1, "Load canceled when not pending.")
                 reg_loading_vector_q[exs_regd_addr_i] <= 1'b0;
             end
             if (lsq_reg_addr_i != 5'b0 && lsq_reg_wr_i) begin
-`ifdef RV_ASSERTS_ON
-                `RV_ASSERT(reg_loading_vector_q[lsq_reg_addr_i] == 1'b1, "Load written when not pending.");
-`endif
+                `RV_ASSERT(reg_loading_vector_q[lsq_reg_addr_i] == 1'b1, "Load written when not pending.")
                 reg_loading_vector_q[lsq_reg_addr_i] <= 1'b0;
             end
         end
@@ -456,8 +450,8 @@ module merlin_id_stage
     begin
         if (clk_en_i) begin
             // register file access assertions
-            `RV_ASSERT(!(id_stage_en & regs1_rd == 1'b1 && reg_loading_vector_q[regs1_addr]), "Register read when pending a load.");
-            `RV_ASSERT(!(id_stage_en & regs2_rd == 1'b1 && reg_loading_vector_q[regs2_addr]), "Register read when pending a load.");
+            `RV_ASSERT(!(id_stage_en & regs1_rd == 1'b1 && reg_loading_vector_q[regs1_addr]), "Register read when pending a load.")
+            `RV_ASSERT(!(id_stage_en & regs2_rd == 1'b1 && reg_loading_vector_q[regs2_addr]), "Register read when pending a load.")
         end
     end
 `endif
