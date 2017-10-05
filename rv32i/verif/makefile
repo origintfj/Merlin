@@ -52,20 +52,23 @@ else
 	IV_ARGS += -DRV_ASSERTS_ON -DRV_TRACER_ON
 endif
 
-test:
-	TSEED=$$(date +%s | sha256sum | head -c 8)
-	echo $(TSEED)
-
 usage:
-	@echo "make clean run [options...]"
+	@echo "make [TARGET]..."
 	@echo ""
-	@echo "OPTIONS:"
-	@echo "    Timeout after x us                 : TIMEOUT=x"
-	@echo "    Run program ./programs/some_test.c : TESTNAME=some_test"
-	@echo "    Dump waveform                      : DUMP=1"
-	@echo "    Use gate-level netlist             : GATES=1"
-
-all:
+	@echo "TARGETS:"
+	@echo "    Clean up the verif folder                        : clean"
+	@echo "    Lint the design                                  : lint"
+	@echo "    Synthesize the design (*)                        : synth"
+	@echo "    Run the program specified by TESTNAME on the CPU : run"
+	@echo ""
+	@echo "VARIABLES: for TARGET 'run'"
+	@echo "    Use ./programs/some_test.c as boot code : TESTNAME=some_test"
+	@echo "    Timeout after x us                      : TIMEOUT=x"
+	@echo "    Dump waveform                           : DUMP=1"
+	@echo "    Use gate-level netlist                  : GATES=1"
+	@echo ""
+	@echo "(*) Requires qflow setup in ../synth to be run beforehand"
+	@echo ""
 
 clean:
 	rm -f *.out
@@ -93,3 +96,6 @@ synth:
 	#cp /usr/share/qflow/tech/osu035/osu035_stdcells.v osu035_stdcells.v
 	cp ../synth/synth/merlin.rtlnopwr.v merlin.rtlnopwr.v
 
+test:
+	TSEED=$$(date +%s | sha256sum | head -c 8)
+	echo $(TSEED)
