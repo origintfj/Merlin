@@ -12,8 +12,6 @@ It therefore follows that a fundamental requirement for anyone wishing to contri
 * qflow (For ASIC synthesis)
 Contributors should use the “lint”, “run”, and “synth” targets in the makefile to verify compatibility is maintained before patching the repository.
 ---
-![alt text](https://github.com/origintfj/riscv/img/output_screenshot.png "Simulation Output Screenshot")
- 
 
 ### TODO
 * Implement the debug interface.
