@@ -1,3 +1,5 @@
+TSEED:=$$(date +%s | sha256sum | head -c 8)
+
 # default greylock boot rom
 BOOT_ROM_FILE := programs/hello_world.c
 
@@ -80,7 +82,7 @@ lint:
 	verilator --lint-only --top-module merlin -I$(RTL_INC_DIR) $(RTL_FILE_LIST)
 
 build_mem: # -ffreestanding -fPIC -fno-builtin
-	$(CC_DIR)/bin/riscv32-unknown-elf-gcc -nostdinc -nostdlib -fPIC -e _entry -T link.ld $(CARGS) $(BOOT_ROM_FILE) -o test.out
+	$(CC_DIR)/bin/riscv32-unknown-elf-gcc -nostdlib -fPIC -T link.ld $(CARGS) $(BOOT_ROM_FILE) -o test.out
 	$(CC_DIR)/bin/riscv32-unknown-elf-objcopy -O verilog test.out mem.hex
 	#cat mem.hex
 	$(CC_DIR)/bin/riscv32-unknown-elf-objdump -D test.out > test.dis
@@ -97,5 +99,4 @@ synth:
 	cp ../synth/synth/merlin.rtlnopwr.v merlin.rtlnopwr.v
 
 test:
-	TSEED=$$(date +%s | sha256sum | head -c 8)
 	echo $(TSEED)

@@ -1,103 +1,4 @@
-//--------------------------------------------------------------
-// Program Entry Point
-//--------------------------------------------------------------
-asm (
-    "_entry:\n"
-    "   li      sp,         65532\n"
-    "   csrrw   x0,         mscratch,   sp\n"
-    "   la      x1,         excp_handler_wrap\n"
-    "   csrw    mtvec,      x1\n"
-    "   addi    x1,         x1,     1\n"
-    //"   lw      x1,         0(x1)\n" // this will generate an exception
-    "   li      sp,         32768\n"
-    "   li      t0,         0x800\n"
-    "   csrs    mie,        t0\n"
-    "   li      t0,         0x8\n"
-    "   csrs    mstatus,    t0\n"
-    "   j       main\n"
-    "   j       main\n"
-);
-//--------------------------------------------------------------
-
-//--------------------------------------------------------------
-// Machine Mode Exception Handler
-//--------------------------------------------------------------
-asm (
-    "excp_handler_wrap:\n"
-    "   csrrw   sp,     mscratch,   sp\n"
-    "   addi    sp,     sp,         -124\n"
-    "   sw      x1,     0(sp)\n"
-    "   sw      x2,     4(sp)\n"
-    "   sw      x3,     8(sp)\n"
-    "   sw      x4,     12(sp)\n"
-    "   sw      x5,     16(sp)\n"
-    "   sw      x6,     20(sp)\n"
-    "   sw      x7,     24(sp)\n"
-    "   sw      x8,     28(sp)\n"
-    "   sw      x9,     32(sp)\n"
-    "   sw      x10,    36(sp)\n"
-    "   sw      x11,    40(sp)\n"
-    "   sw      x12,    44(sp)\n"
-    "   sw      x13,    48(sp)\n"
-    "   sw      x14,    52(sp)\n"
-    "   sw      x15,    56(sp)\n"
-    "   sw      x16,    60(sp)\n"
-    "   sw      x17,    64(sp)\n"
-    "   sw      x18,    68(sp)\n"
-    "   sw      x19,    72(sp)\n"
-    "   sw      x20,    76(sp)\n"
-    "   sw      x21,    80(sp)\n"
-    "   sw      x22,    84(sp)\n"
-    "   sw      x23,    88(sp)\n"
-    "   sw      x24,    92(sp)\n"
-    "   sw      x25,    96(sp)\n"
-    "   sw      x26,    100(sp)\n"
-    "   sw      x27,    104(sp)\n"
-    "   sw      x28,    108(sp)\n"
-    "   sw      x29,    112(sp)\n"
-    "   sw      x30,    116(sp)\n"
-    "   sw      x31,    120(sp)\n"
-
-    "   csrr    a0,     mepc\n"
-    //"   addi    a0,     a0,         4\n"
-    //"   csrrw   x0,     mepc,       a0\n"
-    "   jal     x1,     excp_handler\n"
-
-    "   lw      x1,     0(sp)\n"
-    "   lw      x2,     4(sp)\n"
-    "   lw      x3,     8(sp)\n"
-    "   lw      x4,     12(sp)\n"
-    "   lw      x5,     16(sp)\n"
-    "   lw      x6,     20(sp)\n"
-    "   lw      x7,     24(sp)\n"
-    "   lw      x8,     28(sp)\n"
-    "   lw      x9,     32(sp)\n"
-    "   lw      x10,    36(sp)\n"
-    "   lw      x11,    40(sp)\n"
-    "   lw      x12,    44(sp)\n"
-    "   lw      x13,    48(sp)\n"
-    "   lw      x14,    52(sp)\n"
-    "   lw      x15,    56(sp)\n"
-    "   lw      x16,    60(sp)\n"
-    "   lw      x17,    64(sp)\n"
-    "   lw      x18,    68(sp)\n"
-    "   lw      x19,    72(sp)\n"
-    "   lw      x20,    76(sp)\n"
-    "   lw      x21,    80(sp)\n"
-    "   lw      x22,    84(sp)\n"
-    "   lw      x23,    88(sp)\n"
-    "   lw      x24,    92(sp)\n"
-    "   lw      x25,    96(sp)\n"
-    "   lw      x26,    100(sp)\n"
-    "   lw      x27,    104(sp)\n"
-    "   lw      x28,    108(sp)\n"
-    "   lw      x29,    112(sp)\n"
-    "   lw      x30,    116(sp)\n"
-    "   lw      x31,    120(sp)\n"
-    "   addi    sp,     sp,         124\n"
-    "   csrrw   sp,     mscratch,   sp\n"
-    "   mret\n"
-);
+#include <stdint.h>
 
 void writes(char const* const str);
 void writex(int const value);
@@ -105,9 +6,21 @@ void writex(int const value);
 int intr_count = 1;
 
 void excp_handler(void) {
-    writes("<External Interrupt! (");
+    static uint32_t mcause;
+    static uint32_t mepc;
+    __asm__ volatile ("                 \
+            csrr    %0,     mcause      \n\
+            csrr    %1,     mepc        \n\
+            " : "=r"(mcause), "=r"(mepc)
+    );
+
+    writes("<\nExternal Interrupt! (epc=");
+    writex(mepc);
+    writes(", cause=");
+    writex(mcause);
+    writes(", count=");
     writex(intr_count);
-    writes(")>");
+    writes(")\n>");
 
     // increment the interrupt counter
     ++intr_count;
@@ -187,4 +100,102 @@ void writes(char const* str) {
         }
     } while (c != '\0');
 }
+
+//--------------------------------------------------------------
+// Program Entry Point
+//--------------------------------------------------------------
+__asm__ ("                                      \
+    .globl _entry                               \n\
+    .section .init                              \n\
+    _entry:                                     \n\
+        li      sp,         65532               \n\
+        csrw    mscratch,   sp                  \n\
+        li      sp,         32768               \n\
+        la      t0,         master_handler_wrap \n\
+        csrw    mtvec,      t0                  \n\
+        li      t0,         0x800               \n\
+        csrs    mie,        t0                  \n\
+        li      t0,         0x8                 \n\
+        csrs    mstatus,    t0                  \n\
+        j       main                            \n\
+        "
+);
+//--------------------------------------------------------------
+
+//--------------------------------------------------------------
+// Machine Mode Exception Handler
+//--------------------------------------------------------------
+__asm__ ("                                  \
+    .section .master_handler                \n\
+    master_handler_wrap:                    \n\
+        csrrw   sp,     mscratch,   sp      \n\
+        addi    sp,     sp,         -124    \n\
+        sw      x1,     0(sp)               \n\
+        sw      x2,     4(sp)               \n\
+        sw      x3,     8(sp)               \n\
+        sw      x4,     12(sp)              \n\
+        sw      x5,     16(sp)              \n\
+        sw      x6,     20(sp)              \n\
+        sw      x7,     24(sp)              \n\
+        sw      x8,     28(sp)              \n\
+        sw      x9,     32(sp)              \n\
+        sw      x10,    36(sp)              \n\
+        sw      x11,    40(sp)              \n\
+        sw      x12,    44(sp)              \n\
+        sw      x13,    48(sp)              \n\
+        sw      x14,    52(sp)              \n\
+        sw      x15,    56(sp)              \n\
+        sw      x16,    60(sp)              \n\
+        sw      x17,    64(sp)              \n\
+        sw      x18,    68(sp)              \n\
+        sw      x19,    72(sp)              \n\
+        sw      x20,    76(sp)              \n\
+        sw      x21,    80(sp)              \n\
+        sw      x22,    84(sp)              \n\
+        sw      x23,    88(sp)              \n\
+        sw      x24,    92(sp)              \n\
+        sw      x25,    96(sp)              \n\
+        sw      x26,    100(sp)             \n\
+        sw      x27,    104(sp)             \n\
+        sw      x28,    108(sp)             \n\
+        sw      x29,    112(sp)             \n\
+        sw      x30,    116(sp)             \n\
+        sw      x31,    120(sp)             \n\
+        jal     ra,     excp_handler        \n\
+        lw      x1,     0(sp)               \n\
+        lw      x2,     4(sp)               \n\
+        lw      x3,     8(sp)               \n\
+        lw      x4,     12(sp)              \n\
+        lw      x5,     16(sp)              \n\
+        lw      x6,     20(sp)              \n\
+        lw      x7,     24(sp)              \n\
+        lw      x8,     28(sp)              \n\
+        lw      x9,     32(sp)              \n\
+        lw      x10,    36(sp)              \n\
+        lw      x11,    40(sp)              \n\
+        lw      x12,    44(sp)              \n\
+        lw      x13,    48(sp)              \n\
+        lw      x14,    52(sp)              \n\
+        lw      x15,    56(sp)              \n\
+        lw      x16,    60(sp)              \n\
+        lw      x17,    64(sp)              \n\
+        lw      x18,    68(sp)              \n\
+        lw      x19,    72(sp)              \n\
+        lw      x20,    76(sp)              \n\
+        lw      x21,    80(sp)              \n\
+        lw      x22,    84(sp)              \n\
+        lw      x23,    88(sp)              \n\
+        lw      x24,    92(sp)              \n\
+        lw      x25,    96(sp)              \n\
+        lw      x26,    100(sp)             \n\
+        lw      x27,    104(sp)             \n\
+        lw      x28,    108(sp)             \n\
+        lw      x29,    112(sp)             \n\
+        lw      x30,    116(sp)             \n\
+        lw      x31,    120(sp)             \n\
+        addi    sp,     sp,         124     \n\
+        csrrw   sp,     mscratch,   sp      \n\
+        mret                                \n\
+        "
+);
 
