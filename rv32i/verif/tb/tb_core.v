@@ -28,8 +28,9 @@ module tb_core;
     wire        drspready;
     wire        drspvalid;
     wire [31:0] drspdata;
-
+`ifdef RV_ASSERTS_ON
     wire [31:0] rom_data;
+`endif
     //--------------------------------------------------------------
 
     parameter C_TIMEOUT = 0;
@@ -97,9 +98,12 @@ module tb_core;
     // merlin core
     //
     merlin
+`ifndef GATES
         #(
-            .C_RESET_VECTOR      ('0)
-        ) i_merlin (
+            .C_RESET_VECTOR      (32'b0)
+        )
+`endif
+        i_merlin (
             // global
             .clk_i               (clk),
             .clk_en_i            (1'b1),
@@ -182,6 +186,7 @@ module tb_core;
 
     // assersions
     //
+`ifdef RV_ASSERTS_ON
     assign rom_data[ 7: 0] = i_boot_rom.mem[i_merlin.pfu_ids_pc + 0];
     assign rom_data[15: 8] = i_boot_rom.mem[i_merlin.pfu_ids_pc + 1];
     assign rom_data[23:16] = i_boot_rom.mem[i_merlin.pfu_ids_pc + 2];
@@ -197,7 +202,6 @@ module tb_core;
             end
         end
     end
-/*
-*/
+`endif
 endmodule
 

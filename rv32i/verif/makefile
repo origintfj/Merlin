@@ -35,7 +35,7 @@ ifdef TESTNAME
 	BOOT_ROM_FILE := programs/$(TESTNAME).c
 endif
 
-IV_ARGS := -DRV_ASSERTS_ON -DRV_TRACER_ON
+IV_ARGS :=
 ifdef TIMEOUT
 	IV_ARGS += -Ptb_core.C_TIMEOUT=$(TIMEOUT)
 endif
@@ -46,7 +46,10 @@ ifdef DUMP
 endif
 
 ifdef GATES
-	RTL_FILE_LIST := osu035_stdcells.v merlin32i.rtlnopwr.v
+	IV_ARGS += -DGATES
+	RTL_FILE_LIST := osu035_stdcells.v merlin.rtlnopwr.v
+else
+	IV_ARGS += -DRV_ASSERTS_ON -DRV_TRACER_ON
 endif
 
 test:
@@ -86,7 +89,7 @@ run_only:
 	vvp tb_core.out $(DUMP_LXT2)
 
 synth:
-	../synth/qflow_exec.sh
-	cp /usr/share/qflow/tech/osu035/osu035_stdcells.v osu035_stdcells.v
-	cp ../synth/synthesis/merlin32i.rtlnopwr.v merlin32i.rtlnopwr.v
+	make -f ../synth/makefile -C ../synth clean synth
+	#cp /usr/share/qflow/tech/osu035/osu035_stdcells.v osu035_stdcells.v
+	cp ../synth/synth/merlin.rtlnopwr.v merlin.rtlnopwr.v
 
