@@ -10,7 +10,7 @@ It therefore follows that a fundamental requirement for anyone wishing to contri
 * iverilog (For simulation)
 * verilator (For linting)
 * qflow (For ASIC synthesis)
-Contributors should use the “check” target in the makefile to verify compatibility is maintained before patching the repository.
+Contributors should use the “lint”, “run”, and “synth” targets in the makefile to verify compatibility is maintained before patching the repository.
 ---
 
 ### TODO
