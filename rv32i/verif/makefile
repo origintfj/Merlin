@@ -88,7 +88,7 @@ build_mem: # -ffreestanding -fPIC -fno-builtin
 run: build_mem run_only
 
 run_only:
-	iverilog $(IV_ARGS) -o tb_core.out -g2012 -I$(RTL_INC_DIR) $(RTL_FILE_LIST) $(TB_FILE_LIST)
+	iverilog $(IV_ARGS) -o tb_core.out -g2005-sv -I$(RTL_INC_DIR) $(RTL_FILE_LIST) $(TB_FILE_LIST)
 	vvp tb_core.out $(DUMP_LXT2)
 
 synth:

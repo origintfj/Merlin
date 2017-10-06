@@ -46,6 +46,8 @@ module merlin_pfu32ic
     //--------------------------------------------------------------
 
     // interface assignments
+    // request gate register
+    reg                          request_gate;
     // ibus debt
     reg                          ibus_debt;
     wire                         request;
@@ -89,11 +91,24 @@ module merlin_pfu32ic
     // interface assignments
     //--------------------------------------------------------------
     assign ireqhpl_o   = exs_hpl_i;
-    assign ireqvalid_o = fifo_accepting & ~exs_pc_wr_i & (~ibus_debt | response);
+    assign ireqvalid_o = fifo_accepting & ~exs_pc_wr_i & (~ibus_debt | response) & request_gate;
     assign ireqaddr_o  = { pc_q[31:2], 2'b0 };
     assign irspready_o = 1'b1; //irspvalid_i; // always ready
     //
     assign ids_dav_o = ~(|fifo_atom_empty);
+
+
+    //--------------------------------------------------------------
+    // request gate register
+    //--------------------------------------------------------------
+    always @ (posedge clk_i or negedge resetb_i)
+    begin
+        if (~resetb_i) begin
+            request_gate <= 1'b0;
+        end else if (clk_en_i) begin
+            request_gate <= 1'b1;
+        end
+    end
 
 
     //--------------------------------------------------------------
