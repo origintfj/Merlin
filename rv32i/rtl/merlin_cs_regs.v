@@ -78,6 +78,7 @@ module merlin_cs_regs
     // interrupt logic
     wire       [`RV_CSR_IP_RANGE] raw_irqv;
     wire       [`RV_CSR_IP_RANGE] irqv;
+    wire                   [11:0] irqv_mask;
     reg                           interrupt;
     // interrupt cause encoder
     reg            [`RV_XLEN-1:0] icause;
@@ -143,15 +144,17 @@ module merlin_cs_regs
     assign raw_irqv = { irqm_extern_i, 1'b0, irqs_extern_i, irqu_extern_i,
                         irqm_timer_i,  1'b0, irqs_timer_i,  irqu_timer_i,
                         irqm_softw_i,  1'b0, irqs_softw_i,  irqu_softw_i } | mip_q;
-    assign irqv        = raw_irqv & mie_q;
+    //
+    assign irqv_mask   = { mstatus_q[3:0], mstatus_q[3:0], mstatus_q[3:0] };
+    assign irqv        = raw_irqv & mie_q & irqv_mask;
     assign interrupt_o = interrupt;
     //
     always @ (*)
     begin
         case (mode_q)
-            `RV_CSR_MODE_MACHINE    : interrupt = |irqv & mstatus_q[`RV_CSR_STATUS_MIE_INDEX];
-            `RV_CSR_MODE_SUPERVISOR : interrupt = |irqv & mstatus_q[`RV_CSR_STATUS_SIE_INDEX];
-            `RV_CSR_MODE_USER       : interrupt = |irqv & mstatus_q[`RV_CSR_STATUS_UIE_INDEX];
+            `RV_CSR_MODE_MACHINE    : interrupt = |(irqv & 12'h888);
+            `RV_CSR_MODE_SUPERVISOR : interrupt = |(irqv & 12'haaa);
+            `RV_CSR_MODE_USER       : interrupt = |(irqv);
             default                 : interrupt = 1'b0;
         endcase
     end
