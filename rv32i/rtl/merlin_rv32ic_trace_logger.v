@@ -65,7 +65,8 @@ module merlin_rv32ic_trace_logger
         trap_depth  = 0;
         logfile     = $fopen("merlin_htt.log", "w");
 
-        $fwrite(logfile, "TIME         M   ADDR       INS         DESCRIPTION\n");
+                        //  [    0]           0 [3] 0x00000000 (00010137): lui   x2, 0x00010000
+        $fwrite(logfile, "T|x2 ADDI|TIME       |CPM|ADDR      |INSTRUCTION\n");
     end
 
     //--------------------------------------------------------------
@@ -130,13 +131,7 @@ module merlin_rv32ic_trace_logger
         if (~resetb_i) begin
         end else if (clk_en_i & ex_stage_en_i) begin
             if (csr_jump_to_trap_i) begin
-                trap_depth = trap_depth + 1;
-                if (trap_depth > 0) begin
-                    $fwrite(logfile, "T [%5d]", stack_depth);
-                end else begin
-                    $fwrite(logfile, "  [%5d]", stack_depth);
-                end
-                //
+                $fwrite(logfile, "%1d [%5d]", trap_depth, stack_depth);
                 $fwrite(logfile, "%12t ", $time());
                 $fwrite(logfile, "[%0d] ", csr_mode_i);
                 if (ins_expanded_valid) begin
@@ -226,13 +221,9 @@ module merlin_rv32ic_trace_logger
                 endcase
                 $fwrite(logfile, "(0x%8x)", csr_trap_entry_addr_i);
                 $fwrite(logfile, "\n");
+                trap_depth = trap_depth + 1;
             end else if (execute_commit_i) begin
-                if (trap_depth > 0) begin
-                    $fwrite(logfile, "T [%5d]", stack_depth);
-                end else begin
-                    $fwrite(logfile, "  [%5d]", stack_depth);
-                end
-                //
+                $fwrite(logfile, "%1d [%5d]", trap_depth, stack_depth);
                 $fwrite(logfile, "%12t ", $time());
                 $fwrite(logfile, "[%0d] ", csr_mode_i);
                 if (ins_expanded_valid) begin
