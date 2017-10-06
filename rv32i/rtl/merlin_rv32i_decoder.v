@@ -346,7 +346,7 @@ module merlin_rv32i_decoder
                     if (regd_addr != 5'b0) begin
                         csr_rd_o = 1'b1;
                     end
-                    if (regs1_addr != 5'b0) begin
+                    if (regs1_addr != 5'b0 || funct3 == 3'b001) begin
                         csr_wr_o = 1'b1;
                     end
                 end else if (funct3 == 3'b101 ||
@@ -359,7 +359,7 @@ module merlin_rv32i_decoder
                     if (regd_addr != 5'b0) begin
                         csr_rd_o = 1'b1;
                     end
-                    if (regs1_addr != 5'b0) begin
+                    if (regs1_addr != 5'b0 || funct3 == 3'b101) begin
                         csr_wr_o = 1'b1;
                     end
                 end else begin
