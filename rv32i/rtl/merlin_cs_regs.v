@@ -67,7 +67,7 @@ module merlin_cs_regs
         input  wire          [1:0] trap_rtn_mode_i,
         output reg  [`RV_XLEN-1:0] trap_rtn_addr_o,
         // static i/o
-        output wire          [1:0] mode_o,
+        output wire          [1:0] mode_o, // TODO - make sure the mode @ time of trap call/rtn
         // tracer port
         output wire [`RV_XLEN-1:0] trap_cause_o
     );
