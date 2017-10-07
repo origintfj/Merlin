@@ -247,7 +247,9 @@ module merlin_cs_regs
     //--------------------------------------------------------------
     always @ (*)
     begin
-        if (excp_maif_i | excp_mala_i | excp_masa_i) begin // TODO hardware breakpoint | page fault
+        if (interrupt) begin // TODO hardware breakpoint | page fault
+            trap_value = { `RV_XLEN {1'b0} };
+        end else if (excp_maif_i | excp_mala_i | excp_masa_i) begin
             trap_value = excp_pc_i;
         end else if (excp_uerr_i | excp_ilgl_i) begin
             trap_value = excp_ins_i;
