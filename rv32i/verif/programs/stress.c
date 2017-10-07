@@ -1,23 +1,18 @@
 #include <stdint.h>
 
+#define EXCP_CAUSE_ECALL    0x0000000B
+#define EXCP_CAUSE_MEI      0x8000000B
+
 void writes(char const* const str);
 void writex(int const value);
 
 int intr_count = 1;
 
-void excp_handler(void) {
-    static uint32_t mcause;
-    static uint32_t mepc;
-    __asm__ volatile ("                 \
-            csrr    %0,     mcause      \n\
-            csrr    %1,     mepc        \n\
-            " : "=r"(mcause), "=r"(mepc)
-    );
-
+void __machine_external_interrupt(uint32_t const mepc, uint32_t mtval) {
     writes("<\nExternal Interrupt! (epc=");
     writex(mepc);
-    writes(", cause=");
-    writex(mcause);
+    writes(", mtval=");
+    writex(mtval);
     writes(", count=");
     writex(intr_count);
     writes(")\n>");
@@ -30,6 +25,49 @@ void excp_handler(void) {
     // clear interrupt
     *(int volatile *const)0x00000004 = 1;
 }
+void __ecall(uint32_t const mepc, uint32_t mtval) {
+    writes("<\nECALL (mepc=");
+    writex(mepc);
+    writes(", mtval=");
+    writex(mtval);
+    writes(")\n>");
+}
+
+void excp_handler(void) {
+    static uint32_t mcause;
+    static uint32_t mepc;
+    static uint32_t mtval;
+    __asm__ volatile ("                 \
+            csrr    %0,     mcause      \n\
+            csrr    %1,     mepc        \n\
+            csrr    %2,     mbadaddr    \n\
+        " // mbadaddr is actually mtval
+        : "=r"(mcause), "=r"(mepc), "=r"(mtval)
+    );
+
+    if (mcause == EXCP_CAUSE_ECALL) {
+        __ecall(mepc, mtval);
+        mepc += 4;
+    } else if (mcause == EXCP_CAUSE_MEI) {
+        __machine_external_interrupt(mepc, mtval);
+    } else {
+        writes("<\nException!!! (cause=");
+        writex(mcause);
+        writes(", epc=");
+        writex(mepc);
+        writes(", mtval=");
+        writex(mtval);
+        writes(")\n");
+        while (1);
+    }
+
+    __asm__ volatile ("                 \
+            csrw    mepc,   %0          \n\
+        "
+        :
+        : "r"(mepc)
+    );
+}
 //--------------------------------------------------------------
 
 void main(void) {
@@ -37,22 +75,28 @@ void main(void) {
 
     for (j = 0; j < 4; ++j) {
         for (i = 0; i < j; ++i) {
+            __asm__ volatile ("             \
+                    ecall                   \n\
+                    csrw    cycle,  x0      \n\
+                "
+            );
             writes("Hello World!\n");
         }
     }
 
-    asm (
-        //"   ecall\n"
-        "   wfi\n"
+    __asm__ volatile ("     \
+            wfi             \n\
+        "
     );
 
     writes("From the Merlin RV32I test program\n");
     writex(0x27a7fe4);
 
     writes("Entering a \"while (1)\".\n");
-    asm (
-        "loop:\n"
-        "   j       loop\n"
+    __asm__ volatile ("         \
+        loop:                   \n\
+            j       loop        \n\
+        "
     );
 }
 
