@@ -75,11 +75,13 @@ void main(void) {
 
     for (j = 0; j < 4; ++j) {
         for (i = 0; i < j; ++i) {
+/*
             __asm__ volatile ("             \
                     ecall                   \n\
                     csrw    cycle,  x0      \n\
                 "
             );
+*/
             writes("Hello World!\n");
         }
     }
