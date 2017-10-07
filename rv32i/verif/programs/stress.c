@@ -31,11 +31,7 @@ void excp_handler(void) {
     *(int volatile *const)0x00000004 = 1;
 }
 //--------------------------------------------------------------
-/*
-do pfu and jump speculation
-fix load/store alignment
-implement wfi
-*/
+
 void main(void) {
     int i, j;
 
