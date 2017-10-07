@@ -58,7 +58,7 @@ asm (
     "   sw      x30,    116(sp)\n"
     "   sw      x31,    120(sp)\n"
 
-    "   csrrw   a0,     mepc,       x0\n"
+    "   csrr    a0,     mepc\n"
     //"   addi    a0,     a0,         4\n"
     //"   csrrw   x0,     mepc,       a0\n"
     "   jal     x1,     excp_handler\n"
