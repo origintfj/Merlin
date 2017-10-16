@@ -528,8 +528,6 @@ module merlin_cs_regs
         end else if (clk_en_i) begin
             if (exs_en_i) begin
                 if (jump_to_trap_o) begin // take over any pending interrupt
-                    // processor priv. mode register
-                    mode_q <= `RV_CSR_MODE_MACHINE;
                     // accessible CSRs
                     case (target_mode)
                         `RV_CSR_MODE_MACHINE : begin
@@ -539,6 +537,7 @@ module merlin_cs_regs
                             mepc_q   <= excp_pc_i[`RV_CSR_EPC_RANGE];
                             mcause_q <= trap_cause;
                             mtval_q  <= trap_value;
+                            mode_q   <= `RV_CSR_MODE_MACHINE;
                         end
                         `RV_CSR_MODE_SUPERVISOR : begin
                             mstatus_q[`RV_CSR_STATUS_SPP_INDEX]  <= |mode_q; // 0 iff was user mode, 1 otherwise
@@ -547,6 +546,7 @@ module merlin_cs_regs
                             sepc_q   <= excp_pc_i[`RV_CSR_EPC_RANGE];
                             scause_q <= trap_cause;
                             stval_q  <= trap_value;
+                            mode_q   <= `RV_CSR_MODE_SUPERVISOR;
                         end
                         `RV_CSR_MODE_USER : begin
                             mstatus_q[`RV_CSR_STATUS_UPIE_INDEX] <= mstatus_q[`RV_CSR_STATUS_UIE_INDEX];
@@ -554,8 +554,10 @@ module merlin_cs_regs
                             uepc_q   <= excp_pc_i[`RV_CSR_EPC_RANGE];
                             ucause_q <= trap_cause;
                             utval_q  <= trap_value;
+                            mode_q   <= `RV_CSR_MODE_USER;
                         end
                         default : begin
+                            mode_q <= `RV_CSR_MODE_MACHINE;
                         end
                     endcase
                 end else if (trap_rtn_i) begin
