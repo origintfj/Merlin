@@ -310,9 +310,13 @@ module merlin_rv32i_decoder
             end
             `RV_MAJOR_OPCODE_MISCMEM : begin // misc-mem
                 ins_type = C_IMM_TYPE_MISC_MEM;
-                // NOTE: any fence is treated as a fence.i
-                if (funct3 == 3'b001) begin // fence.i
+                // NOTE: for now, any fence is treated as a fence.i
+                if (funct3 == 3'b000 && ins_i[31:28] == 4'b0 && regs1_addr == 5'b0 && regd_addr == 5'b0) begin // fence TODO - see above note
                     fencei_o = 1'b1;
+                end else if (funct3 == 3'b001 && ins_i[31:15] == 17'b0 && regd_addr == 5'b0) begin // fence.i
+                    fencei_o = 1'b1;
+                end else begin
+                    ins_err_o = 1'b1;
                 end
             end
             `RV_MAJOR_OPCODE_SYSTEM : begin // system
