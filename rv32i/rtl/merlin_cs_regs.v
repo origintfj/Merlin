@@ -149,8 +149,7 @@ module merlin_cs_regs
     assign irqv        = raw_irqv & mie_q & irqv_mask;
     assign interrupt_o = interrupt;
     //
-    always @ (*)
-    begin
+    always @ (*) begin
         case (mode_q)
             `RV_CSR_MODE_MACHINE    : interrupt = |(irqv & 12'h888);
             `RV_CSR_MODE_SUPERVISOR : interrupt = |(irqv & 12'haaa);
@@ -170,8 +169,7 @@ module merlin_cs_regs
      *   3) timer interrupts
      *   4) synchronous traps
      */
-    always @ (*)
-    begin
+    always @ (*) begin
         // NOTE: IMPORTANT: This desision tree must be ordered correctly
         if (|(irqv[11:8]) == 1'b1) begin // external interrupt
             if (irqv[11] == 1'b1) begin
@@ -217,8 +215,7 @@ module merlin_cs_regs
      *   1001 - ecall(s)
      *   1011 - ecall(m)
      */
-    always @ (*)
-    begin
+    always @ (*) begin
         if (excp_ferr_i) begin
             ecause = `RV_CSR_EXCP_CAUSE_INS_ACCESS_FAULT;
         end else if (excp_uerr_i) begin
@@ -245,8 +242,7 @@ module merlin_cs_regs
     //--------------------------------------------------------------
     // trap value encoder
     //--------------------------------------------------------------
-    always @ (*)
-    begin
+    always @ (*) begin
         if (interrupt) begin // TODO hardware breakpoint | page fault
             trap_value = { `RV_XLEN {1'b0} };
         end else if (excp_maif_i | excp_mala_i | excp_masa_i) begin
@@ -282,8 +278,7 @@ module merlin_cs_regs
                             );
     assign trap_cause_o = trap_cause;
     //
-    always @ (*)
-    begin
+    always @ (*) begin
         if (interrupt) begin
             trap_cause = icause;
         end else begin
@@ -295,8 +290,7 @@ module merlin_cs_regs
     //--------------------------------------------------------------
     // access restriction logic
     //--------------------------------------------------------------
-    always @ (*)
-    begin
+    always @ (*) begin
         if (addr_typecode_q == 2'b11) begin // read-only
             readonly_csr_o = 1'b1;
         end else begin
@@ -310,8 +304,7 @@ module merlin_cs_regs
         end
     end
     //
-    always @ (posedge clk_i)
-    begin
+    always @ (posedge clk_i) begin
         if (clk_en_i) begin
             if (exs_en_i & access_i) begin
                 bad_csr_addr_o  <= rd_invalid_address;
@@ -327,8 +320,7 @@ module merlin_cs_regs
     //--------------------------------------------------------------
     assign deleg_index = trap_cause[`RV_CSR_EDELEG_SZX-1:0];
     //
-    always @ (*)
-    begin
+    always @ (*) begin
         case (mode_q)
             `RV_CSR_MODE_SUPERVISOR : begin
                 if (interrupt == 1'b1) begin // interrupt
@@ -378,8 +370,7 @@ module merlin_cs_regs
     //--------------------------------------------------------------
     // target trap base address mux
     //--------------------------------------------------------------
-    always @ (*)
-    begin
+    always @ (*) begin
         trap_mode_vectored = 1'b0;
         case (target_mode)
             `RV_CSR_MODE_MACHINE : begin
@@ -416,8 +407,7 @@ module merlin_cs_regs
     //--------------------------------------------------------------
     // trap return address mux
     //--------------------------------------------------------------
-    always @ (*)
-    begin
+    always @ (*) begin
         case (trap_rtn_mode_i)
             `RV_CSR_MODE_MACHINE    : trap_rtn_addr_o = { mepc_q, `RV_CSR_EPC_LOB };
             `RV_CSR_MODE_SUPERVISOR : trap_rtn_addr_o = { sepc_q, `RV_CSR_EPC_LOB };
@@ -430,8 +420,7 @@ module merlin_cs_regs
     //--------------------------------------------------------------
     // read decode and o/p register
     //--------------------------------------------------------------
-    always @ (*)
-    begin
+    always @ (*) begin
         rd_data            = 32'b0; // zero fields by default
         rd_invalid_address = 1'b0;
         case (addr_i)
@@ -478,8 +467,7 @@ module merlin_cs_regs
             end
         endcase
     end
-    always @ (posedge clk_i)
-    begin
+    always @ (posedge clk_i) begin
         if (clk_en_i) begin
             if (exs_en_i & access_i) begin
                 rd_data_o <= rd_data;
@@ -491,8 +479,7 @@ module merlin_cs_regs
     //--------------------------------------------------------------
     // write decode and registers
     //--------------------------------------------------------------
-    always @ (posedge clk_i or negedge resetb_i)
-    begin
+    always @ (posedge clk_i or negedge resetb_i) begin
         if (~resetb_i) begin
             // processor priv. mode register
             mode_q     <= `RV_CSR_MODE_MACHINE;

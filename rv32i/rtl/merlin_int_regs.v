@@ -39,8 +39,7 @@ module merlin_int_regs
     //--------------------------------------------------------------
     // read/write wire
     //--------------------------------------------------------------
-    always @ (posedge clk_i)
-    begin
+    always @ (posedge clk_i) begin
         if (clk_en_i) begin
             // read port a
             if (rreg_a_rd_i) begin

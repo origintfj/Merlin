@@ -30,8 +30,7 @@ module merlin_rv32ic_expander
     assign op     = ins_i[1:0];
     assign funct3 = ins_i[15:13];
     //
-    always @ (*)
-    begin
+    always @ (*) begin
         ins_rvc_o = 1'b1;
         ins_err_o = 1'b0;
         //

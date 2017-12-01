@@ -172,8 +172,7 @@ module merlin_ex_stage
     //--------------------------------------------------------------
     assign jump = (execute_commit & (ids_jump_q | ids_trap_rtn_q | ids_fencei_q)) | csr_jump_to_trap;
     //
-    always @ (*)
-    begin
+    always @ (*) begin
         if (csr_jump_to_trap) begin
             pfu_jump_addr_o = csr_trap_entry_addr;
         end else if (ids_trap_rtn_q) begin
@@ -214,8 +213,7 @@ module merlin_ex_stage
     assign excp_maif  = ids_jump_q & (|(alu_data_out[1:0]));
 `endif
     //
-    always @ (*)
-    begin
+    always @ (*) begin
         excp_mala = 1'b0;
         excp_masa = 1'b0;
         if (funct3_q == 3'b001 && alu_data_out[0] != 1'b0) begin
@@ -227,8 +225,7 @@ module merlin_ex_stage
         end
     end
     //
-    always @ (*)
-    begin
+    always @ (*) begin
         excp_ilgl = 1'b0;
         if (ids_csr_rd_q) begin
             excp_ilgl = csr_bad_addr | csr_priv_too_low;
@@ -252,8 +249,7 @@ module merlin_ex_stage
     assign ex_valid       = ids_valid_q & sofid_run;
     assign execute_commit = ex_valid & (alu_cmp_out | ~ids_cond_q) & ~csr_jump_to_trap;
     //
-    always @ (posedge clk_i or negedge resetb_i)
-    begin
+    always @ (posedge clk_i or negedge resetb_i) begin
         if (~resetb_i) begin
             sofid_q <= `RV_SOFID_RUN;
         end else if (clk_en_i) begin
@@ -266,8 +262,7 @@ module merlin_ex_stage
             end
         end
     end
-    always @ (*)
-    begin
+    always @ (*) begin
         if (sofid_q == `RV_SOFID_RUN) begin
             sofid_run = 1'b1;
         end else begin
@@ -279,8 +274,7 @@ module merlin_ex_stage
     //--------------------------------------------------------------
     // delay stage
     //--------------------------------------------------------------
-    always @ (posedge clk_i or negedge resetb_i)
-    begin
+    always @ (posedge clk_i or negedge resetb_i) begin
         if (~resetb_i) begin
             ids_valid_q <= 1'b0;
         end else if (clk_en_i) begin
@@ -326,8 +320,7 @@ module merlin_ex_stage
     //--------------------------------------------------------------
     // wfi latch
     //--------------------------------------------------------------
-    always @ (posedge clk_i or negedge resetb_i)
-    begin
+    always @ (posedge clk_i or negedge resetb_i) begin
         if (~resetb_i) begin
             wfi_latch_q <= 1'b0;
         end else if (clk_en_i) begin
@@ -347,8 +340,7 @@ module merlin_ex_stage
     //--------------------------------------------------------------
     assign ex_stage_en = ~exs_stall;
     //
-    always @ (*)
-    begin
+    always @ (*) begin
         exs_stall = wfi_latch_q;
         if (execute_commit) begin
             if ( ( lsq_full_i & (lq_wr_q | sq_wr_q)) |
@@ -362,8 +354,7 @@ module merlin_ex_stage
     //--------------------------------------------------------------
     // regd data out mux
     //--------------------------------------------------------------
-    always @ (*)
-    begin
+    always @ (*) begin
         if (ids_csr_rd_q) begin
             ids_regd_data_o = csr_data_out;
         end else begin
@@ -375,8 +366,7 @@ module merlin_ex_stage
     //--------------------------------------------------------------
     // alu pcinc mux
     //--------------------------------------------------------------
-    always @ (*)
-    begin
+    always @ (*) begin
         if (ids_link_q) begin
             alu_pcinc_mux_out = pc_inc_q;
         end else begin
@@ -409,8 +399,7 @@ module merlin_ex_stage
     //--------------------------------------------------------------
     // cs register file and write data logic
     //--------------------------------------------------------------
-    always @ (*)
-    begin
+    always @ (*) begin
         csr_wr_data = ids_csr_wr_data_q;
         case (csr_wr_mode)
             2'b01 : csr_wr_data = ids_csr_wr_data_q;

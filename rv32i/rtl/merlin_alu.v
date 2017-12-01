@@ -47,8 +47,7 @@ module merlin_alu
     //--------------------------------------------------------------
     // alu output register
     //--------------------------------------------------------------
-    always @ (posedge clk_i)
-    begin
+    always @ (posedge clk_i) begin
         if (clk_en_i) begin
             op_result_o <= op_result_mux_out;
         end
@@ -58,8 +57,7 @@ module merlin_alu
     //--------------------------------------------------------------
     // operation result mux
     //--------------------------------------------------------------
-    always @ (*)
-    begin
+    always @ (*) begin
         op_result_mux_out = { `RV_XLEN {1'b0} }; // NOTE: don't actually care
         case (op_opcode_i)
             `RV_ALUOP_ADD  : op_result_mux_out = op_left_i + op_right_i;
@@ -82,16 +80,13 @@ module merlin_alu
     //--------------------------------------------------------------
     // shifter
     //--------------------------------------------------------------
-    always @ (*)
-    begin
+    always @ (*) begin
         shift_left_array[0]  = op_left_i;
         shift_right_array[0] = op_left_i;
     end
     //
-    generate
-    for (genvar_i = 0; genvar_i < `RV_XLEN_X; genvar_i = genvar_i + 1) begin : shifter
-        always @ (*)
-        begin
+    generate for (genvar_i = 0; genvar_i < `RV_XLEN_X; genvar_i = genvar_i + 1) begin : shifter
+        always @ (*) begin
             if (op_right_i[genvar_i] == 1'b1) begin
                 // left shift
                 shift_left_array[genvar_i + 1][2**genvar_i - 1:   0] = { 2**genvar_i {1'b0} };
@@ -110,22 +105,18 @@ module merlin_alu
                 shift_right_array[genvar_i + 1] = shift_right_array[genvar_i];
             end
         end
-    end
-    endgenerate
+    end endgenerate
 
 
     //--------------------------------------------------------------
     // alu comparitor
     //--------------------------------------------------------------
-    always @ (*) // TODO consider using one compariter here and switching the MSBs to do signed vs. unsigned
-    begin
+    always @ (*) begin // TODO consider using one compariter here and switching the MSBs to do signed vs. unsigned
         cmp_lts = $signed(cmp_left_i) < $signed(cmp_right_i);
-
         cmp_ltu = cmp_left_i < cmp_right_i;
     end
     //
-    always @ (posedge clk_i)
-    begin
+    always @ (posedge clk_i) begin
         if (clk_en_i) begin
             cmp_result_o <= 1'b0;
             case (cmp_opcode_i)

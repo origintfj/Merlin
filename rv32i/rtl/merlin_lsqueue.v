@@ -116,8 +116,7 @@ module merlin_lsqueue
     //--------------------------------------------------------------
     // request data formatter
     //--------------------------------------------------------------
-    always @ (*)
-    begin
+    always @ (*) begin
         case (exs_funct3_i)
             3'b000  : exs_regs2_data_justified = { exs_regs2_data_i[ 7:0],
                                                    exs_regs2_data_i[ 7:0],
@@ -135,8 +134,7 @@ module merlin_lsqueue
     //--------------------------------------------------------------
     assign req_fifo_wr = exs_lq_wr_i | exs_sq_wr_i;
     //
-    always @ (*)
-    begin
+    always @ (*) begin
         if (exs_lq_wr_i) begin
             req_fifo_wr_data = { exs_addr_i,
                                  { `RV_XLEN-5 {1'b0} }, exs_regd_addr_i,
@@ -245,8 +243,7 @@ module merlin_lsqueue
     //--------------------------------------------------------------
     // response data formatter
     //--------------------------------------------------------------
-    always @ (*)
-    begin
+    always @ (*) begin
         case (req_ctrl_fifo_rd_data_funct3)
             3'b000 : begin // LB
                 if (rsp_data_justified[7]) begin
@@ -291,8 +288,7 @@ module merlin_lsqueue
         endcase
     end
     //
-    always @ (*)
-    begin
+    always @ (*) begin
         case (req_ctrl_fifo_rd_data_alignment)
             2'b01   : rsp_data_justified = {  8'b0, rsp_data_fifo_rd_data[`RV_XLEN-1: 8] };
             2'b10   : rsp_data_justified = { 16'b0, rsp_data_fifo_rd_data[`RV_XLEN-1:16] };

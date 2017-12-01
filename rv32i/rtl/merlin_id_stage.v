@@ -170,8 +170,7 @@ module merlin_id_stage
     //--------------------------------------------------------------
     assign ins_uerr_d = rv32i_ins_uerr | (ins_expanded_valid & rv32ic_ins_uerr);
     //
-    always @ (*)
-    begin
+    always @ (*) begin
         if (ins_expanded_valid) begin
             pfu_ack_size_o = 2'b01;
             rv32i_ins      = ins_expanded;
@@ -233,8 +232,7 @@ module merlin_id_stage
     assign s2_lq_fwd_available = (lsq_reg_wr_i  && lsq_reg_addr_i  == regs2_addr) ||
                                  (fwd_regl_wr_q && fwd_regl_addr_q == regs2_addr);
     //
-    always @ (*)
-    begin
+    always @ (*) begin
         ids_stall = 1'b0;
         //
         if (pfu_dav_i) begin
@@ -248,8 +246,7 @@ module merlin_id_stage
         end
     end
     //
-    always @ (posedge clk_i or negedge resetb_i)
-    begin
+    always @ (posedge clk_i or negedge resetb_i) begin
         if (~resetb_i) begin
             reg_loading_vector_q <= 31'b0;
         end else if (clk_en_i) begin
@@ -298,8 +295,7 @@ module merlin_id_stage
     // forwarding registers
     //--------------------------------------------------------------
     // regd forwarding register
-    always @ (posedge clk_i or negedge resetb_i)
-    begin
+    always @ (posedge clk_i or negedge resetb_i) begin
         if (~resetb_i) begin
             fwd_regd_wr_q   <= 1'b0;
             //fwd_regd_addr_q <= 5'b0; // NOTE: don't actually care
@@ -311,8 +307,7 @@ module merlin_id_stage
         end
     end
     // lqueue write-back forwarding register
-    always @ (posedge clk_i or negedge resetb_i)
-    begin
+    always @ (posedge clk_i or negedge resetb_i) begin
         if (~resetb_i) begin
             fwd_regl_wr_q   <= 1'b0;
             //fwd_regl_addr_q <= 5'b0; // NOTE: don't actually care
@@ -328,8 +323,7 @@ module merlin_id_stage
     //--------------------------------------------------------------
     // id register stage
     //--------------------------------------------------------------
-    always @ (posedge clk_i or negedge resetb_i)
-    begin
+    always @ (posedge clk_i or negedge resetb_i) begin
         if (~resetb_i) begin
             exs_valid_o <= 1'b0;
         end else if (clk_en_i) begin
@@ -340,8 +334,7 @@ module merlin_id_stage
             end
         end
     end
-    always @ (posedge clk_i)
-    begin
+    always @ (posedge clk_i) begin
         if (clk_en_i) begin
             if (id_stage_en) begin
                 exs_ins_o             <= { { `RV_XLEN-32 {1'b0} }, pfu_ins_i };
@@ -382,8 +375,7 @@ module merlin_id_stage
     // operand forwarding mux
     //--------------------------------------------------------------
     // forwarding mux for s1
-    always @ (*)
-    begin
+    always @ (*) begin
         if (regs1_addr_q == 5'b0) begin
             // register x0 is always valid
             fwd_mux_regs1_data = regs1_dout;
@@ -405,8 +397,7 @@ module merlin_id_stage
         end
     end
     // forwarding mux for s2
-    always @ (*)
-    begin
+    always @ (*) begin
         if (regs2_addr_q == 5'b0) begin
             // register x0 is always valid
             fwd_mux_regs2_data = regs2_dout;
@@ -432,8 +423,7 @@ module merlin_id_stage
     //--------------------------------------------------------------
     // left operand select mux
     //--------------------------------------------------------------
-    always @ (*)
-    begin
+    always @ (*) begin
         if (sels1_pc_q) begin
             exs_operand_left_o = pc_q;
         end else begin
@@ -445,8 +435,7 @@ module merlin_id_stage
     //--------------------------------------------------------------
     // right operand select mux
     //--------------------------------------------------------------
-    always @ (*)
-    begin
+    always @ (*) begin
         if (sels2_imm_q) begin
             exs_operand_right_o = imm_q;
         end else begin
@@ -458,8 +447,7 @@ module merlin_id_stage
     //--------------------------------------------------------------
     // right cmp select mux
     //--------------------------------------------------------------
-    always @ (*)
-    begin
+    always @ (*) begin
         if (selcmps2_imm_q) begin
             exs_cmp_right_o = imm_q;
         end else begin
@@ -471,8 +459,7 @@ module merlin_id_stage
     //--------------------------------------------------------------
     // csr write data select mux
     //--------------------------------------------------------------
-    always @ (*)
-    begin
+    always @ (*) begin
         if (sel_csr_wr_data_imm_q) begin
             exs_csr_wr_data_o = imm_q;
         end else begin
@@ -485,8 +472,7 @@ module merlin_id_stage
     // assersions
     //--------------------------------------------------------------
 `ifdef RV_ASSERTS_ON
-    always @ (posedge clk_i)
-    begin
+    always @ (posedge clk_i) begin
         if (clk_en_i) begin
             // register file access assertions
             `RV_ASSERT(

@@ -61,8 +61,7 @@ module merlin_fifo
     //--------------------------------------------------------------
     // status signals
     //--------------------------------------------------------------
-    always @ (*)
-    begin
+    always @ (*) begin
         empty_int = 1'b0;
         full_o    = 1'b0;
         if (rd_ptr_q[C_FIFO_DEPTH_X-1:0] == wr_ptr_q[C_FIFO_DEPTH_X-1:0]) begin
@@ -78,8 +77,7 @@ module merlin_fifo
     //--------------------------------------------------------------
     // pointers
     //--------------------------------------------------------------
-    always @ (posedge clk_i or negedge resetb_i)
-    begin
+    always @ (posedge clk_i or negedge resetb_i) begin
         if (~resetb_i) begin
             rd_ptr_q <= { C_FIFO_DEPTH_X+1 {1'b0} };
             wr_ptr_q <= { C_FIFO_DEPTH_X+1 {1'b0} };
@@ -102,8 +100,7 @@ module merlin_fifo
     //--------------------------------------------------------------
     // memory
     //--------------------------------------------------------------
-    always @ (posedge clk_i)
-    begin
+    always @ (posedge clk_i) begin
         if (clk_en_i) begin
             if (wr_i) begin
                 mem[wr_ptr_q[C_FIFO_DEPTH_X-1:0]] <= din_i;
@@ -116,8 +113,7 @@ module merlin_fifo
     // asserts
     //--------------------------------------------------------------
 `ifdef RV_ASSERTS_ON
-    always @ (posedge clk_i)
-    begin
+    always @ (posedge clk_i) begin
         if (clk_en_i) begin
             `RV_ASSERT(((full_o & wr_i) == 1'b0), "FIFO written when full!")
             `RV_ASSERT(((empty_o & rd_i) == 1'b0), "FIFO read when empty!")

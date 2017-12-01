@@ -87,8 +87,7 @@ module merlin_rv32i_decoder
     assign regd_addr  = ins_i[11: 7];
     assign regs1_addr = ins_i[19:15];
     //
-    always @ (*)
-    begin
+    always @ (*) begin
         ins_err_o             = 1'b0;
         fencei_o              = 1'b0;
         wfi_o                 = 1'b0;
@@ -380,8 +379,7 @@ module merlin_rv32i_decoder
     //--------------------------------------------------------------
     // immediate generation
     //--------------------------------------------------------------
-    always @ (*)
-    begin
+    always @ (*) begin
         if (ins_i[31]) begin
             sign_imm = { `RV_XLEN {1'b1} };
         end else begin
