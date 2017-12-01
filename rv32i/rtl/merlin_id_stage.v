@@ -120,7 +120,6 @@ module merlin_id_stage
     reg       [`RV_XLEN-1:0] fwd_regl_data_q;
     // id register stage
     reg       [`RV_XLEN-1:0] pc_q;
-    reg                      ex_udefins_err_q;
     reg       [`RV_XLEN-1:0] imm_q;
     reg                      sels1_pc_q;
     reg                      sel_csr_wr_data_imm_q;
