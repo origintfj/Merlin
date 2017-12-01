@@ -9,17 +9,7 @@
 `ifndef RV_RISCV_DEFS_
 `define RV_RISCV_DEFS_
 
-//`define RV_ASSERTS_ON
-//`define RV_TRACER_ON
-
-//--------------------------------------------------------------
-// Core Configuration
-//--------------------------------------------------------------
-//`define RV_RESET_TYPE_SYNC        // uncomment this if you want a synchronous reset
-//`define RV_CONFIG_STDEXT_64 // TODO
-`define RV_CONFIG_STDEXT_C        // uncomment this if you want to support RVC instructions
-//`define RV_LSQUEUE_PASSTHROUGH
-//`define RV_PFU_PASSTHROUGH
+`include "merlin_config.v"
 
 //--------------------------------------------------------------
 // Global Definitions
