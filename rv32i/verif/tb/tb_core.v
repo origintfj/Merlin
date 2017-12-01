@@ -5,9 +5,9 @@ module tb_core;
 
     parameter C_IRQV_SZ = 32;
 
-    reg         clk   = 1'b0;
-    wire        reset = 1'b1;
-    reg   [1:0] reset_pipe = 2'b0;
+    reg         clk;
+    wire        reset;
+    reg   [1:0] reset_pipe;
 
     // hardware interrupt generator
     reg  [11:0] intr_counter_q;
@@ -61,8 +61,12 @@ module tb_core;
 
     // generate a clock
     //
-    always
-    begin
+    initial begin
+        clk = 1'b0;
+        reset_pipe = 2'b0;
+    end
+    //
+    always begin
         #10;
         clk = ~clk;
     end
@@ -72,15 +76,17 @@ module tb_core;
     //
     assign reset = ~reset_pipe[0];
     //
-    always @ (posedge clk)
-    begin
+    initial begin
+        reset_pipe = 2'b0;
+    end
+    //
+    always @ (posedge clk) begin
         reset_pipe <= { 1'b1, reset_pipe[1] };
     end
 
 
     // hardware interrupt generator
-    always @ (posedge clk or posedge reset)
-    begin
+    always @ (posedge clk or posedge reset) begin
         if (reset) begin
             intr_counter_q <= 12'b0;
             intr_extern    <= 1'b0;
@@ -194,8 +200,7 @@ module tb_core;
     assign rom_data[15: 8] = i_boot_rom.mem[i_merlin.pfu_ids_pc + 1];
     assign rom_data[23:16] = i_boot_rom.mem[i_merlin.pfu_ids_pc + 2];
     assign rom_data[31:24] = i_boot_rom.mem[i_merlin.pfu_ids_pc + 3];
-    always @ (posedge clk or posedge reset)
-    begin
+    always @ (posedge clk or posedge reset) begin
         if (reset) begin
         end else begin
             if (i_merlin.pfu_ids_dav == 1'b1) begin
