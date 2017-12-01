@@ -2,7 +2,7 @@ module boot_rom
     (
         // global
         input  wire                  clk,
-        input  wire                  resetb,
+        input  wire                  reset,
         // instruction port
         output wire                  treqready,
         input  wire                  treqvalid,
@@ -57,9 +57,9 @@ module boot_rom
     //
     //
     assign reqaddr = treqaddr[C_ROM_SZBX-1:0];
-    always @ (posedge clk or negedge resetb)
+    always @ (posedge clk or posedge reset)
     begin
-        if (~resetb) begin
+        if (reset) begin
             trspvalid <= 1'b0;
             trsprerr  <= 1'b0;
             trspdata  <= 32'hbaadf00d;

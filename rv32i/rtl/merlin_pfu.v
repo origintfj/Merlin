@@ -18,7 +18,7 @@ module merlin_pfu
         // global
         input  wire                   clk_i,
         input  wire                   clk_en_i,
-        input  wire                   resetb_i,
+        input  wire                   reset_i,
         // instruction cache interface
         input  wire                   ireqready_i,
         output wire                   ireqvalid_o,
@@ -94,8 +94,8 @@ module merlin_pfu
     assign request  = ireqvalid_o & ireqready_i;
     assign response = irspvalid_i & irspready_o;
     //
-    always @ (posedge clk_i or negedge resetb_i) begin
-        if (~resetb_i) begin
+    always @ (posedge clk_i or posedge reset_i) begin
+        if (reset_i) begin
             ibus_debt <= 1'b0;
         end else if (clk_en_i) begin
             if (request & ~response) begin
@@ -110,8 +110,8 @@ module merlin_pfu
     //--------------------------------------------------------------
     // fifo level counter
     //--------------------------------------------------------------
-    always @ (posedge clk_i or negedge resetb_i) begin
-        if (~resetb_i) begin
+    always @ (posedge clk_i or posedge reset_i) begin
+        if (reset_i) begin
             fifo_level_q <= { 1'b1, { C_FIFO_DEPTH_X {1'b0} } };
         end else if (clk_en_i) begin
 //*
@@ -138,8 +138,8 @@ module merlin_pfu
     //--------------------------------------------------------------
     // program counter
     //--------------------------------------------------------------
-    always @ (posedge clk_i or negedge resetb_i) begin
-        if (~resetb_i) begin
+    always @ (posedge clk_i or posedge reset_i) begin
+        if (reset_i) begin
             pc_q <= C_RESET_VECTOR;
         end else if (clk_en_i) begin
             if (exs_pc_wr_i) begin
@@ -159,8 +159,8 @@ module merlin_pfu
     //--------------------------------------------------------------
     // vectoring flag register
     //--------------------------------------------------------------
-    always @ (posedge clk_i or negedge resetb_i) begin
-        if (~resetb_i) begin
+    always @ (posedge clk_i or posedge reset_i) begin
+        if (reset_i) begin
             vectoring_q <= 1'b0;
         end else if (clk_en_i) begin
             if (exs_pc_wr_i) begin
@@ -175,8 +175,8 @@ module merlin_pfu
     //--------------------------------------------------------------
     // sofid register
     //--------------------------------------------------------------
-    always @ (posedge clk_i or negedge resetb_i) begin
-        if (~resetb_i) begin
+    always @ (posedge clk_i or posedge reset_i) begin
+        if (reset_i) begin
             sofid_q <= `RV_SOFID_RUN;
         end else if (clk_en_i) begin
             if (vectoring_q & request) begin
@@ -210,7 +210,7 @@ module merlin_pfu
             // global
             .clk_i          (clk_i),
             .clk_en_i       (clk_en_i),
-            .resetb_i       (resetb_i),
+            .reset_i        (reset_i),
             // control and status
             .flush_i        (exs_pc_wr_i | vectoring_q),
             .empty_o        (fifo_empty),

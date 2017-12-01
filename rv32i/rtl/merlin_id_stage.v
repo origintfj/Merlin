@@ -13,7 +13,7 @@ module merlin_id_stage
         // global
         input  wire                      clk_i,
         input  wire                      clk_en_i,
-        input  wire                      resetb_i,
+        input  wire                      reset_i,
         // pfu interface
         input  wire                      pfu_dav_i,   // new fetch available
         output wire                      pfu_ack_o,   // ack this fetch
@@ -245,8 +245,8 @@ module merlin_id_stage
         end
     end
     //
-    always @ (posedge clk_i or negedge resetb_i) begin
-        if (~resetb_i) begin
+    always @ (posedge clk_i or posedge reset_i) begin
+        if (reset_i) begin
             reg_loading_vector_q <= 31'b0;
         end else if (clk_en_i) begin
             if (regd_addr_d != 5'b0 && id_stage_en && zone_d == `RV_ZONE_LOADQ) begin
@@ -272,7 +272,7 @@ module merlin_id_stage
             // global
             .clk_i         (clk_i),
             .clk_en_i      (clk_en_i),
-            .resetb_i      (resetb_i),
+            .reset_i       (reset_i),
             // write port
             .wreg_a_wr_i   (exs_regd_wr_i),
             .wreg_a_addr_i (exs_regd_addr_i),
@@ -294,8 +294,8 @@ module merlin_id_stage
     // forwarding registers
     //--------------------------------------------------------------
     // regd forwarding register
-    always @ (posedge clk_i or negedge resetb_i) begin
-        if (~resetb_i) begin
+    always @ (posedge clk_i or posedge reset_i) begin
+        if (reset_i) begin
             fwd_regd_wr_q   <= 1'b0;
             //fwd_regd_addr_q <= 5'b0; // NOTE: don't actually care
             //fwd_regd_data_q <= { `RV_XLEN {1'b0} }; // NOTE: don't actually care
@@ -306,8 +306,8 @@ module merlin_id_stage
         end
     end
     // lqueue write-back forwarding register
-    always @ (posedge clk_i or negedge resetb_i) begin
-        if (~resetb_i) begin
+    always @ (posedge clk_i or posedge reset_i) begin
+        if (reset_i) begin
             fwd_regl_wr_q   <= 1'b0;
             //fwd_regl_addr_q <= 5'b0; // NOTE: don't actually care
             //fwd_regl_data_q <= { `RV_XLEN {1'b0} }; // NOTE: don't actually care
@@ -322,8 +322,8 @@ module merlin_id_stage
     //--------------------------------------------------------------
     // id register stage
     //--------------------------------------------------------------
-    always @ (posedge clk_i or negedge resetb_i) begin
-        if (~resetb_i) begin
+    always @ (posedge clk_i or posedge reset_i) begin
+        if (reset_i) begin
             exs_valid_o <= 1'b0;
         end else if (clk_en_i) begin
             if (id_stage_en) begin

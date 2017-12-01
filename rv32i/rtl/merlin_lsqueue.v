@@ -20,7 +20,7 @@ module merlin_lsqueue
         // global
         input  wire                clk_i,
         input  wire                clk_en_i,
-        input  wire                resetb_i,
+        input  wire                reset_i,
         // instruction decoder stage interface
         output wire                lsq_reg_wr_o,
         output wire          [4:0] lsq_reg_addr_o,
@@ -166,7 +166,7 @@ module merlin_lsqueue
             // global
             .clk_i              (clk_i),
             .clk_en_i           (clk_en_i),
-            .resetb_i           (resetb_i),
+            .reset_i            (reset_i),
             // control and status
             .flush_i            (1'b0),
             .empty_o            (req_fifo_empty),
@@ -198,7 +198,7 @@ module merlin_lsqueue
             // global
             .clk_i              (clk_i),
             .clk_en_i           (clk_en_i),
-            .resetb_i           (resetb_i),
+            .reset_i            (reset_i),
             // control and status
             .flush_i            (1'b0),
             .empty_o            (rsp_ctrl_fifo_empty),
@@ -226,7 +226,7 @@ module merlin_lsqueue
             // global
             .clk_i              (clk_i),
             .clk_en_i           (clk_en_i),
-            .resetb_i           (resetb_i),
+            .reset_i            (reset_i),
             // control and status
             .flush_i            (1'b0),
             .empty_o            (rsp_data_fifo_empty),

@@ -5,7 +5,7 @@ module ssram
         // global
         input  wire        clk_i,
         input  wire        clk_en_i,
-        input  wire        resetb_i,
+        input  wire        reset_i,
         //
         output wire        treqready_o,
         input  wire        treqvalid_i,
@@ -45,9 +45,9 @@ module ssram
     //
     //
     assign reqaddr = treqaddr_i[C_SSRAM_SZBX-1:0];
-    always @ (posedge clk_i or negedge resetb_i)
+    always @ (posedge clk_i or posedge reset_i)
     begin
-        if (~resetb_i) begin
+        if (reset_i) begin
             trspvalid_o <= 1'b0;
             trspdata_o  <= 32'hbaadf00d;
         end else if (clk_en_i) begin

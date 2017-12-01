@@ -15,7 +15,7 @@ module merlin_alu
         //
         input  wire                   clk_i,
         input  wire                   clk_en_i,
-        input  wire                   resetb_i,
+        input  wire                   reset_i,
         //
         input  wire    [`RV_XLEN-1:0] op_left_i,
         input  wire    [`RV_XLEN-1:0] op_right_i,

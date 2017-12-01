@@ -13,7 +13,7 @@ module merlin_int_regs
         // global
         input  wire                clk_i,
         input  wire                clk_en_i,
-        input  wire                resetb_i,
+        input  wire                reset_i,
         // write port
         input  wire                wreg_a_wr_i,
         input  wire          [4:0] wreg_a_addr_i,

@@ -24,7 +24,7 @@ module merlin_cs_regs
         //
         input  wire                clk_i,
         input  wire                clk_en_i,
-        input  wire                resetb_i,
+        input  wire                reset_i,
         // stage enable
         input  wire                exs_en_i,
         // access request / error reporting interface
@@ -479,8 +479,8 @@ module merlin_cs_regs
     //--------------------------------------------------------------
     // write decode and registers
     //--------------------------------------------------------------
-    always @ (posedge clk_i or negedge resetb_i) begin
-        if (~resetb_i) begin
+    always @ (posedge clk_i or posedge reset_i) begin
+        if (reset_i) begin
             // processor priv. mode register
             mode_q     <= `RV_CSR_MODE_MACHINE;
             // accessible CSRs

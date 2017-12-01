@@ -18,7 +18,7 @@ module merlin
         // global
         input  wire                  clk_i,
         input  wire                  clk_en_i,
-        input  wire                  resetb_i,
+        input  wire                  reset_i,
         // hardware interrupt interface
         input  wire                  irqm_extern_i,
         input  wire                  irqm_softw_i,
@@ -132,7 +132,7 @@ module merlin
             // global
             .clk_i           (clk_i),
             .clk_en_i        (clk_en_i),
-            .resetb_i        (resetb_i),
+            .reset_i         (reset_i),
             // instruction cache interface
             .ireqready_i     (ireqready_i),
             .ireqvalid_o     (ireqvalid_o),
@@ -165,7 +165,7 @@ module merlin
             // global
             .clk_i                (clk_i),
             .clk_en_i             (clk_en_i),
-            .resetb_i             (resetb_i),
+            .reset_i              (reset_i),
             // pfu interface
             .pfu_dav_i            (pfu_ids_dav),      // new fetch available
             .pfu_ack_o            (ids_pfu_ack),      // ack this fetch
@@ -223,7 +223,7 @@ module merlin
             // global
             .clk_i                (clk_i),
             .clk_en_i             (clk_en_i),
-            .resetb_i             (resetb_i),
+            .reset_i              (reset_i),
             // external interface
             .irqm_extern_i        (irqm_extern_i),
             .irqm_softw_i         (irqm_softw_i),
@@ -298,7 +298,7 @@ module merlin
             // global
             .clk_i              (clk_i),
             .clk_en_i           (clk_en_i),
-            .resetb_i           (resetb_i),
+            .reset_i            (reset_i),
             // instruction decoder stage interface
             .lsq_reg_wr_o       (lsq_ids_reg_wr),
             .lsq_reg_addr_o     (lsq_ids_reg_addr),

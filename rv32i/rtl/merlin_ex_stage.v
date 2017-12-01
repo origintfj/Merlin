@@ -15,7 +15,7 @@ module merlin_ex_stage
         // global
         input  wire                     clk_i,
         input  wire                     clk_en_i,
-        input  wire                     resetb_i,
+        input  wire                     reset_i,
         // external interface
         input  wire                     irqm_extern_i,
         input  wire                     irqm_softw_i,
@@ -249,8 +249,8 @@ module merlin_ex_stage
     assign ex_valid       = ids_valid_q & sofid_run;
     assign execute_commit = ex_valid & (alu_cmp_out | ~ids_cond_q) & ~csr_jump_to_trap;
     //
-    always @ (posedge clk_i or negedge resetb_i) begin
-        if (~resetb_i) begin
+    always @ (posedge clk_i or posedge reset_i) begin
+        if (reset_i) begin
             sofid_q <= `RV_SOFID_RUN;
         end else if (clk_en_i) begin
             if (ex_stage_en) begin
@@ -274,8 +274,8 @@ module merlin_ex_stage
     //--------------------------------------------------------------
     // delay stage
     //--------------------------------------------------------------
-    always @ (posedge clk_i or negedge resetb_i) begin
-        if (~resetb_i) begin
+    always @ (posedge clk_i or posedge reset_i) begin
+        if (reset_i) begin
             ids_valid_q <= 1'b0;
         end else if (clk_en_i) begin
             if (ex_stage_en) begin
@@ -320,8 +320,8 @@ module merlin_ex_stage
     //--------------------------------------------------------------
     // wfi latch
     //--------------------------------------------------------------
-    always @ (posedge clk_i or negedge resetb_i) begin
-        if (~resetb_i) begin
+    always @ (posedge clk_i or posedge reset_i) begin
+        if (reset_i) begin
             wfi_latch_q <= 1'b0;
         end else if (clk_en_i) begin
             if (csr_interrupt) begin
@@ -382,7 +382,7 @@ module merlin_ex_stage
             //
             .clk_i        (clk_i),
             .clk_en_i     (clk_en_i & ex_stage_en),
-            .resetb_i     (resetb_i),
+            .reset_i      (reset_i),
             //
             .op_left_i    (ids_operand_left_i),
             .op_right_i   (ids_operand_right_i),
@@ -414,7 +414,7 @@ module merlin_ex_stage
             //
             .clk_i             (clk_i),
             .clk_en_i          (clk_en_i),
-            .resetb_i          (resetb_i),
+            .reset_i           (reset_i),
             //
             .exs_en_i          (ex_stage_en),
             // access request / error reporting interface
@@ -471,7 +471,7 @@ module merlin_ex_stage
             // global
             .clk_i                 (clk_i),
             .clk_en_i              (clk_en_i),
-            .resetb_i              (resetb_i),
+            .reset_i               (reset_i),
             // tracer interface
             .ex_stage_en_i         (ex_stage_en),
             .execute_commit_i      (execute_commit),

@@ -5,8 +5,8 @@ module tb_core;
 
     parameter C_IRQV_SZ = 32;
 
-    reg         clk    = 1'b1;
-    reg         resetb = 1'b0;
+    reg         clk   = 1'b1;
+    reg         reset = 1'b1;
 
     // hardware interrupt generator
     reg  [11:0] intr_counter_q;
@@ -71,14 +71,14 @@ module tb_core;
     //
     always @ (posedge clk)
     begin
-        resetb <= 1'b1;
+        reset <= 1'b0;
     end
 
 
     // hardware interrupt generator
-    always @ (posedge clk or negedge resetb)
+    always @ (posedge clk or posedge reset)
     begin
-        if (~resetb) begin
+        if (reset) begin
             intr_counter_q <= 12'b0;
             intr_extern    <= 1'b0;
         end else begin
@@ -107,7 +107,7 @@ module tb_core;
             // global
             .clk_i               (clk),
             .clk_en_i            (1'b1),
-            .resetb_i            (resetb),
+            .reset_i             (reset),
             // hardware interrupt interface
             .irqm_extern_i       (intr_extern),
             .irqm_softw_i        (1'b0),
@@ -151,7 +151,7 @@ module tb_core;
         (
             // global
             .clk       (clk),
-            .resetb    (resetb),
+            .reset     (reset),
             // instruction port
             .treqready (ireqready),
             .treqvalid (ireqvalid),
@@ -171,7 +171,7 @@ module tb_core;
             // global
             .clk_i        (clk),
             .clk_en_i     (1'b1),
-            .resetb_i     (resetb),
+            .reset_i      (reset),
             //
             .treqready_o  (dreqready),
             .treqvalid_i  (dreqvalid),
@@ -191,9 +191,9 @@ module tb_core;
     assign rom_data[15: 8] = i_boot_rom.mem[i_merlin.pfu_ids_pc + 1];
     assign rom_data[23:16] = i_boot_rom.mem[i_merlin.pfu_ids_pc + 2];
     assign rom_data[31:24] = i_boot_rom.mem[i_merlin.pfu_ids_pc + 3];
-    always @ (posedge clk or negedge resetb)
+    always @ (posedge clk or posedge reset)
     begin
-        if (~resetb) begin
+        if (reset) begin
         end else begin
             if (i_merlin.pfu_ids_dav == 1'b1) begin
                 if (i_merlin.pfu_ids_ins != rom_data) begin

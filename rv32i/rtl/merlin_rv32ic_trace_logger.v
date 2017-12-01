@@ -15,7 +15,7 @@ module merlin_rv32ic_trace_logger
         // global
         input wire                clk_i,
         input wire                clk_en_i,
-        input wire                resetb_i,
+        input wire                reset_i,
         // tracer interface
         input wire                ex_stage_en_i,
         input wire                execute_commit_i,
@@ -127,8 +127,8 @@ module merlin_rv32ic_trace_logger
     //--------------------------------------------------------------
     // logging process
     //--------------------------------------------------------------
-    always @ (posedge clk_i or negedge resetb_i) begin
-        if (~resetb_i) begin
+    always @ (posedge clk_i or posedge reset_i) begin
+        if (reset_i) begin
         end else if (clk_en_i & ex_stage_en_i) begin
             if (csr_jump_to_trap_i) begin
                 $fwrite(logfile, "%1d [%5d]", trap_depth, stack_depth);

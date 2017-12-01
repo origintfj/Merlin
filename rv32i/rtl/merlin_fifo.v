@@ -20,7 +20,7 @@ module merlin_fifo
         // global
         input  wire                     clk_i,
         input  wire                     clk_en_i,
-        input  wire                     resetb_i,
+        input  wire                     reset_i,
         // control and status
         input  wire                     flush_i,
         output wire                     empty_o,
@@ -77,8 +77,8 @@ module merlin_fifo
     //--------------------------------------------------------------
     // pointers
     //--------------------------------------------------------------
-    always @ (posedge clk_i or negedge resetb_i) begin
-        if (~resetb_i) begin
+    always @ (posedge clk_i or posedge reset_i) begin
+        if (reset_i) begin
             rd_ptr_q <= { C_FIFO_DEPTH_X+1 {1'b0} };
             wr_ptr_q <= { C_FIFO_DEPTH_X+1 {1'b0} };
         end else if (clk_en_i) begin

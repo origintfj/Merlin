@@ -15,6 +15,7 @@
 //--------------------------------------------------------------
 // Core Configuration
 //--------------------------------------------------------------
+//`define RV_RESET_TYPE_SYNC
 //`define RV_CONFIG_STDEXT_64 // TODO
 `define RV_CONFIG_STDEXT_C
 //`define RV_LSQUEUE_PASSTHROUGH
