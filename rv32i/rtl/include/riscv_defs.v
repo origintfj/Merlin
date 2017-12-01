@@ -15,15 +15,23 @@
 //--------------------------------------------------------------
 // Core Configuration
 //--------------------------------------------------------------
-//`define RV_RESET_TYPE_SYNC
+//`define RV_RESET_TYPE_SYNC        // uncomment this if you want a synchronous reset
 //`define RV_CONFIG_STDEXT_64 // TODO
-`define RV_CONFIG_STDEXT_C
+`define RV_CONFIG_STDEXT_C        // uncomment this if you want to support RVC instructions
 //`define RV_LSQUEUE_PASSTHROUGH
 //`define RV_PFU_PASSTHROUGH
 
 //--------------------------------------------------------------
 // Global Definitions
 //--------------------------------------------------------------
+`ifdef RV_RESET_TYPE_SYNC
+    `define RV_SYNC_LOGIC_CLOCK(clock)                  (posedge clock)
+    `define RV_SYNC_LOGIC_CLOCK_RESET(clock, reset)     (posedge clock)
+`else
+    `define RV_SYNC_LOGIC_CLOCK(clock)                  (posedge clock)
+    `define RV_SYNC_LOGIC_CLOCK_RESET(clock, reset)     (posedge clock or posedge reset)
+`endif
+
 `ifdef RV_CONFIG_STDEXT_64
     `define RV_XLEN_X   6 // 64-bit
 `else

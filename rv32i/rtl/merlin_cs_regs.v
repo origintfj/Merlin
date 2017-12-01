@@ -304,7 +304,7 @@ module merlin_cs_regs
         end
     end
     //
-    always @ (posedge clk_i) begin
+    always @ `RV_SYNC_LOGIC_CLOCK(clk_i) begin
         if (clk_en_i) begin
             if (exs_en_i & access_i) begin
                 bad_csr_addr_o  <= rd_invalid_address;
@@ -467,7 +467,7 @@ module merlin_cs_regs
             end
         endcase
     end
-    always @ (posedge clk_i) begin
+    always @ `RV_SYNC_LOGIC_CLOCK(clk_i) begin
         if (clk_en_i) begin
             if (exs_en_i & access_i) begin
                 rd_data_o <= rd_data;
@@ -479,7 +479,7 @@ module merlin_cs_regs
     //--------------------------------------------------------------
     // write decode and registers
     //--------------------------------------------------------------
-    always @ (posedge clk_i or posedge reset_i) begin
+    always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
         if (reset_i) begin
             // processor priv. mode register
             mode_q     <= `RV_CSR_MODE_MACHINE;

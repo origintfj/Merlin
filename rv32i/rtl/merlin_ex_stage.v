@@ -249,7 +249,7 @@ module merlin_ex_stage
     assign ex_valid       = ids_valid_q & sofid_run;
     assign execute_commit = ex_valid & (alu_cmp_out | ~ids_cond_q) & ~csr_jump_to_trap;
     //
-    always @ (posedge clk_i or posedge reset_i) begin
+    always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
         if (reset_i) begin
             sofid_q <= `RV_SOFID_RUN;
         end else if (clk_en_i) begin
@@ -274,7 +274,7 @@ module merlin_ex_stage
     //--------------------------------------------------------------
     // delay stage
     //--------------------------------------------------------------
-    always @ (posedge clk_i or posedge reset_i) begin
+    always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
         if (reset_i) begin
             ids_valid_q <= 1'b0;
         end else if (clk_en_i) begin
@@ -320,7 +320,7 @@ module merlin_ex_stage
     //--------------------------------------------------------------
     // wfi latch
     //--------------------------------------------------------------
-    always @ (posedge clk_i or posedge reset_i) begin
+    always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
         if (reset_i) begin
             wfi_latch_q <= 1'b0;
         end else if (clk_en_i) begin

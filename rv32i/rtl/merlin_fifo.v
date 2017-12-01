@@ -77,7 +77,7 @@ module merlin_fifo
     //--------------------------------------------------------------
     // pointers
     //--------------------------------------------------------------
-    always @ (posedge clk_i or posedge reset_i) begin
+    always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
         if (reset_i) begin
             rd_ptr_q <= { C_FIFO_DEPTH_X+1 {1'b0} };
             wr_ptr_q <= { C_FIFO_DEPTH_X+1 {1'b0} };
@@ -100,7 +100,7 @@ module merlin_fifo
     //--------------------------------------------------------------
     // memory
     //--------------------------------------------------------------
-    always @ (posedge clk_i) begin
+    always @ `RV_SYNC_LOGIC_CLOCK(clk_i) begin
         if (clk_en_i) begin
             if (wr_i) begin
                 mem[wr_ptr_q[C_FIFO_DEPTH_X-1:0]] <= din_i;
@@ -113,7 +113,7 @@ module merlin_fifo
     // asserts
     //--------------------------------------------------------------
 `ifdef RV_ASSERTS_ON
-    always @ (posedge clk_i) begin
+    always @ `RV_SYNC_LOGIC_CLOCK(clk_i) begin
         if (clk_en_i) begin
             `RV_ASSERT(((full_o & wr_i) == 1'b0), "FIFO written when full!")
             `RV_ASSERT(((empty_o & rd_i) == 1'b0), "FIFO read when empty!")

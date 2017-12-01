@@ -5,8 +5,9 @@ module tb_core;
 
     parameter C_IRQV_SZ = 32;
 
-    reg         clk   = 1'b1;
-    reg         reset = 1'b1;
+    reg         clk   = 1'b0;
+    wire        reset = 1'b1;
+    reg   [1:0] reset_pipe = 2'b0;
 
     // hardware interrupt generator
     reg  [11:0] intr_counter_q;
@@ -69,9 +70,11 @@ module tb_core;
 
     // generate a reset
     //
+    assign reset = ~reset_pipe[0];
+    //
     always @ (posedge clk)
     begin
-        reset <= 1'b0;
+        reset_pipe <= { 1'b1, reset_pipe[1] };
     end
 
 

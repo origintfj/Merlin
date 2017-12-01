@@ -127,7 +127,7 @@ module merlin_rv32ic_trace_logger
     //--------------------------------------------------------------
     // logging process
     //--------------------------------------------------------------
-    always @ (posedge clk_i or posedge reset_i) begin
+    always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
         if (reset_i) begin
         end else if (clk_en_i & ex_stage_en_i) begin
             if (csr_jump_to_trap_i) begin

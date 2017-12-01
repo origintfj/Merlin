@@ -47,7 +47,7 @@ module merlin_alu
     //--------------------------------------------------------------
     // alu output register
     //--------------------------------------------------------------
-    always @ (posedge clk_i) begin
+    always @ `RV_SYNC_LOGIC_CLOCK(clk_i) begin
         if (clk_en_i) begin
             op_result_o <= op_result_mux_out;
         end
@@ -116,7 +116,7 @@ module merlin_alu
         cmp_ltu = cmp_left_i < cmp_right_i;
     end
     //
-    always @ (posedge clk_i) begin
+    always @ `RV_SYNC_LOGIC_CLOCK(clk_i) begin
         if (clk_en_i) begin
             cmp_result_o <= 1'b0;
             case (cmp_opcode_i)

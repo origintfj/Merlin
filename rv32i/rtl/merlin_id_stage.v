@@ -245,7 +245,7 @@ module merlin_id_stage
         end
     end
     //
-    always @ (posedge clk_i or posedge reset_i) begin
+    always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
         if (reset_i) begin
             reg_loading_vector_q <= 31'b0;
         end else if (clk_en_i) begin
@@ -294,7 +294,7 @@ module merlin_id_stage
     // forwarding registers
     //--------------------------------------------------------------
     // regd forwarding register
-    always @ (posedge clk_i or posedge reset_i) begin
+    always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
         if (reset_i) begin
             fwd_regd_wr_q   <= 1'b0;
             //fwd_regd_addr_q <= 5'b0; // NOTE: don't actually care
@@ -306,7 +306,7 @@ module merlin_id_stage
         end
     end
     // lqueue write-back forwarding register
-    always @ (posedge clk_i or posedge reset_i) begin
+    always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
         if (reset_i) begin
             fwd_regl_wr_q   <= 1'b0;
             //fwd_regl_addr_q <= 5'b0; // NOTE: don't actually care
@@ -322,7 +322,7 @@ module merlin_id_stage
     //--------------------------------------------------------------
     // id register stage
     //--------------------------------------------------------------
-    always @ (posedge clk_i or posedge reset_i) begin
+    always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
         if (reset_i) begin
             exs_valid_o <= 1'b0;
         end else if (clk_en_i) begin
@@ -333,7 +333,7 @@ module merlin_id_stage
             end
         end
     end
-    always @ (posedge clk_i) begin
+    always @ `RV_SYNC_LOGIC_CLOCK(clk_i) begin
         if (clk_en_i) begin
             if (id_stage_en) begin
                 exs_ins_o             <= { { `RV_XLEN-32 {1'b0} }, pfu_ins_i };
@@ -471,7 +471,7 @@ module merlin_id_stage
     // assersions
     //--------------------------------------------------------------
 `ifdef RV_ASSERTS_ON
-    always @ (posedge clk_i) begin
+    always @ `RV_SYNC_LOGIC_CLOCK(clk_i) begin
         if (clk_en_i) begin
             // register file access assertions
             `RV_ASSERT(
