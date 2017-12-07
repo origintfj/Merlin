@@ -81,7 +81,7 @@ module tb_core;
     end
     //
     always begin
-        #10;
+        #10ns;
         clk = ~clk;
     end
 

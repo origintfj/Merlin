@@ -6,8 +6,6 @@
  * License URL    : http://www.apache.org/licenses/
  */
 
-// TODO can branches also cause miss-aligned instruction fetch exceptions? or
-// only jumps
 `include "riscv_defs.v"
 
 module merlin_ex_stage
@@ -203,7 +201,7 @@ module merlin_ex_stage
         end else if (ids_fencei_q) begin
             pfu_jump_addr_o = pc_inc_q;
         end else begin
-            pfu_jump_addr_o = alu_data_out;
+            pfu_jump_addr_o = { alu_data_out[`RV_XLEN-1:1], 1'b0 };
         end
     end
 
@@ -230,10 +228,8 @@ module merlin_ex_stage
     assign excp_ecall = ids_ecall_q;
     assign excp_ferr  = ids_ins_ferr_q;
     assign excp_uerr  = ids_ins_uerr_q;
-`ifdef RV_CONFIG_STDEXT_C
-    assign excp_maif  = ids_jump_q & alu_data_out[0];
-`else
-    assign excp_maif  = ids_jump_q & (|(alu_data_out[1:0]));
+`ifndef RV_CONFIG_STDEXT_C
+    assign excp_maif  = ids_jump_q & alu_data_out[1];
 `endif
     //
     always @ (*) begin
