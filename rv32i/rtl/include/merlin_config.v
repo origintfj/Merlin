@@ -13,7 +13,6 @@
 // Simulation Configuration
 //--------------------------------------------------------------
 //`define RV_ASSERTS_ON             // uncomment to enable assertions
-//`define RV_TRACER_ON              // uncomment to enable the instruction trace logger
 
 //--------------------------------------------------------------
 // Core Configuration

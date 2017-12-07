@@ -75,7 +75,19 @@ module merlin_ex_stage
         output wire               [2:0] lsq_funct3_o,
         output wire               [4:0] lsq_regd_addr_o,
         output wire      [`RV_XLEN-1:0] lsq_regs2_data_o,
-        output wire      [`RV_XLEN-1:0] lsq_addr_o
+        output wire      [`RV_XLEN-1:0] lsq_addr_o,
+        // instruction trace port
+        output wire                     mit_en_o,
+        output wire                     mit_commit_o,
+        output wire      [`RV_XLEN-1:0] mit_pc_o,
+        output wire      [`RV_XLEN-1:0] mit_ins_o,
+        output wire      [`RV_XLEN-1:0] mit_regs2_data_o,
+        output wire      [`RV_XLEN-1:0] mit_alu_dout_o,
+        output wire               [1:0] mit_mode_o,
+        output wire                     mit_trap_o,
+        output wire      [`RV_XLEN-1:0] mit_trap_cause_o,
+        output wire      [`RV_XLEN-1:0] mit_trap_entry_addr_o,
+        output wire      [`RV_XLEN-1:0] mit_trap_rtn_addr_o
     );
 
     //--------------------------------------------------------------
@@ -148,7 +160,6 @@ module merlin_ex_stage
     wire    [`RV_XLEN-1:0] csr_trap_rtn_addr;
     wire             [1:0] csr_mode;
     wire    [`RV_XLEN-1:0] csr_trap_cause;
-    // core tracer
 
     //--------------------------------------------------------------
 
@@ -165,6 +176,18 @@ module merlin_ex_stage
     assign lsq_regd_addr_o  = ids_regd_addr_q;
     assign lsq_regs2_data_o = ids_regs2_data_q;
     assign lsq_addr_o       = alu_data_out;
+    // core tracer
+    assign mit_en_o              = ex_stage_en;
+    assign mit_commit_o          = execute_commit;
+    assign mit_pc_o              = ids_pc_q;
+    assign mit_ins_o             = ids_ins_q;
+    assign mit_regs2_data_o      = ids_regs2_data_q;
+    assign mit_alu_dout_o        = alu_data_out;
+    assign mit_mode_o            = csr_mode;
+    assign mit_trap_o            = csr_jump_to_trap;
+    assign mit_trap_cause_o      = csr_trap_cause;
+    assign mit_trap_entry_addr_o = csr_trap_entry_addr;
+    assign mit_trap_rtn_addr_o   = csr_trap_rtn_addr;
 
 
     //--------------------------------------------------------------
@@ -461,29 +484,4 @@ module merlin_ex_stage
             // tracer port
             .trap_cause_o      (csr_trap_cause)
         );
-
-
-    //--------------------------------------------------------------
-    // core tracer
-    //--------------------------------------------------------------
-`ifdef RV_TRACER_ON
-    merlin_rv32ic_trace_logger i_merlin_rv32ic_trace_logger (
-            // global
-            .clk_i                 (clk_i),
-            .clk_en_i              (clk_en_i),
-            .reset_i               (reset_i),
-            // tracer interface
-            .ex_stage_en_i         (ex_stage_en),
-            .execute_commit_i      (execute_commit),
-            .ins_addr_i            (ids_pc_q),
-            .ins_value_i           (ids_ins_q),
-            .regs2_data_i          (ids_regs2_data_q),
-            .alu_dout_i            (alu_data_out),
-            .csr_mode_i            (csr_mode),
-            .csr_jump_to_trap_i    (csr_jump_to_trap),
-            .csr_trap_cause_i      (csr_trap_cause),
-            .csr_trap_entry_addr_i (csr_trap_entry_addr),
-            .csr_trap_rtn_addr_i   (csr_trap_rtn_addr)
-        );
-`endif
 endmodule

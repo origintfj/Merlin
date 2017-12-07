@@ -51,7 +51,7 @@ ifdef GATES
 	IV_ARGS += -DGATES
 	RTL_FILE_LIST := osu035_stdcells.v merlin.rtlnopwr.v
 else
-	IV_ARGS += -DRV_ASSERTS_ON -DRV_TRACER_ON
+	IV_ARGS += -DRV_ASSERTS_ON
 endif
 
 usage:
