@@ -226,20 +226,27 @@ module merlin_id_stage
      * No register can be targeted if it has a pending load
      *
      */
-    assign s1_lq_fwd_available = (lsq_reg_wr_i  && lsq_reg_addr_i  == regs1_addr) ||
-                                 (fwd_regl_wr_q && fwd_regl_addr_q == regs1_addr);
-    assign s2_lq_fwd_available = (lsq_reg_wr_i  && lsq_reg_addr_i  == regs2_addr) ||
-                                 (fwd_regl_wr_q && fwd_regl_addr_q == regs2_addr);
+    assign s1_lq_fwd_available = (lsq_reg_wr_i  && (lsq_reg_addr_i  == regs1_addr)) ||
+                                 (fwd_regl_wr_q && (fwd_regl_addr_q == regs1_addr));
+    assign s2_lq_fwd_available = (lsq_reg_wr_i  && (lsq_reg_addr_i  == regs2_addr)) ||
+                                 (fwd_regl_wr_q && (fwd_regl_addr_q == regs2_addr));
     //
     always @ (*) begin
         ids_stall = 1'b0;
         //
         if (pfu_dav_i) begin
-            if ( (regs1_addr != 5'b0 && regs1_rd &&
-                   reg_loading_vector_q[regs1_addr] && !s1_lq_fwd_available) ||
-                 (regs2_addr != 5'b0 && regs2_rd &&
-                   reg_loading_vector_q[regs2_addr] && !s2_lq_fwd_available) ||
-                 (regd_addr_d != 5'b0 && regd_tgt && reg_loading_vector_q[regd_addr_d]) ) begin
+            // if reading reg_s1, it's loading, and there's no forward available, then stall
+            if (regs1_addr != 5'b0 && regs1_rd &&
+                reg_loading_vector_q[regs1_addr] && !s1_lq_fwd_available) begin
+                ids_stall = 1'b1;
+            end
+            // if reading reg_s2, it's loading, and there's no forward available, then stall
+            if (regs2_addr != 5'b0 && regs2_rd &&
+                reg_loading_vector_q[regs2_addr] && !s2_lq_fwd_available) begin
+                ids_stall = 1'b1;
+            end
+            // if targeting reg_d and it's loading, then stall
+            if (regd_addr_d != 5'b0 && regd_tgt && reg_loading_vector_q[regd_addr_d]) begin
                 ids_stall = 1'b1;
             end
         end

@@ -300,7 +300,11 @@ module merlin_rv32ic_trace_logger
                 end else if (rv32i_ins[6:0] == `RV_MAJOR_OPCODE_OPIMM) begin
                     case (alu_op)
                         `RV_ALUOP_ADD : begin
-                            $fwrite(logfile, "addi  x%0d, x%0d, %0d", regd_addr, regs1_addr, $signed(imm));
+                            if (rv32i_ins == 32'h00000013) begin
+                                $fwrite(logfile, "nop");
+                            end else begin
+                                $fwrite(logfile, "addi  x%0d, x%0d, %0d", regd_addr, regs1_addr, $signed(imm));
+                            end
                             if (regd_addr == 5'd2 && regs1_addr == 5'd2) begin
                                 stack_depth = stack_depth + $signed(imm);
                             end
