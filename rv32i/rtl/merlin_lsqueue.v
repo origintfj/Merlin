@@ -6,9 +6,6 @@
  * License URL    : http://www.apache.org/licenses/
  */
 
-// NOTE: RV_XLEN must be in { 32, 64 } TODO - enforce
-// TODO generalise the 'response data formatter'
-//
 `include "riscv_defs.v"
 
 module merlin_lsqueue
@@ -259,29 +256,33 @@ module merlin_lsqueue
                     lsq_reg_data_o = { { `RV_XLEN-16 {1'b0} }, rsp_data_justified[15:0] };
                 end
             end
-/*
             3'b010 : begin // LW
-                if (rsp_data_justified[31]) begin
-                    lsq_reg_data_o = { { `RV_XLEN-32 {1'b1} }, rsp_data_justified[31:0] };
-                end else begin
-                    lsq_reg_data_o = { { `RV_XLEN-32 {1'b0} }, rsp_data_justified[31:0] };
+                if (`RV_XLEN == 64) begin // XLEN == 64
+                    if (rsp_data_justified[31]) begin
+                        lsq_reg_data_o = { { `RV_XLEN-32 {1'b1} }, rsp_data_justified[31:0] };
+                    end else begin
+                        lsq_reg_data_o = { { `RV_XLEN-32 {1'b0} }, rsp_data_justified[31:0] };
+                    end
+                end else begin // XLEN == 32
+                    lsq_reg_data_o = rsp_data_justified;
                 end
             end
             3'b011 : begin // LD
                 lsq_reg_data_o = rsp_data_justified;
             end
-*/
             3'b100 : begin // LBU
                 lsq_reg_data_o = { { `RV_XLEN-8 {1'b0} }, rsp_data_justified[7:0] };
             end
             3'b101 : begin // LHU
                 lsq_reg_data_o = { { `RV_XLEN-16 {1'b0} }, rsp_data_justified[15:0] };
             end
-/*
             3'b110 : begin // LWU
-                lsq_reg_data_o = { { `RV_XLEN-32 {1'b0} }, rsp_data_justified[31:0] };
+                if (`RV_XLEN == 64) begin // XLEN == 64
+                    lsq_reg_data_o = { { `RV_XLEN-32 {1'b0} }, rsp_data_justified[31:0] };
+                end else begin // XLEN == 32
+                    lsq_reg_data_o = rsp_data_justified;
+                end
             end
-*/
             default : begin
                 lsq_reg_data_o = rsp_data_justified;
             end
@@ -295,5 +296,13 @@ module merlin_lsqueue
             2'b11   : rsp_data_justified = { 24'b0, rsp_data_fifo_rd_data[`RV_XLEN-1:24] };
             default : rsp_data_justified = rsp_data_fifo_rd_data;
         endcase
+    end
+
+
+    //--------------------------------------------------------------
+    // assertions
+    //--------------------------------------------------------------
+    initial begin
+        `RV_ASSERT((`RV_XLEN == 32 || `RV_XLEN == 64), "Invalid value for RV_XLEN.  Must be 32 or 64.")
     end
 endmodule
