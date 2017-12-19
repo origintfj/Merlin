@@ -373,11 +373,19 @@ module merlin_rv32ic_trace_logger
                     end
                 end else if (rv32i_ins[6:0] == `RV_MAJOR_OPCODE_SYSTEM) begin
                     if (csr_rd & csr_wr) begin
-                        $fwrite(logfile, "x%0d = csr[0x%03x], csr[0x%03x] = x%0d", regd_addr, csr_addr, csr_addr, regs1_addr);
+                        if (funct3[2] == 1'b1) begin // imm
+                            $fwrite(logfile, "x%0d = csr[0x%03x], csr[0x%03x] = 0x%08x", regd_addr, csr_addr, csr_addr, imm);
+                        end else begin
+                            $fwrite(logfile, "x%0d = csr[0x%03x], csr[0x%03x] = x%0d", regd_addr, csr_addr, csr_addr, regs1_addr);
+                        end
                     end else if (csr_rd) begin
-                        $fwrite(logfile, "x%0d = csr[0x%03x]", regd_addr, csr_addr[7:0]);
+                        $fwrite(logfile, "x%0d = csr[0x%03x]", regd_addr, csr_addr);
                     end else if (csr_wr) begin
-                        $fwrite(logfile, "csr[0x%03x] = x%0d", csr_addr[7:0], regs1_addr);
+                        if (funct3[2] == 1'b1) begin // imm
+                            $fwrite(logfile, "csr[0x%03x] = 0x%08x", csr_addr, imm);
+                        end else begin
+                            $fwrite(logfile, "csr[0x%03x] = x%0d", csr_addr, regs1_addr);
+                        end
                     end else if (trap_rtn) begin
                         trap_depth = trap_depth - 1;
                         case (trap_rtn_mode)
