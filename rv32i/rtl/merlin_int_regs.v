@@ -37,26 +37,10 @@ module merlin_int_regs
     //--------------------------------------------------------------
 
     //--------------------------------------------------------------
-    // read/write wire
+    // write
     //--------------------------------------------------------------
     always @ `RV_SYNC_LOGIC_CLOCK(clk_i) begin
         if (clk_en_i) begin
-            // read port a
-            if (rreg_a_rd_i) begin
-                if (rreg_a_addr_i == 0) begin
-                    rreg_a_data_o <= { `RV_XLEN {1'b0} };
-                end else begin
-                    rreg_a_data_o <= mem[rreg_a_addr_i];
-                end
-            end
-            // read port b
-            if (rreg_b_rd_i) begin
-                if (rreg_b_addr_i == 0) begin
-                    rreg_b_data_o <= { `RV_XLEN {1'b0} };
-                end else begin
-                    rreg_b_data_o <= mem[rreg_b_addr_i];
-                end
-            end
             // write port a
             if (wreg_a_wr_i) begin
                 mem[wreg_a_addr_i] <= wreg_a_data_i;
@@ -65,6 +49,25 @@ module merlin_int_regs
             if (wreg_b_wr_i) begin
                 mem[wreg_b_addr_i] <= wreg_b_data_i;
             end
+        end
+    end
+
+
+    //--------------------------------------------------------------
+    // read
+    //--------------------------------------------------------------
+    always @ (*) begin
+        // read port a
+        if (rreg_a_rd_i && rreg_a_addr_i != 5'b0) begin
+            rreg_a_data_o = mem[rreg_a_addr_i];
+        end else begin
+            rreg_a_data_o = { `RV_XLEN {1'b0} };
+        end
+        // read port b
+        if (rreg_b_rd_i && rreg_b_addr_i != 5'b0) begin
+            rreg_b_data_o = mem[rreg_b_addr_i];
+        end else begin
+            rreg_b_data_o = { `RV_XLEN {1'b0} };
         end
     end
 endmodule
