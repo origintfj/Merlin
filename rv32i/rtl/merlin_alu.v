@@ -14,7 +14,7 @@ module merlin_alu
     (
         //
         input  wire                   clk_i,
-        input  wire                   clk_en_i,
+        input  wire                   stage_en_i,
         input  wire                   reset_i,
         //
         input  wire    [`RV_XLEN-1:0] op_left_i,
@@ -48,7 +48,7 @@ module merlin_alu
     // alu output register
     //--------------------------------------------------------------
     always @ `RV_SYNC_LOGIC_CLOCK(clk_i) begin
-        if (clk_en_i) begin
+        if (stage_en_i) begin
             op_result_o <= op_result_mux_out;
         end
     end
@@ -117,7 +117,7 @@ module merlin_alu
     end
     //
     always @ `RV_SYNC_LOGIC_CLOCK(clk_i) begin
-        if (clk_en_i) begin
+        if (stage_en_i) begin
             cmp_result_o <= 1'b0;
             case (cmp_opcode_i)
                 `RV_ALUCOND_EQ  : begin

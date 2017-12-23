@@ -17,7 +17,6 @@ module merlin_pfu
     (
         // global
         input  wire                   clk_i,
-        input  wire                   clk_en_i,
         input  wire                   reset_i,
         // instruction cache interface
         input  wire                   ireqready_i,
@@ -97,7 +96,7 @@ module merlin_pfu
     always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
         if (reset_i) begin
             ibus_debt <= 1'b0;
-        end else if (clk_en_i) begin
+        end else begin
             if (request & ~response) begin
                 ibus_debt <= 1'b1;
             end else if (~request & response) begin
@@ -113,7 +112,7 @@ module merlin_pfu
     always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
         if (reset_i) begin
             fifo_level_q <= { 1'b1, { C_FIFO_DEPTH_X {1'b0} } };
-        end else if (clk_en_i) begin
+        end else begin
 //*
             if (exs_pc_wr_i) begin
                 fifo_level_q <= { 1'b1, { C_FIFO_DEPTH_X {1'b0} } };
@@ -141,7 +140,7 @@ module merlin_pfu
     always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
         if (reset_i) begin
             pc_q <= C_RESET_VECTOR;
-        end else if (clk_en_i) begin
+        end else begin
             if (exs_pc_wr_i) begin
                 pc_q <= exs_pc_din_i;
             end else if (request) begin
@@ -162,7 +161,7 @@ module merlin_pfu
     always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
         if (reset_i) begin
             vectoring_q <= 1'b0;
-        end else if (clk_en_i) begin
+        end else begin
             if (exs_pc_wr_i) begin
                 vectoring_q <= 1'b1;
             end else if (request) begin
@@ -178,7 +177,7 @@ module merlin_pfu
     always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
         if (reset_i) begin
             sofid_q <= `RV_SOFID_RUN;
-        end else if (clk_en_i) begin
+        end else begin
             if (vectoring_q & request) begin
                 sofid_q <= `RV_SOFID_JUMP;
             end else if (response) begin
@@ -209,7 +208,6 @@ module merlin_pfu
         ) i_merlin_fifo (
             // global
             .clk_i          (clk_i),
-            .clk_en_i       (clk_en_i),
             .reset_i        (reset_i),
             // control and status
             .flush_i        (exs_pc_wr_i | vectoring_q),

@@ -12,7 +12,6 @@ module merlin_id_stage
     (
         // global
         input  wire                      clk_i,
-        input  wire                      clk_en_i,
         input  wire                      reset_i,
         // pfu interface
         input  wire                      pfu_dav_i,   // new fetch available
@@ -248,7 +247,7 @@ module merlin_id_stage
     always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
         if (reset_i) begin
             reg_loading_vector_q <= 31'b0;
-        end else if (clk_en_i) begin
+        end else begin
             if (regd_addr_d != 5'b0 && id_stage_en && zone_d == `RV_ZONE_LOADQ) begin
                 `RV_ASSERT(reg_loading_vector_q[regd_addr_d] == 1'b0, "Register marked as pending load when already pending.")
                 reg_loading_vector_q[regd_addr_d] <= 1'b1;
@@ -271,7 +270,6 @@ module merlin_id_stage
     merlin_int_regs i_merlin_int_regs (
             // global
             .clk_i         (clk_i),
-            .clk_en_i      (clk_en_i),
             .reset_i       (reset_i),
             // write port
             .wreg_a_wr_i   (exs_regd_wr_i),
@@ -296,7 +294,7 @@ module merlin_id_stage
     always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
         if (reset_i) begin
             exs_valid_o <= 1'b0;
-        end else if (clk_en_i) begin
+        end else begin
             if (id_stage_en) begin
                 exs_valid_o <= 1'b1;
             end else if (~exs_stall) begin
@@ -305,40 +303,38 @@ module merlin_id_stage
         end
     end
     always @ `RV_SYNC_LOGIC_CLOCK(clk_i) begin
-        if (clk_en_i) begin
-            if (id_stage_en) begin
-                exs_ins_o             <= { { `RV_XLEN-32 {1'b0} }, pfu_ins_i };
-                exs_sofid_o           <= pfu_sofid_i;
-                exs_fencei_o          <= fencei_d;
-                exs_wfi_o             <= wfi_d;
-                exs_jump_o            <= jump_d;
-                exs_ecall_o           <= ecall_d;
-                exs_trap_rtn_o        <= trap_rtn_d;
-                exs_trap_rtn_mode_o   <= trap_rtn_mode_d;
-                pc_q                  <= pfu_pc_i;
-                exs_ins_size_o        <= pfu_ack_size_o;
-                exs_ins_uerr_o        <= ins_uerr_d;
-                exs_ins_ferr_o        <= pfu_ferr_i;
-                exs_zone_o            <= zone_d;
-                exs_regd_addr_o       <= regd_addr_d;
-                imm_q                 <= imm_d;
-                exs_link_o            <= link_d;
-                sels1_pc_q            <= sels1_pc_d;
-                sel_csr_wr_data_imm_q <= sel_csr_wr_data_imm_d;
-                sels2_imm_q           <= sels2_imm_d;
-                selcmps2_imm_q        <= selcmps2_imm_d;
-                exs_alu_op_o          <= alu_op_d;
-                exs_funct3_o          <= funct3_d;
-                exs_csr_rd_o          <= csr_rd_d;
-                exs_csr_wr_o          <= csr_wr_d;
-                exs_csr_addr_o        <= csr_addr_d;
-                exs_cond_o            <= conditional_d;
-                // register read addr/control delay
-                regs1_rd_q            <= regs1_rd_d;
-                regs1_addr_q          <= regs1_addr_d;
-                regs2_rd_q            <= regs2_rd_d;
-                regs2_addr_q          <= regs2_addr_d;
-            end
+        if (id_stage_en) begin
+            exs_ins_o             <= { { `RV_XLEN-32 {1'b0} }, pfu_ins_i };
+            exs_sofid_o           <= pfu_sofid_i;
+            exs_fencei_o          <= fencei_d;
+            exs_wfi_o             <= wfi_d;
+            exs_jump_o            <= jump_d;
+            exs_ecall_o           <= ecall_d;
+            exs_trap_rtn_o        <= trap_rtn_d;
+            exs_trap_rtn_mode_o   <= trap_rtn_mode_d;
+            pc_q                  <= pfu_pc_i;
+            exs_ins_size_o        <= pfu_ack_size_o;
+            exs_ins_uerr_o        <= ins_uerr_d;
+            exs_ins_ferr_o        <= pfu_ferr_i;
+            exs_zone_o            <= zone_d;
+            exs_regd_addr_o       <= regd_addr_d;
+            imm_q                 <= imm_d;
+            exs_link_o            <= link_d;
+            sels1_pc_q            <= sels1_pc_d;
+            sel_csr_wr_data_imm_q <= sel_csr_wr_data_imm_d;
+            sels2_imm_q           <= sels2_imm_d;
+            selcmps2_imm_q        <= selcmps2_imm_d;
+            exs_alu_op_o          <= alu_op_d;
+            exs_funct3_o          <= funct3_d;
+            exs_csr_rd_o          <= csr_rd_d;
+            exs_csr_wr_o          <= csr_wr_d;
+            exs_csr_addr_o        <= csr_addr_d;
+            exs_cond_o            <= conditional_d;
+            // register read addr/control delay
+            regs1_rd_q            <= regs1_rd_d;
+            regs1_addr_q          <= regs1_addr_d;
+            regs2_rd_q            <= regs2_rd_d;
+            regs2_addr_q          <= regs2_addr_d;
         end
     end
 
@@ -433,22 +429,20 @@ module merlin_id_stage
     //--------------------------------------------------------------
 `ifdef RV_ASSERTS_ON
     always @ `RV_SYNC_LOGIC_CLOCK(clk_i) begin
-        if (clk_en_i) begin
-            // register file access assertions
-            `RV_ASSERT(
-                !(pfu_ack_o == 1'b1 &&
-                  regs1_addr_d != 5'b0 && regs1_rd_d &&
-                  reg_loading_vector_q[regs1_addr_d] && !s1_lq_fwd_available),
-                "Register read when pending a load."
-            )
+        // register file access assertions
+        `RV_ASSERT(
+            !(pfu_ack_o == 1'b1 &&
+              regs1_addr_d != 5'b0 && regs1_rd_d &&
+              reg_loading_vector_q[regs1_addr_d] && !s1_lq_fwd_available),
+            "Register read when pending a load."
+        )
 
-            `RV_ASSERT(
-                !(pfu_ack_o == 1'b1 &&
-                  regs2_addr_d != 5'b0 && regs2_rd_d &&
-                  reg_loading_vector_q[regs2_addr_d] && !s2_lq_fwd_available),
-                "Register read when pending a load."
-            )
-        end
+        `RV_ASSERT(
+            !(pfu_ack_o == 1'b1 &&
+              regs2_addr_d != 5'b0 && regs2_rd_d &&
+              reg_loading_vector_q[regs2_addr_d] && !s2_lq_fwd_available),
+            "Register read when pending a load."
+        )
     end
 `endif
 endmodule

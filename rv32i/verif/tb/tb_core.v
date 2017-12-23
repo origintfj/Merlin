@@ -139,7 +139,6 @@ module tb_core;
             // global
             .clk_i                 (clk | sleeping),
             .fclk_i                (fclk),
-            .clk_en_i              (1'b1),
             .reset_i               (reset),
             // core status
             .sleeping_o            (sleeping),
@@ -198,7 +197,6 @@ module tb_core;
     merlin_rv32ic_trace_logger i_merlin_rv32ic_trace_logger (
             // global
             .clk_i                 (clk),
-            .clk_en_i              (1'b1),
             .reset_i               (reset),
             // tracer interface
             .ex_stage_en_i         (mit_en),

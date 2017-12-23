@@ -18,7 +18,6 @@ module merlin
         // global
         input  wire                  clk_i,
         input  wire                  fclk_i,
-        input  wire                  clk_en_i,
         input  wire                  reset_i,
         // core status
         output wire                  sleeping_o,
@@ -146,7 +145,6 @@ module merlin
         ) i_merlin_pfu32ic (
             // global
             .clk_i           (clk_i),
-            .clk_en_i        (clk_en_i),
             .reset_i         (reset_i),
             // instruction cache interface
             .ireqready_i     (ireqready_i),
@@ -179,7 +177,6 @@ module merlin
     merlin_id_stage i_merlin_id_stage (
             // global
             .clk_i                (clk_i),
-            .clk_en_i             (clk_en_i),
             .reset_i              (reset_i),
             // pfu interface
             .pfu_dav_i            (pfu_ids_dav),      // new fetch available
@@ -238,7 +235,6 @@ module merlin
             // global
             .clk_i                 (clk_i),
             .fclk_i                (fclk_i),
-            .clk_en_i              (clk_en_i),
             .reset_i               (reset_i),
             // external interface
             .sleeping_o            (sleeping_o),
@@ -327,7 +323,6 @@ module merlin
         ) i_merlin_lsqueue (
             // global
             .clk_i              (clk_i),
-            .clk_en_i           (clk_en_i),
             .reset_i            (reset_i),
             // instruction decoder stage interface
             .lsq_reg_wr_o       (lsq_ids_reg_wr),

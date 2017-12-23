@@ -19,7 +19,6 @@ module merlin_fifo
     (
         // global
         input  wire                     clk_i,
-        input  wire                     clk_en_i,
         input  wire                     reset_i,
         // control and status
         input  wire                     flush_i,
@@ -81,7 +80,7 @@ module merlin_fifo
         if (reset_i) begin
             rd_ptr_q <= { C_FIFO_DEPTH_X+1 {1'b0} };
             wr_ptr_q <= { C_FIFO_DEPTH_X+1 {1'b0} };
-        end else if (clk_en_i) begin
+        end else begin
             if (flush_i) begin
                 rd_ptr_q <= { C_FIFO_DEPTH_X+1 {1'b0} };
                 wr_ptr_q <= { C_FIFO_DEPTH_X+1 {1'b0} };
@@ -101,10 +100,8 @@ module merlin_fifo
     // memory
     //--------------------------------------------------------------
     always @ `RV_SYNC_LOGIC_CLOCK(clk_i) begin
-        if (clk_en_i) begin
-            if (wr_i) begin
-                mem[wr_ptr_q[C_FIFO_DEPTH_X-1:0]] <= din_i;
-            end
+        if (wr_i) begin
+            mem[wr_ptr_q[C_FIFO_DEPTH_X-1:0]] <= din_i;
         end
     end
 
@@ -114,10 +111,8 @@ module merlin_fifo
     //--------------------------------------------------------------
 `ifdef RV_ASSERTS_ON
     always @ `RV_SYNC_LOGIC_CLOCK(clk_i) begin
-        if (clk_en_i) begin
-            `RV_ASSERT(((full_o & wr_i) == 1'b0), "FIFO written when full!")
-            `RV_ASSERT(((empty_o & rd_i) == 1'b0), "FIFO read when empty!")
-        end
+        `RV_ASSERT(((full_o & wr_i) == 1'b0), "FIFO written when full!")
+        `RV_ASSERT(((empty_o & rd_i) == 1'b0), "FIFO read when empty!")
     end
 `endif
 endmodule

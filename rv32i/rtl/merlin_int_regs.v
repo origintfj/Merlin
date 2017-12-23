@@ -12,7 +12,6 @@ module merlin_int_regs
     (
         // global
         input  wire                clk_i,
-        input  wire                clk_en_i,
         input  wire                reset_i,
         // write port
         input  wire                wreg_a_wr_i,
@@ -40,15 +39,13 @@ module merlin_int_regs
     // write
     //--------------------------------------------------------------
     always @ `RV_SYNC_LOGIC_CLOCK(clk_i) begin
-        if (clk_en_i) begin
-            // write port a
-            if (wreg_a_wr_i) begin
-                mem[wreg_a_addr_i] <= wreg_a_data_i;
-            end
-            // write port b
-            if (wreg_b_wr_i) begin
-                mem[wreg_b_addr_i] <= wreg_b_data_i;
-            end
+        // write port a
+        if (wreg_a_wr_i) begin
+            mem[wreg_a_addr_i] <= wreg_a_data_i;
+        end
+        // write port b
+        if (wreg_b_wr_i) begin
+            mem[wreg_b_addr_i] <= wreg_b_data_i;
         end
     end
 

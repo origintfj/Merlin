@@ -23,7 +23,6 @@ module merlin_cs_regs
     (
         //
         input  wire                clk_i,
-        input  wire                clk_en_i,
         input  wire                reset_i,
         // stage enable
         input  wire                exs_en_i,
@@ -305,12 +304,10 @@ module merlin_cs_regs
     end
     //
     always @ `RV_SYNC_LOGIC_CLOCK(clk_i) begin
-        if (clk_en_i) begin
-            if (exs_en_i & access_i) begin
-                bad_csr_addr_o  <= rd_invalid_address;
-                addr_typecode_q <= addr_i[11:10];
-                addr_privcode_q <= addr_i[9:8];
-            end
+        if (exs_en_i & access_i) begin
+            bad_csr_addr_o  <= rd_invalid_address;
+            addr_typecode_q <= addr_i[11:10];
+            addr_privcode_q <= addr_i[9:8];
         end
     end
 
@@ -468,10 +465,8 @@ module merlin_cs_regs
         endcase
     end
     always @ `RV_SYNC_LOGIC_CLOCK(clk_i) begin
-        if (clk_en_i) begin
-            if (exs_en_i & access_i) begin
-                rd_data_o <= rd_data;
-            end
+        if (exs_en_i & access_i) begin
+            rd_data_o <= rd_data;
         end
     end
 
@@ -512,7 +507,7 @@ module merlin_cs_regs
             //mcause_q
             //mtval_q
             mip_q      <= `RV_CSR_MIP_RESET_VALUE;
-        end else if (clk_en_i) begin
+        end else begin
             if (exs_en_i) begin
                 if (jump_to_trap_o) begin // take over any pending interrupt
                     // accessible CSRs

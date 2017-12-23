@@ -13,7 +13,6 @@ module merlin_ex_stage
         // global
         input  wire                     clk_i,
         input  wire                     fclk_i,
-        input  wire                     clk_en_i,
         input  wire                     reset_i,
         // external interface
         output wire                     sleeping_o,
@@ -276,7 +275,7 @@ module merlin_ex_stage
     always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
         if (reset_i) begin
             sofid_q <= `RV_SOFID_RUN;
-        end else if (clk_en_i) begin
+        end else begin
             if (ex_stage_en) begin
                 if (jump) begin
                     sofid_q <= `RV_SOFID_JUMP;
@@ -301,7 +300,7 @@ module merlin_ex_stage
     always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
         if (reset_i) begin
             ids_valid_q <= 1'b0;
-        end else if (clk_en_i) begin
+        end else begin
             if (ex_stage_en) begin
                 ids_ins_q           <= ids_ins_i;
                 ids_valid_q         <= ids_valid_i;
@@ -407,7 +406,7 @@ module merlin_ex_stage
     merlin_alu i_merlin_alu (
             //
             .clk_i        (clk_i),
-            .clk_en_i     (clk_en_i & ex_stage_en),
+            .stage_en_i   (ex_stage_en),
             .reset_i      (reset_i),
             //
             .op_left_i    (ids_operand_left_i),
@@ -439,7 +438,6 @@ module merlin_ex_stage
     merlin_cs_regs i_merlin_cs_regs (
             //
             .clk_i             (clk_i),
-            .clk_en_i          (clk_en_i),
             .reset_i           (reset_i),
             //
             .exs_en_i          (ex_stage_en),
