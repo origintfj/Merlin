@@ -6,8 +6,11 @@ module tb_core;
     parameter C_IRQV_SZ = 32;
 
     reg         clk;
+    wire        fclk;
     wire        reset;
     reg   [1:0] reset_pipe;
+
+    wire        sleeping;
 
     // hardware interrupt generator
     reg  [11:0] intr_counter_q;
@@ -75,6 +78,8 @@ module tb_core;
     //--------------------------------------------------------------
     // generate a clock
     //--------------------------------------------------------------
+    assign fclk = clk;
+    //
     initial begin
         clk = 1'b0;
         reset_pipe = 2'b0;
@@ -132,9 +137,12 @@ module tb_core;
 `endif
         i_merlin (
             // global
-            .clk_i                 (clk),
+            .clk_i                 (clk | sleeping),
+            .fclk_i                (fclk),
             .clk_en_i              (1'b1),
             .reset_i               (reset),
+            // core status
+            .sleeping_o            (sleeping),
             // hardware interrupt interface
             .irqm_extern_i         (intr_extern),
             .irqm_softw_i          (1'b0),

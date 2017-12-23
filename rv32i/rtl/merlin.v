@@ -17,8 +17,11 @@ module merlin
     (
         // global
         input  wire                  clk_i,
+        input  wire                  fclk_i,
         input  wire                  clk_en_i,
         input  wire                  reset_i,
+        // core status
+        output wire                  sleeping_o,
         // hardware interrupt interface
         input  wire                  irqm_extern_i,
         input  wire                  irqm_softw_i,
@@ -234,9 +237,12 @@ module merlin
     merlin_ex_stage i_merlin_ex_stage (
             // global
             .clk_i                 (clk_i),
+            .fclk_i                (fclk_i),
             .clk_en_i              (clk_en_i),
             .reset_i               (reset_i),
             // external interface
+            .sleeping_o            (sleeping_o),
+            //
             .irqm_extern_i         (irqm_extern_i),
             .irqm_softw_i          (irqm_softw_i),
             .irqm_timer_i          (irqm_timer_i),

@@ -97,6 +97,7 @@ void main(void) {
     writes("Entering a \"while (1)\".\n");
     __asm__ volatile ("         \
         loop:                   \n\
+            wfi                 \n\
             j       loop        \n\
         "
     );

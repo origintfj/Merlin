@@ -12,9 +12,12 @@ module merlin_ex_stage
     (
         // global
         input  wire                     clk_i,
+        input  wire                     fclk_i,
         input  wire                     clk_en_i,
         input  wire                     reset_i,
         // external interface
+        output wire                     sleeping_o,
+        //
         input  wire                     irqm_extern_i,
         input  wire                     irqm_softw_i,
         input  wire                     irqm_timer_i,
@@ -341,10 +344,12 @@ module merlin_ex_stage
     //--------------------------------------------------------------
     // wfi latch
     //--------------------------------------------------------------
-    always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
+    assign sleeping_o = wfi_latch_q;
+    //
+    always @ `RV_SYNC_LOGIC_CLOCK_RESET(fclk_i, reset_i) begin
         if (reset_i) begin
             wfi_latch_q <= 1'b0;
-        end else if (clk_en_i) begin
+        end else begin
             if (csr_interrupt) begin
                 wfi_latch_q <= 1'b0;
             end else if (ex_stage_en) begin
