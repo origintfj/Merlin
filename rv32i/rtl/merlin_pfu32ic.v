@@ -68,7 +68,6 @@ module merlin_pfu32ic
     parameter C_FIFO_PC_LSB     =  0;
     //
     wire                         fifo_line_rd;
-    wire                         fifo_line_empty;
     wire [C_FIFO_LINE_WIDTH-1:0] fifo_line_din;
     wire [C_FIFO_LINE_WIDTH-1:0] fifo_line_dout;
     // atom fifo
@@ -227,7 +226,7 @@ module merlin_pfu32ic
             .reset_i            (reset_i),
             // control and status
             .flush_i            (exs_pc_wr_i | vectoring_q),
-            .empty_o            (fifo_line_empty),
+            .empty_o            (),
             .full_o             (),
             // write port
             .wr_i               (response),

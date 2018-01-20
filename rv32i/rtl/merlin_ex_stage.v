@@ -21,11 +21,6 @@ module merlin_ex_stage
         input  wire                     irqm_softw_i,
         input  wire                     irqm_timer_i,
         input  wire                     irqs_extern_i,
-        input  wire                     irqs_softw_i,
-        input  wire                     irqs_timer_i,
-        input  wire                     irqu_extern_i,
-        input  wire                     irqu_softw_i,
-        input  wire                     irqu_timer_i,
         // pfu stage interface
         output wire               [1:0] pfu_hpl_o,
             // hart vectoring interface

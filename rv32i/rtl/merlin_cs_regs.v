@@ -343,15 +343,15 @@ module merlin_cs_regs
     //
     reg  [`RV_XLEN-1:0] utval_q;
     // interrupt and exception logic
-    wire                m_int_e;
-    wire                m_int_t;
-    wire                m_int_s;
-    wire                s_int_e;
-    wire                s_int_t;
-    wire                s_int_s;
-    wire                u_int_e;
-    wire                u_int_t;
-    wire                u_int_s;
+    reg                 m_int_e_q;
+    reg                 m_int_t_q;
+    reg                 m_int_s_q;
+    reg                 s_int_e_q;
+    reg                 s_int_t_q;
+    reg                 s_int_s_q;
+    reg                 u_int_e_q;
+    reg                 u_int_t_q;
+    reg                 u_int_s_q;
     //
     reg                 interrupt;
     reg           [3:0] interrupt_cause;
@@ -706,6 +706,8 @@ module merlin_cs_regs
                 12'h000 : begin // ustatus
                     mstatus_upie_d = read_modify_write1(mstatus_upie_q, wr_data_i[4]);
                     mstatus_uie_d  = read_modify_write1(mstatus_uie_q,  wr_data_i[0]);
+                end
+                default : begin
                 end
             endcase
         end
@@ -1187,6 +1189,8 @@ module merlin_cs_regs
                     mie_utie_d = read_modify_write1(mie_utie_q, wr_data_i[4]);
                     mie_usie_d = read_modify_write1(mie_usie_q, wr_data_i[0]);
                 end
+                default : begin
+                end
             endcase
         end
     end
@@ -1314,6 +1318,8 @@ module merlin_cs_regs
                 end
                 12'h044 : begin // uip
                     mip_usip_d = read_modify_write1(mip_usip_q, wr_data_i[0]);
+                end
+                default : begin
                 end
             endcase
         end
@@ -1663,15 +1669,29 @@ module merlin_cs_regs
      *   3) timer interrupts
      *   4) synchronous traps
      */
-    assign m_int_e = mip_meip & mie_meie_q;
-    assign m_int_t = mip_mtip & mie_mtie_q;
-    assign m_int_s = mip_msip & mie_msie_q;
-    assign s_int_e = mip_seip & mie_seie_q;
-    assign s_int_t = mip_stip & mie_stie_q;
-    assign s_int_s = mip_ssip & mie_ssie_q;
-    assign u_int_e = mip_ueip & mie_ueie_q;
-    assign u_int_t = mip_utip & mie_utie_q;
-    assign u_int_s = mip_usip & mie_usie_q;
+    always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
+        if (reset_i) begin
+            m_int_e_q <= 1'b0;
+            m_int_t_q <= 1'b0;
+            m_int_s_q <= 1'b0;
+            s_int_e_q <= 1'b0;
+            s_int_t_q <= 1'b0;
+            s_int_s_q <= 1'b0;
+            u_int_e_q <= 1'b0;
+            u_int_t_q <= 1'b0;
+            u_int_s_q <= 1'b0;
+        end else begin
+            m_int_e_q <= mip_meip & mie_meie_q;
+            m_int_t_q <= mip_mtip & mie_mtie_q;
+            m_int_s_q <= mip_msip & mie_msie_q;
+            s_int_e_q <= mip_seip & mie_seie_q;
+            s_int_t_q <= mip_stip & mie_stie_q;
+            s_int_s_q <= mip_ssip & mie_ssie_q;
+            u_int_e_q <= mip_ueip & mie_ueie_q;
+            u_int_t_q <= mip_utip & mie_utie_q;
+            u_int_s_q <= mip_usip & mie_usie_q;
+        end
+    end
     // interrupt logic
     always @ (*) begin
         interrupt       = 1'b0;
@@ -1679,14 +1699,12 @@ module merlin_cs_regs
         interrupt_mode  = `RV_CSR_MODE_MACHINE;
         case (mode_q)
             `RV_CSR_MODE_MACHINE : begin
-                interrupt = (mstatus_mie_q & (m_int_e |
-                                              m_int_t |
-                                              m_int_s ));
+                interrupt = (mstatus_mie_q & (m_int_e_q | m_int_t_q | m_int_s_q));
                 // interrupt cause encoder
-                if (m_int_e) begin          // machine external interrupt
+                if (m_int_e_q) begin          // machine external interrupt
                     interrupt_cause = `RV_CSR_INTR_CAUSE_ME;
                     interrupt_mode  = `RV_CSR_MODE_MACHINE;
-                end else if (m_int_s) begin // machine software interrupt
+                end else if (m_int_s_q) begin // machine software interrupt
                     interrupt_cause = `RV_CSR_INTR_CAUSE_MS;
                     interrupt_mode  = `RV_CSR_MODE_MACHINE;
                 end else begin              // machine timer interrupt
@@ -1695,24 +1713,24 @@ module merlin_cs_regs
                 end
             end
             `RV_CSR_MODE_SUPERVISOR : begin
-                interrupt = (                (m_int_e | m_int_t | m_int_s)) |
-                            (mstatus_sie_q & (s_int_e | s_int_t | s_int_s)) ;
+                interrupt = (                (m_int_e_q | m_int_t_q | m_int_s_q)) |
+                            (mstatus_sie_q & (s_int_e_q | s_int_t_q | s_int_s_q)) ;
                 // interrupt cause and mode encoder
-                if (m_int_e) begin          // machine external interrupt
+                if (m_int_e_q) begin          // machine external interrupt
                     interrupt_cause = `RV_CSR_INTR_CAUSE_ME;
                     interrupt_mode  = `RV_CSR_MODE_MACHINE;
-                end else if (m_int_s) begin // machine software interrupt
+                end else if (m_int_s_q) begin // machine software interrupt
                     interrupt_cause = `RV_CSR_INTR_CAUSE_MS;
                     interrupt_mode  = `RV_CSR_MODE_MACHINE;
-                end else if (m_int_t) begin // machine timer interrupt
+                end else if (m_int_t_q) begin // machine timer interrupt
                     interrupt_cause = `RV_CSR_INTR_CAUSE_MT;
                     interrupt_mode  = `RV_CSR_MODE_MACHINE;
-                end else if (s_int_e) begin // supervisor external interrupt
+                end else if (s_int_e_q) begin // supervisor external interrupt
                     interrupt_cause = `RV_CSR_INTR_CAUSE_SE;
                     interrupt_mode  = (mideleg_sei_q ? `RV_CSR_MODE_SUPERVISOR
                                                      : `RV_CSR_MODE_MACHINE)
                                                      ;
-                end else if (s_int_s) begin // supervisor software interrupt
+                end else if (s_int_s_q) begin // supervisor software interrupt
                     interrupt_cause = `RV_CSR_INTR_CAUSE_SS;
                     interrupt_mode  = (mideleg_ssi_q ? `RV_CSR_MODE_SUPERVISOR
                                                      : `RV_CSR_MODE_MACHINE)
@@ -1725,41 +1743,41 @@ module merlin_cs_regs
                 end
             end
             `RV_CSR_MODE_USER : begin
-                interrupt = (                (m_int_e | m_int_t | m_int_s)) |
-                            (                (s_int_e | s_int_t | s_int_s)) |
-                            (mstatus_uie_q & (u_int_e | u_int_t | u_int_s)) ;
+                interrupt = (                (m_int_e_q | m_int_t_q | m_int_s_q)) |
+                            (                (s_int_e_q | s_int_t_q | s_int_s_q)) |
+                            (mstatus_uie_q & (u_int_e_q | u_int_t_q | u_int_s_q)) ;
                 // interrupt cause and mode encoder
-                if (m_int_e) begin          // machine external interrupt
+                if (m_int_e_q) begin          // machine external interrupt
                     interrupt_cause = `RV_CSR_INTR_CAUSE_ME;
                     interrupt_mode  = `RV_CSR_MODE_MACHINE;
-                end else if (m_int_s) begin // machine software interrupt
+                end else if (m_int_s_q) begin // machine software interrupt
                     interrupt_cause = `RV_CSR_INTR_CAUSE_MS;
                     interrupt_mode  = `RV_CSR_MODE_MACHINE;
-                end else if (m_int_t) begin // machine timer interrupt
+                end else if (m_int_t_q) begin // machine timer interrupt
                     interrupt_cause = `RV_CSR_INTR_CAUSE_MT;
                     interrupt_mode  = `RV_CSR_MODE_MACHINE;
-                end else if (s_int_e) begin // supervisor external interrupt
+                end else if (s_int_e_q) begin // supervisor external interrupt
                     interrupt_cause = `RV_CSR_INTR_CAUSE_SE;
                     interrupt_mode  = (mideleg_sei_q ? `RV_CSR_MODE_SUPERVISOR
                                                      : `RV_CSR_MODE_MACHINE)
                                                      ;
-                end else if (s_int_s) begin // supervisor software interrupt
+                end else if (s_int_s_q) begin // supervisor software interrupt
                     interrupt_cause = `RV_CSR_INTR_CAUSE_SS;
                     interrupt_mode  = (mideleg_ssi_q ? `RV_CSR_MODE_SUPERVISOR
                                                      : `RV_CSR_MODE_MACHINE)
                                                      ;
-                end else if (s_int_t) begin // supervisor timer interrupt
+                end else if (s_int_t_q) begin // supervisor timer interrupt
                     interrupt_cause = `RV_CSR_INTR_CAUSE_ST;
                     interrupt_mode  = (mideleg_sti_q ? `RV_CSR_MODE_SUPERVISOR
                                                      : `RV_CSR_MODE_MACHINE)
                                                      ;
-                end else if (u_int_e) begin // user external interrupt
+                end else if (u_int_e_q) begin // user external interrupt
                     interrupt_cause = `RV_CSR_INTR_CAUSE_UE;
                     interrupt_mode  = (mideleg_uei_q ? (sideleg_uei_q ? `RV_CSR_MODE_USER
                                                                       : `RV_CSR_MODE_SUPERVISOR)
                                                      : `RV_CSR_MODE_MACHINE)
                                                      ;
-                end else if (u_int_s) begin // user software interrupt
+                end else if (u_int_s_q) begin // user software interrupt
                     interrupt_cause = `RV_CSR_INTR_CAUSE_US;
                     interrupt_mode  = (mideleg_usi_q ? (sideleg_usi_q ? `RV_CSR_MODE_USER
                                                                       : `RV_CSR_MODE_SUPERVISOR)
@@ -1932,7 +1950,7 @@ module merlin_cs_regs
      */
     assign trap_call_o       = ex_valid_i & (interrupt | exception);
     assign trap_call_cause_o = { interrupt, { `RV_XLEN-5 {1'b0} }, trap_call_cause_code };
-    assign trap_call_addr_o  = (trap_call_vectored ? { trap_call_base[`RV_XLEN-1:4], interrupt_cause, 2'b0 }
+    assign trap_call_addr_o  = (trap_call_vectored ? { trap_call_base[`RV_XLEN-3:4], interrupt_cause, 2'b0 }
                                                    : { trap_call_base,                                2'b0 })
                                                    ;
     assign trap_call_cause_code = (interrupt ? interrupt_cause
