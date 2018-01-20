@@ -49,7 +49,12 @@ endif
 
 ifdef GATES
 	IV_ARGS += -DGATES
-	RTL_FILE_LIST := osu035_stdcells.v merlin.rtlnopwr.v
+	RTL_FILE_LIST :=                                 \
+		osu035_stdcells.v                            \
+		$(RTL_DIR)/merlin_rv32ic_expander.v          \
+		$(RTL_DIR)/merlin_rv32i_decoder.v            \
+		$(RTL_DIR)/merlin_rv32ic_trace_logger.v      \
+		merlin.rtlnopwr.v
 else
 	IV_ARGS += -DRV_ASSERTS_ON
 endif

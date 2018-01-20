@@ -26,11 +26,6 @@ module merlin
         input  wire                  irqm_softw_i,
         input  wire                  irqm_timer_i,
         input  wire                  irqs_extern_i,
-        input  wire                  irqs_softw_i,
-        input  wire                  irqs_timer_i,
-        input  wire                  irqu_extern_i,
-        input  wire                  irqu_softw_i,
-        input  wire                  irqu_timer_i,
         // instruction port
         input  wire                  ireqready_i,
         output wire                  ireqvalid_o,
@@ -243,11 +238,6 @@ module merlin
             .irqm_softw_i          (irqm_softw_i),
             .irqm_timer_i          (irqm_timer_i),
             .irqs_extern_i         (irqs_extern_i),
-            .irqs_softw_i          (irqs_softw_i),
-            .irqs_timer_i          (irqs_timer_i),
-            .irqu_extern_i         (irqu_extern_i),
-            .irqu_softw_i          (irqu_softw_i),
-            .irqu_timer_i          (irqu_timer_i),
             // pfu stage interface
             .pfu_hpl_o             (exs_pfu_hpl),
                 // hart vectoring interface

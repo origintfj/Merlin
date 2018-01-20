@@ -137,6 +137,10 @@ module merlin_ex_stage
     reg     [`RV_XLEN-1:0] ids_regs2_data_q;
     reg              [4:0] ids_regd_addr_q;
     reg              [2:0] funct3_q;
+    reg     [`RV_XLEN-1:0] csr_rd_data_q;
+    reg                    csr_badpriv_q;
+    reg                    csr_badwrite_q;
+    reg                    csr_badcsr_q;
     // wfi latch
     reg                    wfi_latch_q;
     // ex stage stall controller
@@ -149,11 +153,10 @@ module merlin_ex_stage
     wire    [`RV_XLEN-1:0] alu_data_out;
     wire                   alu_cmp_out;
     // cs register file and write data logic
-    reg     [`RV_XLEN-1:0] csr_wr_data;
-    wire    [`RV_XLEN-1:0] csr_data_out;
-    wire                   csr_bad_addr;
-    wire                   csr_readonly;
-    wire                   csr_priv_too_low;
+    wire    [`RV_XLEN-1:0] csr_rd_data_d;
+    wire                   csr_badcsr_d;
+    wire                   csr_badwrite_d;
+    wire                   csr_badpriv_d;
     wire                   csr_interrupt;
     wire                   csr_jump_to_trap;
     wire    [`RV_XLEN-1:0] csr_trap_entry_addr;
@@ -219,7 +222,7 @@ module merlin_ex_stage
     assign lsq_lq_wr_o = ex_stage_en & execute_commit & lq_wr_q;
     assign lsq_sq_wr_o = ex_stage_en & execute_commit & sq_wr_q;
     //
-    assign csr_wr       = execute_commit & ids_csr_wr_q;
+    assign csr_wr       = ex_stage_en & execute_commit & ids_csr_wr_q;
     assign csr_wr_mode  = funct3_q[1:0];
     assign csr_trap_rtn = execute_commit & ids_trap_rtn_q;
 
@@ -250,12 +253,8 @@ module merlin_ex_stage
     //
     always @ (*) begin
         excp_ilgl = 1'b0;
-        if (ids_csr_rd_q) begin
-            excp_ilgl = csr_bad_addr | csr_priv_too_low;
-        end
-        //
-        if (ids_csr_wr_q) begin
-            excp_ilgl = csr_bad_addr | csr_priv_too_low | csr_readonly;
+        if (ids_csr_rd_q | ids_csr_wr_q) begin
+            excp_ilgl = csr_badcsr_q | csr_badpriv_q | csr_badwrite_q;
         end
         //
         if (ids_trap_rtn_q) begin
@@ -335,6 +334,11 @@ module merlin_ex_stage
                 ids_regs2_data_q  <= ids_regs2_data_i;
                 ids_regd_addr_q   <= ids_regd_addr_i;
                 funct3_q          <= ids_funct3_i;
+                //
+                csr_rd_data_q     <= csr_rd_data_d;
+                csr_badpriv_q     <= csr_badpriv_d;
+                csr_badwrite_q    <= csr_badwrite_d;
+                csr_badcsr_q      <= csr_badcsr_d;
             end
         end
     end
@@ -381,7 +385,7 @@ module merlin_ex_stage
     //--------------------------------------------------------------
     always @ (*) begin
         if (ids_csr_rd_q) begin
-            ids_regd_data_o = csr_data_out;
+            ids_regd_data_o = csr_rd_data_q;
         end else begin
             ids_regd_data_o = alu_pcinc_mux_out;
         end
@@ -422,47 +426,31 @@ module merlin_ex_stage
 
 
     //--------------------------------------------------------------
-    // cs register file and write data logic
+    // control and status register file
     //--------------------------------------------------------------
-    always @ (*) begin
-        csr_wr_data = ids_csr_wr_data_q;
-        case (csr_wr_mode)
-            2'b01 : csr_wr_data = ids_csr_wr_data_q;
-            2'b10 : csr_wr_data = csr_data_out |  ids_csr_wr_data_q;
-            2'b11 : csr_wr_data = csr_data_out & ~ids_csr_wr_data_q;
-            default : begin
-            end
-        endcase
-    end
-    //
     merlin_cs_regs i_merlin_cs_regs (
             //
             .clk_i             (clk_i),
             .reset_i           (reset_i),
-            //
-            .exs_en_i          (ex_stage_en),
             // access request / error reporting interface
-            .access_i          (ids_csr_rd_i | ids_csr_wr_i),
-            .addr_i            (ids_csr_addr_i),
-            .bad_csr_addr_o    (csr_bad_addr),
-            .readonly_csr_o    (csr_readonly),
-            .priv_too_low_o    (csr_priv_too_low),
-            .rd_data_o         (csr_data_out),
+            .access_rd_i       (ids_csr_rd_i),
+            .access_wr_i       (ids_csr_wr_i),
+            .access_addr_i     (ids_csr_addr_i),
+            .access_badcsr_o   (csr_badcsr_d),
+            .access_badwrite_o (csr_badwrite_d),
+            .access_badpriv_o  (csr_badpriv_d),
+            .access_rd_data_o  (csr_rd_data_d),
             // write-back interface
             .wr_i              (csr_wr),
+            .wr_mode_i         (csr_wr_mode),
             .wr_addr_i         (ids_csr_addr_q),
-            .wr_data_i         (csr_wr_data),
+            .wr_data_i         (ids_csr_wr_data_q),
             // exception, interrupt, and hart vectoring interface
-            .ex_valid_i        (ex_valid),
+            .ex_valid_i        (ex_valid & ex_stage_en),
             .irqm_extern_i     (irqm_extern_i),
             .irqm_softw_i      (irqm_softw_i),
             .irqm_timer_i      (irqm_timer_i),
             .irqs_extern_i     (irqs_extern_i),
-            .irqs_softw_i      (irqs_softw_i),
-            .irqs_timer_i      (irqs_timer_i),
-            .irqu_extern_i     (irqu_extern_i),
-            .irqu_softw_i      (irqu_softw_i),
-            .irqu_timer_i      (irqu_timer_i),
             .excp_ferr_i       (excp_ferr),
             .excp_uerr_i       (excp_uerr),
             .excp_maif_i       (excp_maif),
@@ -475,14 +463,14 @@ module merlin_ex_stage
             //
             .interrupt_o       (csr_interrupt),
             //
-            .jump_to_trap_o    (csr_jump_to_trap),
-            .trap_entry_addr_o (csr_trap_entry_addr),
-            .trap_rtn_i        (csr_trap_rtn),
-            .trap_rtn_mode_i   (ids_trap_rtn_mode_q),
-            .trap_rtn_addr_o   (csr_trap_rtn_addr),
+            .trap_call_o       (csr_jump_to_trap),    // jump to trap
+            .trap_call_addr_o  (csr_trap_entry_addr), // address to jump to
+            .trap_call_cause_o (csr_trap_cause),      // cause of trap
+            .trap_call_value_o (),                    // trap call value ( [m|s|u]tval )
+            .trap_rtn_i        (csr_trap_rtn),        // return from trap
+            .trap_rtn_mode_i   (ids_trap_rtn_mode_q), // mode of return ( [m|s|u]ret )
+            .trap_rtn_addr_o   (csr_trap_rtn_addr),   // address to jump (return) to
             // static i/o
-            .mode_o            (csr_mode),
-            // tracer port
-            .trap_cause_o      (csr_trap_cause)
+            .mode_o            (csr_mode)
         );
 endmodule

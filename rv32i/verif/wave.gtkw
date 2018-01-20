@@ -1,26 +1,30 @@
 [*]
-[*] GTKWave Analyzer v3.3.58 (w)1999-2014 BSI
-[*] Fri Dec 15 00:50:33 2017
+[*] GTKWave Analyzer v3.3.66 (w)1999-2015 BSI
+[*] Sat Dec 23 21:07:31 2017
 [*]
-[dumpfile] "/usr/local/google/home/tomsm/merlin/rv32i/verif/wave.lxt"
-[dumpfile_mtime] "Fri Dec 15 00:39:54 2017"
-[dumpfile_size] 4111228
-[savefile] "/usr/local/google/home/tomsm/merlin/rv32i/verif/wave.gtkw"
+[dumpfile] "/home/tom/riscv/rv32i/verif/wave.lxt"
+[dumpfile_mtime] "Sat Dec 23 08:12:50 2017"
+[dumpfile_size] 2735797
+[savefile] "/home/tom/riscv/rv32i/verif/wave.gtkw"
 [timestart] 0
-[size] 2495 1576
+[size] 1983 1128
 [pos] -1 -1
-*-19.000000 0 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-28.000000 546730000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_core.
 [treeopen] tb_core.i_merlin.
 [treeopen] tb_core.i_merlin.i_merlin_ex_stage.
 [treeopen] tb_core.i_merlin.i_merlin_id_stage.
+[treeopen] tb_core.i_merlin.i_merlin_pfu32ic.
 [sst_width] 290
 [signals_width] 329
 [sst_expanded] 1
 [sst_vpaned_height] 529
 @28
-tb_core.i_merlin.clk_i[0]
 tb_core.i_merlin.reset_i[0]
+tb_core.i_merlin.sleeping_o[0]
+tb_core.i_merlin.clk_i[0]
+tb_core.i_merlin.fclk_i[0]
+tb_core.i_merlin.irqm_extern_i[0]
 @800200
 -I Port
 @28
@@ -61,6 +65,15 @@ tb_core.i_merlin.drspdata_i[31:0]
 tb_core.i_merlin.i_merlin_id_stage.i_merlin_rv32ic_expander.ins_rvc_o[0]
 @800200
 -pfu
+@28
+tb_core.i_merlin.i_merlin_pfu32ic.ids_dav_o[0]
+tb_core.i_merlin.i_merlin_pfu32ic.ids_ack_i[0]
+tb_core.i_merlin.i_merlin_pfu32ic.ids_ack_size_i[1:0]
+tb_core.i_merlin.i_merlin_pfu32ic.ids_sofid_o[1:0]
+tb_core.i_merlin.i_merlin_pfu32ic.ids_ferr_o[0]
+@22
+tb_core.i_merlin.i_merlin_pfu32ic.ids_pc_o[31:0]
+tb_core.i_merlin.i_merlin_pfu32ic.ids_ins_o[31:0]
 @1000200
 -pfu
 @28
@@ -87,9 +100,7 @@ tb_core.i_merlin.i_merlin_id_stage.exs_pc_o[31:0]
 @28
 tb_core.i_merlin.i_merlin_id_stage.exs_ins_size_o[1:0]
 tb_core.i_merlin.i_merlin_id_stage.exs_valid_o[0]
-@29
 tb_core.i_merlin.i_merlin_id_stage.exs_ecall_o[0]
-@28
 tb_core.i_merlin.i_merlin_id_stage.exs_fencei_o[0]
 tb_core.i_merlin.i_merlin_id_stage.exs_wfi_o[0]
 tb_core.i_merlin.i_merlin_id_stage.exs_jump_o[0]
@@ -133,6 +144,12 @@ tb_core.i_merlin.i_merlin_id_stage.lsq_reg_data_i[31:0]
 tb_core.i_merlin.i_merlin_id_stage.exs_regd_cncl_load_i[0]
 @1000200
 -id_stage rhs
+@28
+tb_core.i_merlin.i_merlin_ex_stage.ex_stage_en[0]
+tb_core.i_merlin.i_merlin_ex_stage.csr_interrupt[0]
+tb_core.i_merlin.i_merlin_ex_stage.wfi_latch_q[0]
+tb_core.i_merlin.i_merlin_ex_stage.execute_commit[0]
+tb_core.i_merlin.i_merlin_ex_stage.ids_wfi_q[0]
 @800200
 -ex stage rhs
 @28
