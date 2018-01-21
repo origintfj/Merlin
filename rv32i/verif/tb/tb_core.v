@@ -132,7 +132,7 @@ module tb_core;
     merlin
 `ifndef GATES
         #(
-            .C_RESET_VECTOR      (32'b0)
+            .C_WORD_RESET_VECTOR      (30'b0)
         )
 `endif
         i_merlin (
