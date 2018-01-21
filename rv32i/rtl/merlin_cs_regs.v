@@ -20,9 +20,13 @@
 `include "riscv_defs.v"
 
 module merlin_cs_regs
+    #(
+        parameter C_WORD_RESET_VECTOR = 30'h0
+    )
     (
         //
         input  wire                clk_i,
+        input  wire                fclk_i,
         input  wire                reset_i,
         // access request / error reporting interface
         input  wire                access_rd_i,
@@ -476,9 +480,13 @@ module merlin_cs_regs
     //--------------------------------------------------------------
     // access restriction logic
     //--------------------------------------------------------------
-    assign access_badcsr_o   = access_badcsr;
-    assign access_badwrite_o = (access_addr_i[11:10] == 2'b11 ? access_wr_i : 1'b0);
-    assign access_badpriv_o  = (access_addr_i[9:8] > mode_d ? 1'b1 : 1'b0);
+    assign access_badcsr_o   = access_badcsr & (access_rd_i | access_wr_i);
+    assign access_badwrite_o = (access_addr_i[11:10] == 2'b11 ? access_wr_i
+                                                              : 1'b0)
+                                                              ;
+    assign access_badpriv_o  = (access_addr_i[9:8] > mode_d ? access_rd_i | access_wr_i
+                                                            : 1'b0)
+                                                            ;
 
 
     //--------------------------------------------------------------
@@ -530,7 +538,7 @@ module merlin_cs_regs
             12'h342 : access_rd_data_o = mcause;
             12'h343 : access_rd_data_o = mtval;
             12'h344 : access_rd_data_o = mip;
-            default : access_badcsr  = 1'b1;
+            default : access_badcsr    = 1'b1;
         endcase
     end
 
@@ -1023,7 +1031,7 @@ module merlin_cs_regs
     //
     always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
         if (reset_i) begin
-            mtvec_q      <= `RV_RESET_VECTOR; // TODO
+            mtvec_q      <= C_WORD_RESET_VECTOR;
             mtvec_mode_q <= `RV_CSR_TVEC_MODE_DIRECT;
         end else begin
             mtvec_q      <= mtvec_d;
@@ -1669,7 +1677,7 @@ module merlin_cs_regs
      *   3) timer interrupts
      *   4) synchronous traps
      */
-    always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
+    always @ `RV_SYNC_LOGIC_CLOCK_RESET(fclk_i, reset_i) begin
         if (reset_i) begin
             m_int_e_q <= 1'b0;
             m_int_t_q <= 1'b0;

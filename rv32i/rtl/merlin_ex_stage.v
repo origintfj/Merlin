@@ -9,6 +9,9 @@
 `include "riscv_defs.v"
 
 module merlin_ex_stage
+    #(
+        parameter C_WORD_RESET_VECTOR = 30'h0
+    )
     (
         // global
         input  wire                     clk_i,
@@ -101,7 +104,7 @@ module merlin_ex_stage
     wire                   excp_maif;
     reg                    excp_mala;
     reg                    excp_masa;
-    reg                    excp_ilgl;
+    wire                   excp_ilgl;
     // instruction qualification logic
     wire                   ex_valid;
     wire                   execute_commit;
@@ -233,6 +236,8 @@ module merlin_ex_stage
 `else
     assign excp_maif  = ids_jump_q & alu_data_out[1];
 `endif
+    assign excp_ilgl = (ids_trap_rtn_mode_q > csr_mode ? ids_trap_rtn_q : 1'b0) | // xRET && x > priv_mode
+                       (csr_badcsr_q | csr_badpriv_q | csr_badwrite_q);           // illegal csr access
     //
     always @ (*) begin
         excp_mala = 1'b0;
@@ -243,19 +248,6 @@ module merlin_ex_stage
         end else if (funct3_q == 3'b010 && alu_data_out[1:0] != 2'b00) begin
             excp_mala = lq_wr_q;
             excp_masa = sq_wr_q;
-        end
-    end
-    //
-    always @ (*) begin
-        excp_ilgl = 1'b0;
-        if (ids_csr_rd_q | ids_csr_wr_q) begin
-            excp_ilgl = csr_badcsr_q | csr_badpriv_q | csr_badwrite_q;
-        end
-        //
-        if (ids_trap_rtn_q) begin
-            if (ids_trap_rtn_mode_q > csr_mode) begin // if xRET && x > priv_mode
-                excp_ilgl = 1'b1;
-            end
         end
     end
 
@@ -423,9 +415,13 @@ module merlin_ex_stage
     //--------------------------------------------------------------
     // control and status register file
     //--------------------------------------------------------------
-    merlin_cs_regs i_merlin_cs_regs (
+    merlin_cs_regs
+        #(
+            .C_WORD_RESET_VECTOR (C_WORD_RESET_VECTOR)
+        ) i_merlin_cs_regs (
             //
             .clk_i             (clk_i),
+            .fclk_i            (fclk_i),
             .reset_i           (reset_i),
             // access request / error reporting interface
             .access_rd_i       (ids_csr_rd_i),
@@ -441,7 +437,7 @@ module merlin_ex_stage
             .wr_addr_i         (ids_csr_addr_q),
             .wr_data_i         (ids_csr_wr_data_q),
             // exception, interrupt, and hart vectoring interface
-            .ex_valid_i        (ex_valid & ex_stage_en),
+            .ex_valid_i        (ex_valid),
             .irqm_extern_i     (irqm_extern_i),
             .irqm_softw_i      (irqm_softw_i),
             .irqm_timer_i      (irqm_timer_i),

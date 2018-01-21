@@ -41,8 +41,6 @@
 
 `define RV_XLEN                 (2**`RV_XLEN_X)
 //
-`define RV_RESET_VECTOR         { `RV_XLEN {1'b0} } // Set the reset vector here
-//
 `define RV_VENDOR_ID            { `RV_XLEN {1'b0} } // Set the vendor ID here
 `define RV_ARCHITECTURE_ID      { `RV_XLEN {1'b0} } // TODO
 `define RV_IMPLEMENTATION_ID    { `RV_XLEN {1'b0} } // TODO

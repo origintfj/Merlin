@@ -12,7 +12,7 @@
 
 module merlin
     #(
-        parameter C_RESET_VECTOR = 32'h0
+        parameter C_WORD_RESET_VECTOR = 30'h0
     )
     (
         // global
@@ -134,9 +134,9 @@ module merlin
     //--------------------------------------------------------------
     merlin_pfu32ic
         #(
-            .C_FIFO_PASSTHROUGH (`RV_PFU_BYPASS),
-            .C_FIFO_DEPTH_X     (2), // pfu fifo depth base 2 exponent
-            .C_RESET_VECTOR     (C_RESET_VECTOR)
+            .C_FIFO_PASSTHROUGH  (`RV_PFU_BYPASS),
+            .C_FIFO_DEPTH_X      (2), // pfu fifo depth base 2 exponent
+            .C_WORD_RESET_VECTOR (C_WORD_RESET_VECTOR)
         ) i_merlin_pfu32ic (
             // global
             .clk_i           (clk_i),
@@ -226,7 +226,10 @@ module merlin
     //--------------------------------------------------------------
     // execution stage
     //--------------------------------------------------------------
-    merlin_ex_stage i_merlin_ex_stage (
+    merlin_ex_stage
+        #(
+            .C_WORD_RESET_VECTOR   (C_WORD_RESET_VECTOR)
+        ) i_merlin_ex_stage (
             // global
             .clk_i                 (clk_i),
             .fclk_i                (fclk_i),

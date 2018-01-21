@@ -10,9 +10,9 @@
 
 module merlin_pfu
     #(
-        parameter C_FIFO_PASSTHROUGH = 0,
-        parameter C_FIFO_DEPTH_X     = 2, // depth >= read latency + 2
-        parameter C_RESET_VECTOR     = { `RV_XLEN {1'b0} }
+        parameter C_FIFO_PASSTHROUGH  = 0,
+        parameter C_FIFO_DEPTH_X      = 2, // depth >= read latency + 2
+        parameter C_WORD_RESET_VECTOR = { `RV_XLEN-2 {1'b0} }
     )
     (
         // global
@@ -139,7 +139,7 @@ module merlin_pfu
     //--------------------------------------------------------------
     always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
         if (reset_i) begin
-            pc_q <= C_RESET_VECTOR;
+            pc_q <= { C_WORD_RESET_VECTOR, 2'b0 };
         end else begin
             if (exs_pc_wr_i) begin
                 pc_q <= exs_pc_din_i;
