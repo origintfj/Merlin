@@ -1,3 +1,5 @@
+### IMPORTANT: master currently broken with a comb. loop.  Fix coming soon.  For now checkout commit bb836d1c2994ecd977edfabfabd185f0ef3ab2a4 "Removing clock enable"
+
 # RISC-V - Open Source RV32I[C] CPU
 
 This is an open source implementation of a 32-bit base integer (with optional 'C' extension) RISC-V CPU.  It has been written in a version of Verilog which is compatible with a wide variety of open source tools including the open-source ASIC design flow "Qflow".
