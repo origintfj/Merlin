@@ -1,4 +1,4 @@
-### IMPORTANT: master currently broken with a comb. loop.  Fix coming soon.  For now checkout commit bb836d1c2994ecd977edfabfabd185f0ef3ab2a4 "Removing clock enable"
+> WARNING: cpu clock gating on sleep has had almost no testing - recomend assigning an always-on clock to both 'clk_i' and 'fclk_i' for now.
 
 # RISC-V - Open Source RV32I[C] CPU
 
