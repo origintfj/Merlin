@@ -29,11 +29,14 @@ module merlin_rv32ic_trace_logger
 
     //--------------------------------------------------------------
 
-    // program variables
+    // Instruction Locality Profiler (ILP) init
+    integer                ilpfile;
+    integer                ins_number;
+    // Instruction Locality Profiler (ILP) logger
+    // Merlin Instruction Tracer (MIT) init
     integer                logfile;
     integer                stack_depth;
     integer                trap_depth;
-    integer                i;
     // rv32ic instruction expander
     wire            [31:0] rv32i_ins_expanded;
     wire                   ins_expanded_valid;
@@ -57,6 +60,34 @@ module merlin_rv32ic_trace_logger
 
     //--------------------------------------------------------------
 
+    //--------------------------------------------------------------
+    // Instruction Locality Profiler (ILP) init
+    //--------------------------------------------------------------
+    initial begin
+        ins_number = 0;
+        ilpfile    = $fopen("merlin_ilp.csv", "w");
+
+        $fwrite(ilpfile, "\"Time\",\"Address (Base 10)\"\n");
+    end
+
+
+    //--------------------------------------------------------------
+    // Instruction Locality Profiler (ILP) logger
+    //--------------------------------------------------------------
+    always @ `RV_SYNC_LOGIC_CLOCK_RESET(clk_i, reset_i) begin
+        if (reset_i) begin
+        end else begin
+            if (execute_commit_i) begin
+                $fwrite(ilpfile, "%d,%d\n", ins_number, ins_addr_i);
+                ins_number = ins_number + 1;
+            end
+        end
+    end
+
+
+    //--------------------------------------------------------------
+    // Merlin Instruction Tracer (MIT) init
+    //--------------------------------------------------------------
     initial begin
         stack_depth = 0;
         trap_depth  = 0;
@@ -65,6 +96,7 @@ module merlin_rv32ic_trace_logger
                         //  [    0]           0 [3] 0x00000000 (00010137): lui   x2, 0x00010000
         $fwrite(logfile, "T|x2 ADDI|TIME       |CPM|ADDR      |INSTRUCTION\n");
     end
+
 
     //--------------------------------------------------------------
     // rv32ic instruction expander
