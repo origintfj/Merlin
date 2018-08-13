@@ -651,6 +651,7 @@ module merlin_cs_regs
         mstatus_sie_d  = mstatus_sie_q;
         mstatus_uie_d  = mstatus_uie_q;
         if (trap_call_o) begin
+            mode_d = trap_call_mode;
             case (trap_call_mode)
                 `RV_CSR_MODE_MACHINE : begin
                     mstatus_mpp_d  = mode_q;
