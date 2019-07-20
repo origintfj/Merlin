@@ -91,10 +91,12 @@ void main(void) {
     writes("From the Merlin RV32I test program\n");
     writex(0x27a7fe4);
 
+/*
     asm (
         "loop:\n"
         "   j       loop\n"
     );
+*/
 
     *(unsigned *const)0xfffffffc = 0; // end test
 }

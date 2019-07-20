@@ -1,5 +1,11 @@
 TSEED:=$$(date +%s | sha256sum | head -c 8)
 
+TOOLS_BIN := /opt/rv32imc/bin/
+TOOL_PREFIX := riscv32-unknown-elf-
+CC := $(TOOLS_BIN)/$(TOOL_PREFIX)gcc
+OC := $(TOOLS_BIN)/$(TOOL_PREFIX)objcopy
+OD := $(TOOLS_BIN)/$(TOOL_PREFIX)objdump
+
 # default greylock boot rom
 BOOT_ROM_FILE := programs/hello_world.c
 
@@ -87,10 +93,10 @@ lint:
 	verilator --lint-only --top-module merlin -I$(RTL_INC_DIR) $(RTL_FILE_LIST)
 
 build_mem: # -ffreestanding -fPIC -fno-builtin
-	$(CC_DIR)/bin/riscv32-unknown-elf-gcc -nostdlib -fPIC -T link.ld $(CARGS) $(BOOT_ROM_FILE) -o test.out
-	$(CC_DIR)/bin/riscv32-unknown-elf-objcopy -O verilog test.out mem.hex
+	$(CC) -march=rv32ic -mabi=ilp32 -nostdlib -fPIC -T link.ld $(CARGS) $(BOOT_ROM_FILE) -o test.out
+	$(OC) -O verilog test.out mem.hex
 	#cat mem.hex
-	$(CC_DIR)/bin/riscv32-unknown-elf-objdump -D test.out > test.dis
+	$(OD) -D test.out > test.dis
 
 run: build_mem run_only
 
