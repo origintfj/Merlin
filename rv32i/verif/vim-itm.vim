@@ -2,11 +2,16 @@ function ItmInit()
     colorscheme blue
     highlight CursorLine ctermbg=black
     highlight CursorLine ctermfg=white
+    highlight CursorLine guibg=Orange
+    highlight CursorLine guifg=Black
+    set guifont=Courier\ 10\ Pitch\ 9
+
     set cursorline
     "set background=dark
     "set foreground=green
 
     execute "view vim.itm.log"
+    set nowrap
     execute "normal \<C-w>s"
     execute "view vim.itm.dis"
     "set filetype=asm
@@ -22,6 +27,7 @@ function ItmInit()
 endfunction
 
 function ItmResize()
+    "execute "set cmdheight=2"
     execute "resize 11"
 endfunction
 
@@ -44,7 +50,7 @@ function ItmResolve()
     wincmd k
 
     " jump to the relevant line of assembly
-    call search("[ ]*[^0-9a-fA-F]" . adr . ":")
+    call search("^ [ ]*" . adr . ":")
 
     " reverse search to find the function name and extract it to 'func'
     call search("^[0-9a-fA-F][0-9a-fA-F]*[ ]*\<.*\>", "b")
@@ -52,7 +58,7 @@ function ItmResolve()
     let func = matchstr(func, "\<.*\>")
 
     " jump to the relevant line of assembly again
-    call search("[ ]*[^0-9a-fA-F]" . adr . ":")
+    call search("^ [ ]*" . adr . ":")
 
     " center the active line
     normal zz
